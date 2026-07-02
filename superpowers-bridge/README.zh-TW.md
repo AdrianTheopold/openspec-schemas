@@ -154,7 +154,7 @@ OpenSpec 管 **「做什麼」**(artifact 生命週期:proposal / specs / tasks 
 
 | 情境 | 是否要建 change | 怎麼做 |
 |---|---|---|
-| 新功能 / 新 capability | ✅ 要 | `openspec new change <name> --schema superpowers-bridge` |
+| 新功能 / 新 capability | ✅ 要 | `/opsx:new <name> --schema superpowers-bridge` |
 | Breaking change | ✅ 要 | 同上 |
 | 架構變更 | ✅ 要 | 同上 |
 | Bug fix(恢復原本行為,不變更合約) | ❌ 不要 | 直接 PR |
@@ -170,7 +170,7 @@ OpenSpec 管 **「做什麼」**(artifact 生命週期:proposal / specs / tasks 
 
 如果使用者以 narrative(「我們來討論架構」「腦力激盪一下」)觸發了 `superpowers:brainstorming`,brainstorming 的產出**不可以**寫到 `docs/superpowers/specs/` —— 那會繞過本 schema 的 output redirection,在 repo 裡留下 orphan artifact。
 
-正確流程:在以下 5 條判準**全部滿足**之前,維持 verbal brainstorm;全滿足時升級到 `/opsx:propose`,讓 brainstorming 的對話結論落到 `openspec/changes/<name>/brainstorm.md`。
+正確流程:在以下 5 條判準**全部滿足**之前,維持 verbal brainstorm;全滿足時升級到 `/opsx:propose` 或 `/opsx:new`,讓 brainstorming 的對話結論落到 `openspec/changes/<name>/brainstorm.md`。
 
 1. **Scope 鎖定** —— 一句話講清「包含什麼、不包含什麼」,且不會在每一輪對話又長出新項目
 2. **主要設計分歧已收斂** —— 替代方案討論過、選了一個;剩下的 unknown 是**明確列出的 TBD**(有 owner、有影響面),不是「還沒想到」
@@ -221,7 +221,7 @@ brainstorm ──┬──→ proposal ──→ specs ──┐
 
 ```mermaid
 flowchart TD
-    Start([/opsx:propose · /opsx:ff])
+    Start([/opsx:propose · /opsx:new])
 
     subgraph Plan ["📝 PLANNING — 6 個 artifact"]
         direction TB
@@ -334,7 +334,7 @@ Superpowers skill 有預設輸出路徑(例如 brainstorming 寫到 `docs/superp
 
 ### 逐步流程
 ```bash
-openspec new change my-feature --schema superpowers-bridge
+/opsx:new my-feature --schema superpowers-bridge
 /opsx:continue         # → brainstorm(互動式對話)
 /opsx:continue         # → proposal
 /opsx:continue         # → design(將 brainstorm 重組為結構化決策)
@@ -347,10 +347,12 @@ openspec new change my-feature --schema superpowers-bridge
 /opsx:archive
 ```
 
+> **Profile 註記:** `/opsx:new` 屬於 OpenSpec 的**擴充(expanded)** workflow profile。用**核心(core)** profile 初始化的 repo 不會有它(也沒有 `/opsx:bulk-archive`)—— 用 `openspec update` 啟用 expanded profile,或直接用等效的 CLI:`openspec new change <name> --schema superpowers-bridge` 再接 `/opsx:continue`。(`/opsx:new` 是唯一接受 `--schema` 的建立指令;`/opsx:propose` 與 `/opsx:ff` 使用專案的預設 schema。)
+
 ### 切回 spec-driven
 ```bash
 # 單一 change 用不同 schema
-openspec new change my-simple-fix --schema spec-driven
+/opsx:new my-simple-fix --schema spec-driven
 
 # 或修改專案預設(openspec/config.yaml: schema: spec-driven)
 ```
@@ -417,13 +419,13 @@ Evidence-first 反思:§0 Evidence(量化前置數據 —— commit 數、diff �
 | 情境 | 指令 |
 |---|---|
 | 首次 clone 專案後 | `bash scripts/install-git-hooks.sh` |
-| 新 change(互動式) | `openspec new change <name> --schema superpowers-bridge` 接著多次 `/opsx:continue` |
+| 新 change(互動式) | `/opsx:new <name> --schema superpowers-bridge` 接著多次 `/opsx:continue` |
 | 新 change(一鍵) | `/opsx:ff <name>` |
 | 恢復中斷的 change | `/opsx:continue <name>` |
 | 進入實作 | `/opsx:apply <name>` |
 | 手動 verify | `/opsx:verify <name>` |
 | 歸檔 | `/opsx:archive <name>` |
-| 用內建(跳過 brainstorm) | `openspec new change <name> --schema spec-driven` |
+| 用內建(跳過 brainstorm) | `/opsx:new <name> --schema spec-driven` |
 | 列出所有 schema | `openspec schemas` |
 | 查看某 change 進度 | `openspec status --change <name> --json` |
 | 列出 active changes | `openspec list` |
