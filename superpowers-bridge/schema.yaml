@@ -503,6 +503,13 @@ apply:
        - Read plan.md in this change directory for micro-tasks
        - Update tasks.md checkboxes as coarse tasks complete
        - Work within the created worktree
+       - STOP after the final whole-branch review passes. Do NOT invoke
+         superpowers:finishing-a-development-branch and do NOT remove or
+         clean up the worktree — this bridge runs the finish sequence
+         itself at apply step 6, and the worktree + SDD ledger must
+         survive for steps 3-5 (verify / retrospective / archive).
+         Return control to the apply controller after the final review;
+         report the commit range and the ledger path.
 
        IMPORTANT — transitive skill activation:
        subagent-driven-development internally enforces the
@@ -516,6 +523,13 @@ apply:
          spec compliance and code quality issues. A final review
          runs for the entire implementation before apply
          concludes.
+
+       NOTE: subagent-driven-development's own flow ends by invoking
+       finishing-a-development-branch + worktree cleanup; under THIS
+       bridge that terminal step is SUPPRESSED (see the executor
+       instruction above) because the bridge sequences finish itself
+       at apply step 6. There is no native flag to disable it, so the
+       suppression is by instruction.
 
        This schema does NOT support `superpowers:executing-plans`
        as a fallback for non-subagent platforms. Per its SKILL.md,
