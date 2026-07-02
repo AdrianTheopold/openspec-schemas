@@ -190,6 +190,10 @@ artifacts:
       Pass the tasks.md content to the skill as the input for
       decomposition. The plan should reference the specs and
       design artifacts in this change directory.
+
+      Note (Superpowers 6.x): writing-plans emits a "## Global
+      Constraints" block and per-task "Interfaces" blocks; the
+      implementer MUST honor both.
     requires:
       - tasks
 
@@ -463,6 +467,10 @@ artifacts:
     requires:
       - verify
 
+# v6 notes: subagent-driven-development (6.x) applies explicit per-dispatch
+# model selection (Sonnet for mechanical steps, Opus for reasoning) and keeps
+# a durable .superpowers/sdd/ progress ledger for long runs. Both are handled
+# by the executor automatically — no instruction here duplicates them.
 apply:
   requires: [plan]
   tracks: tasks.md
@@ -531,11 +539,11 @@ apply:
        - **superpowers:test-driven-development** — every task
          follows RED-GREEN-REFACTOR. Implementation code written
          before a failing test is deleted.
-       - **superpowers:requesting-code-review** — after each
-         task, a code-reviewer subagent is dispatched to catch
-         spec compliance and code quality issues. A final review
-         runs for the entire implementation before apply
-         concludes.
+       - **superpowers:requesting-code-review** — invoked only for
+         the FINAL whole-branch review before apply concludes.
+         Per-task review is handled INSIDE subagent-driven-development
+         by its own merged task-reviewer prompt (spec compliance +
+         code quality), not by a separate skill invocation.
 
        NOTE: subagent-driven-development's own flow ends by invoking
        finishing-a-development-branch + worktree cleanup; under THIS
@@ -581,14 +589,18 @@ apply:
        all 8 artifacts done, spec synced into main specs, change
        under archive/.
 
-    6. **Completion (PR is the LAST step)**:
+    6. **Completion (finish + push is the LAST automated step)**:
 
        After retrospective + archive are both done, use the Skill
        tool to invoke **superpowers:finishing-a-development-branch**.
+       In Superpowers v6 this PUSHES the branch; it does NOT open a
+       PR/MR for you (the `gh pr create` step was removed upstream).
+       Opening the MR/PR is a separate human step — on GitLab use
+       `glab`; do NOT auto-open or auto-merge.
 
-       The branch's PR diff MUST contain the complete archived
-       cycle. If it doesn't (e.g., because retrospective or archive
-       was skipped), STOP and complete those first.
+       The pushed branch MUST contain the complete archived cycle
+       (all 8 artifacts, specs synced, change under archive/). If it
+       doesn't (e.g., retrospective or archive was skipped), STOP and
+       complete those first.
 
-       This is the canonical opening sequence for the PR — do NOT
-       reorder.
+       This is the canonical finish sequence — do NOT reorder.
