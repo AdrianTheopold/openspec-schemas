@@ -12,7 +12,7 @@ description: >
   If your platform lacks subagent support, use spec-driven instead.
   Each artifact / apply step verifies its required skills before
   invoking and surfaces a clear error if any are missing.
-  brainstorm → proposal → specs → tasks → plan → verify → retrospective.
+  brainstorm → proposal → design → specs → tasks → plan → verify → retrospective.
   design is required (reorganizes raw brainstorm output into structured
   Context / Goals / Decisions / Risks / Migration; referenced by tasks
   and plan for implementation guidance).
@@ -213,7 +213,7 @@ artifacts:
          git log --oneline $(git merge-base HEAD origin/main 2>/dev/null || git merge-base HEAD origin/master 2>/dev/null || git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null)..HEAD | wc -l
 
       2. Task progress (must return > 0):
-         grep -c '^- \[x\]' openspec/changes/<change-name>/tasks.md
+         grep -cE '^\s*- \[x\]' openspec/changes/<change-name>/tasks.md
          (This returns 0 only if the apply executor failed to tick
          tasks.md as tasks cleared — see apply step 2's ticking rule;
          a 0 here on a genuinely-complete apply is a bookkeeping miss,

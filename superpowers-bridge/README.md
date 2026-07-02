@@ -222,7 +222,7 @@ The Artifact DAG above shows **file-existence** dependencies. The runtime lifecy
 flowchart TD
     Start([/opsx:propose · /opsx:ff])
 
-    subgraph Plan ["📝 PLANNING — 7 artifacts"]
+    subgraph Plan ["📝 PLANNING — 6 artifacts"]
         direction TB
         BS["<b>brainstorm.md</b><br/><i>superpowers:brainstorming</i>"]
         PROP["<b>proposal.md</b>"]
@@ -246,9 +246,9 @@ flowchart TD
         A1["<b>1. Workspace</b><br/><i>using-git-worktrees</i>"]
         A2["<b>2. Executor</b><br/><i>subagent-driven-development</i><br/>↳ TDD + code-review (transitive)"]
         A3["<b>3. Verification</b><br/><i>openspec-verify-change</i> → verify.md"]
-        A4["<b>4. Retrospective</b> → retrospective.md<br/>(BEFORE PR; hot context)"]
+        A4["<b>4. Retrospective</b> → retrospective.md<br/>(BEFORE finish; hot context)"]
         A5["<b>5. Archive</b><br/><i>openspec archive -y</i><br/>(sync delta + move folder)"]
-        A6["<b>6. Completion</b><br/><i>finishing-a-development-branch</i><br/>🏁 PR is LAST"]
+        A6["<b>6. Completion</b><br/><i>finishing-a-development-branch</i><br/>🏁 push is LAST"]
 
         A0 --> A1 --> A2 --> A3
         A3 -. blocking → fix .-> A2
@@ -285,12 +285,12 @@ APPLY ━━━━━━━━━━━━━━━━━━━━━━━━�
                               ▼           │
   4. retrospective.md (BEFORE PR; hot context)
   5. openspec archive -y (sync delta + move folder)
-  6. superpowers:finishing-a-development-branch (🏁 PR is LAST)
+  6. superpowers:finishing-a-development-branch (🏁 push is LAST)
 ```
 
 > **Timing notes** (full rationale in "Six design touches" #6):
 > - `verify.md` declares `requires: plan` in the graph but is actually produced inside apply step 3.
-> - `retrospective.md` declares `requires: verify` and per Step 4 is produced **before** the PR opens — so the PR diff includes the complete archived cycle (all artifacts done, spec synced, change folder under `archive/`).
+> - `retrospective.md` declares `requires: verify` and per Step 4 is produced **before** finish/push (step 6) — so the pushed branch includes the complete archived cycle (all artifacts done, spec synced, change folder under `archive/`).
 > - The `requires:` edges are file-existence dependencies for OpenSpec's graph engine; runtime ordering lives in instruction prose.
 
 ### Seven Superpowers touchpoints
@@ -303,7 +303,7 @@ APPLY ━━━━━━━━━━━━━━━━━━━━━━━━�
 | 4 | `superpowers:subagent-driven-development` | apply step 2 | Direct |
 | 5 | `superpowers:test-driven-development` | (activated inside #4) | **Transitive** |
 | 6 | `superpowers:requesting-code-review` | (activated inside #4) | **Transitive** |
-| 7 | `superpowers:finishing-a-development-branch` | apply step 4 | Direct |
+| 7 | `superpowers:finishing-a-development-branch` | apply step 6 | Direct |
 
 Plus one OpenSpec built-in: `openspec-verify-change` (apply step 3, produces `verify.md`).
 
@@ -442,7 +442,7 @@ Integration lives entirely in `instruction:` fields (pure prompts). If Superpowe
 
 ### 3. Transitive dependencies made explicit
 
-TDD and code-review are normally hidden inside `subagent-driven-development`'s SKILL.md. Our schema's apply step 2a instruction lists these two transitive activations explicitly, so a reader can see "what actually happens during apply" at a glance.
+TDD and code-review are normally hidden inside `subagent-driven-development`'s SKILL.md. Our schema's apply step 2 instruction lists these two transitive activations explicitly, so a reader can see "what actually happens during apply" at a glance.
 
 ### 4. Opinionated: subagent platforms only, no manual fallback
 

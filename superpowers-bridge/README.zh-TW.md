@@ -222,7 +222,7 @@ brainstorm ──┬──→ proposal ──→ specs ──┐
 flowchart TD
     Start([/opsx:propose · /opsx:ff])
 
-    subgraph Plan ["📝 PLANNING — 7 個 artifact"]
+    subgraph Plan ["📝 PLANNING — 6 個 artifact"]
         direction TB
         BS["<b>brainstorm.md</b><br/><i>superpowers:brainstorming</i>"]
         PROP["<b>proposal.md</b>"]
@@ -246,9 +246,9 @@ flowchart TD
         A1["<b>1. Workspace</b><br/><i>using-git-worktrees</i>"]
         A2["<b>2. Executor</b><br/><i>subagent-driven-development</i><br/>↳ TDD + code-review(傳遞)"]
         A3["<b>3. Verification</b><br/><i>openspec-verify-change</i> → verify.md"]
-        A4["<b>4. Retrospective</b> → retrospective.md<br/>(PR 之前;hot context)"]
+        A4["<b>4. Retrospective</b> → retrospective.md<br/>(finish 之前;hot context)"]
         A5["<b>5. Archive</b><br/><i>openspec archive -y</i><br/>(sync delta + 搬 folder)"]
-        A6["<b>6. Completion</b><br/><i>finishing-a-development-branch</i><br/>🏁 PR 是最後一步"]
+        A6["<b>6. Completion</b><br/><i>finishing-a-development-branch</i><br/>🏁 push 是最後一步"]
 
         A0 --> A1 --> A2 --> A3
         A3 -. blocking → 回去修 .-> A2
@@ -283,9 +283,9 @@ APPLY ━━━━━━━━━━━━━━━━━━━━━━━━�
   3. openspec-verify-change → verify.md ◄┐
                               │           │ blocking → 回去修
                               ▼           │
-  4. retrospective.md(PR 之前;hot context)
+  4. retrospective.md(finish 之前;hot context)
   5. openspec archive -y(sync delta + 搬 folder)
-  6. superpowers:finishing-a-development-branch(🏁 PR 是最後一步)
+  6. superpowers:finishing-a-development-branch(🏁 push 是最後一步)
 ```
 
 > **時序註記**(完整理由見下方「設計觸點 #6」):
@@ -303,11 +303,11 @@ APPLY ━━━━━━━━━━━━━━━━━━━━━━━━�
 | 4 | `superpowers:subagent-driven-development` | apply step 2 | 直接 |
 | 5 | `superpowers:test-driven-development` | (#4 內部觸發) | **傳遞** |
 | 6 | `superpowers:requesting-code-review` | (#4 內部觸發) | **傳遞** |
-| 7 | `superpowers:finishing-a-development-branch` | apply step 4 | 直接 |
+| 7 | `superpowers:finishing-a-development-branch` | apply step 6 | 直接 |
 
 加上一個 OpenSpec built-in:`openspec-verify-change`(apply step 3,產出 `verify.md`)。
 
-> **不支援 `executing-plans` fallback**。本 schema 是 opinionated 的:要求 subagent-capable 平台(Claude Code、Codex 等)。替代 executor `superpowers:executing-plans` 並**不會** transitively 觸發 TDD 或 code-review(已對 [SKILL.md](https://github.com/obra/superpowers/blob/v6.1.0/skills/executing-plans/SKILL.md) 做事實查核 —— body 完全沒提到 TDD 或 code-review,Integration 段也未列出 `test-driven-development` 與 `requesting-code-review`)。退到 2b 等於靜默降級 Superpowers 的核心價值。若你的平台沒有 subagent 支援,改用 OpenSpec 內建的 `spec-driven` schema。
+> **不支援 `executing-plans` fallback**。本 schema 是 opinionated 的:要求 subagent-capable 平台(Claude Code、Codex 等)。替代 executor `superpowers:executing-plans` 並**不會** transitively 觸發 TDD 或 code-review(已對 [SKILL.md](https://github.com/obra/superpowers/blob/v6.1.0/skills/executing-plans/SKILL.md) 做事實查核 —— body 完全沒提到 TDD 或 code-review,Integration 段也未列出 `test-driven-development` 與 `requesting-code-review`)。退到 executing-plans 等於靜默降級 Superpowers 的核心價值。若你的平台沒有 subagent 支援,改用 OpenSpec 內建的 `spec-driven` schema。
 
 ### Output redirection(產出重導)
 
@@ -399,11 +399,11 @@ Main agent 讀 `plan.md`,為每個 micro-task 派發 fresh subagent。每個 sub
 
 Evidence-first 反思:§0 Evidence(量化前置數據 —— commit 數、diff 大小、tasks done 比例、新依賴、validate 狀態等)加上 6 段分析(Wins / Misses / Plan deviations / Skill compliance / Surprises / Promote candidates)。每個 claim 引用 commit / file / 可量化事實,通常指向 §0 而非每行 inline 證據。procedure 直接內嵌在 artifact instruction —— 不依賴外部 skill(Decision 3 in 設計 spec:Claude Code plugin 化延後到 v1.x)。
 
-在開 PR **之前**寫好,讓 retro 跟其他 artifact 一起落在同一個 PR diff。
+在 finish/push **之前**寫好,讓 retro 跟其他 artifact 一起落在同一個 PR diff。
 
 #### 5. Archive — `openspec archive -y`(或 `/opsx:archive`)
 
-把 delta spec sync 到 `openspec/specs/<capability>/spec.md`、把 change 目錄搬到 `openspec/changes/archive/YYYY-MM-DD-<name>/`。在開 PR **之前**跑完,這樣 PR diff 反映完整的 archived cycle 狀態(所有 artifact 完成、spec 已 sync、folder 在 `archive/`)。
+把 delta spec sync 到 `openspec/specs/<capability>/spec.md`、把 change 目錄搬到 `openspec/changes/archive/YYYY-MM-DD-<name>/`。在 finish/push **之前**跑完,這樣 PR diff 反映完整的 archived cycle 狀態(所有 artifact 完成、spec 已 sync、folder 在 `archive/`)。
 
 #### 6. Completion — `superpowers:finishing-a-development-branch`
 
@@ -442,11 +442,11 @@ Evidence-first 反思:§0 Evidence(量化前置數據 —— commit 數、diff �
 
 ### 3. 傳遞依賴顯式化
 
-TDD 與 code-review 平常藏在 `subagent-driven-development` 的 SKILL.md 裡。本 schema apply step 2a 的 instruction **直接列出**這兩個 transitive activation,讓讀者一眼看懂「apply 階段到底會發生什麼」。
+TDD 與 code-review 平常藏在 `subagent-driven-development` 的 SKILL.md 裡。本 schema apply step 2 的 instruction **直接列出**這兩個 transitive activation,讓讀者一眼看懂「apply 階段到底會發生什麼」。
 
 ### 4. Opinionated:只支援 subagent 平台,沒有手動 fallback
 
-本 schema 要求 subagent-capable 平台(Claude Code、Codex 等)。替代 executor `superpowers:executing-plans` **不會** transitively 觸發 TDD 或 code-review(已對其 [SKILL.md](https://github.com/obra/superpowers/blob/v6.1.0/skills/executing-plans/SKILL.md) 做事實查核 —— body 完全沒提及這兩者,Integration 段也未列出 `test-driven-development` 與 `requesting-code-review`)。退到 2b 等於靜默丟掉 Superpowers 帶給整合的核心價值。我們選擇在 Step 0 fail loud,並指引使用者改用內建的 `spec-driven` schema。
+本 schema 要求 subagent-capable 平台(Claude Code、Codex 等)。替代 executor `superpowers:executing-plans` **不會** transitively 觸發 TDD 或 code-review(已對其 [SKILL.md](https://github.com/obra/superpowers/blob/v6.1.0/skills/executing-plans/SKILL.md) 做事實查核 —— body 完全沒提及這兩者,Integration 段也未列出 `test-driven-development` 與 `requesting-code-review`)。退到 executing-plans 等於靜默丟掉 Superpowers 帶給整合的核心價值。我們選擇在 Step 0 fail loud,並指引使用者改用內建的 `spec-driven` schema。
 
 ### 5. Evidence-based PRECHECK for verify and retrospective(Layer 2 capability detection)
 
