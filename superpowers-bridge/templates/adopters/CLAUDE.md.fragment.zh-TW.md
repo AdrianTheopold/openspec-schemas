@@ -11,7 +11,7 @@
 | 你看到的觸發 | 應該怎麼做 |
 |---|---|
 | 使用者以 narrative 開「設計討論 / 腦力激盪」 | 先 verbal `superpowers:brainstorming`,**不**寫到 `docs/superpowers/specs/`;對話收斂後依下方 5 條判準升級到 `/opsx:propose` |
-| 使用者直接呼叫 `/opsx:new` / `/opsx:ff` / `/opsx:propose` | 走 schema 既定流程;artifact instruction 會在每步注入 |
+| 使用者直接呼叫 `/opsx:propose` / `/opsx:ff`(或 `openspec new change`) | 走 schema 既定流程;artifact instruction 會在每步注入 |
 | 使用者明確說 bug fix / typo / config 微調 / 文件更新 | 直接 PR,**不**建 change(見下方 skip 規則) |
 | 已經在某個 change 中 | `/opsx:continue` 或 `/opsx:apply` / `/opsx:verify` / `/opsx:archive` 推進 |
 

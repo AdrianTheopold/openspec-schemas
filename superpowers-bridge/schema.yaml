@@ -199,12 +199,14 @@ artifacts:
     template: verify.md
     instruction: |
       PRECHECK — implementation evidence:
+      (Substitute <change-name> in the commands below with this
+      change's directory name before running them.)
       Before producing verify.md, run BOTH commands. If either
       returns 0, STOP and tell the user that apply phase has not
       yet produced reviewable changes.
 
       1. Commit evidence (must return > 0):
-         git log --oneline $(git merge-base HEAD origin/main 2>/dev/null || git merge-base HEAD origin/master 2>/dev/null)..HEAD | wc -l
+         git log --oneline $(git merge-base HEAD origin/main 2>/dev/null || git merge-base HEAD origin/master 2>/dev/null || git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null)..HEAD | wc -l
 
       2. Task progress (must return > 0):
          grep -c '^- \[x\]' openspec/changes/<change-name>/tasks.md

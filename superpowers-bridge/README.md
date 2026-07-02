@@ -153,7 +153,7 @@ Not every change needs a `change` directory. The following scenarios should skip
 
 | Scenario | Need a change? | What to do |
 |---|---|---|
-| New feature / new capability | ✅ Yes | `/opsx:new <name> --schema superpowers-bridge` |
+| New feature / new capability | ✅ Yes | `openspec new change <name> --schema superpowers-bridge` |
 | Breaking change | ✅ Yes | Same |
 | Architecture change | ✅ Yes | Same |
 | Bug fix (restoring intended behavior, no contract change) | ❌ No | Direct PR |
@@ -169,7 +169,7 @@ Not every change needs a `change` directory. The following scenarios should skip
 
 If `superpowers:brainstorming` was triggered via narrative ("let's brainstorm the architecture") in a project that uses this schema, the brainstorming output **MUST NOT** land in `docs/superpowers/specs/` — that bypasses the schema's output redirection and creates orphan artifacts.
 
-The correct flow: keep brainstorming verbally until all 5 conditions below hold, then promote to `/opsx:propose` or `/opsx:new` so the agreed design lands in `openspec/changes/<name>/brainstorm.md`.
+The correct flow: keep brainstorming verbally until all 5 conditions below hold, then promote to `/opsx:propose` so the agreed design lands in `openspec/changes/<name>/brainstorm.md`.
 
 1. **Scope locked** — one sentence describes what's in / out, and the scope doesn't keep growing each turn
 2. **Major design forks resolved** — alternatives have been weighed and one chosen; remaining unknowns are **explicit TBDs** (with owner and impact-scope statement), not "haven't thought about it yet"
@@ -220,7 +220,7 @@ The Artifact DAG above shows **file-existence** dependencies. The runtime lifecy
 
 ```mermaid
 flowchart TD
-    Start([/opsx:propose · /opsx:new])
+    Start([/opsx:propose · /opsx:ff])
 
     subgraph Plan ["📝 PLANNING — 7 artifacts"]
         direction TB
@@ -333,7 +333,7 @@ Implemented purely via context injection at invocation time, not by modifying sk
 
 ### Step-by-step flow
 ```bash
-/opsx:new my-feature --schema superpowers-bridge
+openspec new change my-feature --schema superpowers-bridge
 /opsx:continue         # → brainstorm (interactive dialogue)
 /opsx:continue         # → proposal
 /opsx:continue         # → design (reorganize brainstorm into structured decisions)
@@ -349,7 +349,7 @@ Implemented purely via context injection at invocation time, not by modifying sk
 ### Switching back to spec-driven
 ```bash
 # Use a different schema for one change
-/opsx:new my-simple-fix --schema spec-driven
+openspec new change my-simple-fix --schema spec-driven
 
 # Or change project default in openspec/config.yaml: schema: spec-driven
 ```
@@ -416,13 +416,13 @@ Confirms tests are green, presents merge / PR / keep-branch / discard options, c
 | Scenario | Command |
 |---|---|
 | First clone of a project | `bash scripts/install-git-hooks.sh` |
-| New change (interactive) | `/opsx:new <name> --schema superpowers-bridge` then `/opsx:continue` |
+| New change (interactive) | `openspec new change <name> --schema superpowers-bridge` then `/opsx:continue` |
 | New change (one-shot) | `/opsx:ff <name>` |
 | Resume an interrupted change | `/opsx:continue <name>` |
 | Enter implementation | `/opsx:apply <name>` |
 | Manual verify | `/opsx:verify <name>` |
 | Archive | `/opsx:archive <name>` |
-| Use built-in (skip brainstorm) | `/opsx:new <name> --schema spec-driven` |
+| Use built-in (skip brainstorm) | `openspec new change <name> --schema spec-driven` |
 | List all schemas in the project | `openspec schemas` |
 | Inspect a change's progress | `openspec status --change <name> --json` |
 | List active changes | `openspec list` |
