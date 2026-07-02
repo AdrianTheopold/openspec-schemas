@@ -208,6 +208,10 @@ artifacts:
 
       2. Task progress (must return > 0):
          grep -c '^- \[x\]' openspec/changes/<change-name>/tasks.md
+         (This returns 0 only if the apply executor failed to tick
+         tasks.md as tasks cleared — see apply step 2's ticking rule;
+         a 0 here on a genuinely-complete apply is a bookkeeping miss,
+         not incomplete work. Tick the boxes, then re-run.)
 
       Only after BOTH return positive numbers, proceed to invoke
       the verification skill below.
@@ -501,7 +505,14 @@ apply:
 
        Tell the executor:
        - Read plan.md in this change directory for micro-tasks
-       - Update tasks.md checkboxes as coarse tasks complete
+       - Tick tasks.md checkboxes IN THE SAME bookkeeping message where
+         you append the SDD progress-ledger line for a cleared task:
+         when a task's review comes back clean, flip its `- [ ]` to
+         `- [x]` in openspec/changes/<name>/tasks.md AND append the
+         ledger line together. tasks.md is the committed source of
+         truth (it travels in the PR diff and gates verify); the ledger
+         is throwaway per-worktree scratch. Never leave tasks.md
+         all-unchecked — the verify PRECHECK below will falsely STOP.
        - Work within the created worktree
        - STOP after the final whole-branch review passes. Do NOT invoke
          superpowers:finishing-a-development-branch and do NOT remove or
