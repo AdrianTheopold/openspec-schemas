@@ -4,7 +4,7 @@
 
 ## 變更工作流(Claude Code 啟動先讀)
 
-本 repo 採用 [`superpowers-bridge`](https://github.com/JiangWay/openspec-schemas/tree/main/superpowers-bridge) 銜接 OpenSpec 與 Superpowers。整合規則(語言、artifact 路徑、PRECHECK)以該 bridge README 為準;以下是給 Claude 的 routing 指引。
+本 repo 採用 [`superpowers-bridge`](https://github.com/AdrianTheopold/openspec-schemas/tree/main/superpowers-bridge) 銜接 OpenSpec 與 Superpowers。整合規則(語言、artifact 路徑、PRECHECK)以該 bridge README 為準;以下是給 Claude 的 routing 指引。
 
 ### 入口分流
 
@@ -43,4 +43,4 @@
 - TBD 沒收斂就升級到 opsx
 - 對 bug fix / typo 也建 change
 
-詳細見 [superpowers-bridge README §進入與離開的判斷](https://github.com/JiangWay/openspec-schemas/blob/main/superpowers-bridge/README.zh-TW.md#進入與離開的判斷entry--exit-gates)。
+詳細見 [superpowers-bridge README §進入與離開的判斷](https://github.com/AdrianTheopold/openspec-schemas/blob/main/superpowers-bridge/README.zh-TW.md#進入與離開的判斷entry--exit-gates)。
