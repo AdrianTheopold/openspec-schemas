@@ -188,7 +188,7 @@ If any condition is missing, keep brainstorming. When all five hold:
 | Anti-pattern | Why it's wrong |
 |---|---|
 | Letting brainstorming write to `docs/superpowers/specs/` after the schema is installed | Bypasses redirection at [schema.yaml](./schema.yaml) lines 35-39; produces orphan artifacts |
-| Letting writing-plans write to `docs/superpowers/plans/` | Same reason (schema.yaml lines 169-171) |
+| Letting writing-plans write to `docs/superpowers/plans/` | Same reason (schema.yaml lines 180-182) |
 | Promoting to opsx with unresolved blocking TBDs | Those TBDs will block apply phase too — promotion just defers the same problem |
 | Opening a change for bug fix / typo / config tweak | Process ceremony exceeds actual risk; slows delivery without value |
 
@@ -347,7 +347,7 @@ Implemented purely via context injection at invocation time, not by modifying sk
 /opsx:archive
 ```
 
-> **Profile note:** `/opsx:new` belongs to OpenSpec's **expanded** workflow profile. Repos initialized with the **core** profile won't have it (nor `/opsx:bulk-archive`) — enable the expanded profile with `openspec update`, or use the CLI equivalent: `openspec new change <name> --schema superpowers-bridge` then `/opsx:continue`. (`/opsx:new` is the only create-command that accepts `--schema`; `/opsx:propose` and `/opsx:ff` use your project's default schema.)
+> **Profile note — this bridge's opsx flow requires OpenSpec's expanded workflow profile.** The **core** profile (the `openspec init` default) provides only `propose, explore, apply, sync, archive`; the expanded-only commands are `new, continue, ff, verify, bulk-archive, onboard` — and this bridge's flows lean on `/opsx:continue`, `/opsx:ff`, and `/opsx:verify` throughout, not just `/opsx:new`. Enable the expanded set by running `openspec config profile` (select the full workflow set in the picker) and then `openspec update`; running `openspec update` alone does **not** switch profiles. If you must stay on core, only the first step has a CLI equivalent (`openspec new change <name> --schema superpowers-bridge`) — `/opsx:continue`/`/opsx:verify` have none, so the expanded profile is effectively required. (`/opsx:new` is the only create-command that accepts `--schema`; `/opsx:propose` and `/opsx:ff` use your project's default schema.)
 
 ### Switching back to spec-driven
 ```bash
@@ -381,12 +381,12 @@ Creates `.worktrees/<change-name>/`, switches to a new branch, runs setup, confi
 
 #### 2. Executor — `superpowers:subagent-driven-development`
 
-Main agent reads `plan.md`, dispatches a fresh subagent per micro-task. Each subagent transitively activates:
+Main agent reads `plan.md`, dispatches a fresh subagent per micro-task:
 
-- **TDD** (`superpowers:test-driven-development`): write failing test → watch it fail → minimal code → pass; production code without prior test gets deleted
-- **Per-task code review** (`superpowers:requesting-code-review`): spec-compliance review + code-quality review; critical issues block forward motion
+- **TDD** (`superpowers:test-driven-development`): each subagent transitively activates it — write failing test → watch it fail → minimal code → pass; production code without prior test gets deleted
+- **Per-task review**: after each task the controller dispatches subagent-driven-development's own merged task-reviewer (spec-compliance + code-quality) — not a separate skill invocation; critical issues block forward motion
 
-Coarse `tasks.md` checkboxes tick as tasks complete. After all tasks, a final code review covers the whole implementation.
+Coarse `tasks.md` checkboxes tick as tasks complete. After all tasks, a final whole-branch code review (`superpowers:requesting-code-review`) covers the implementation.
 
 This schema does NOT support `superpowers:executing-plans` as a fallback. See the "Six design touches" section below for rationale.
 
@@ -410,7 +410,7 @@ Syncs delta specs into `openspec/specs/<capability>/spec.md` and moves the chang
 
 #### 6. Completion — `superpowers:finishing-a-development-branch`
 
-Confirms tests are green, presents merge / PR / keep-branch / discard options, cleans up the worktree. **PR is the last step** — if retro or archive haven't been done, finish them first.
+Confirms tests are green, presents merge / PR / keep-branch / discard options. The worktree is cleaned up only on the merge or discard options; the push/PR path preserves it so you can iterate on PR feedback. **PR is the last step** — if retro or archive haven't been done, finish them first.
 
 ---
 
@@ -418,7 +418,6 @@ Confirms tests are green, presents merge / PR / keep-branch / discard options, c
 
 | Scenario | Command |
 |---|---|
-| First clone of a project | `bash scripts/install-git-hooks.sh` |
 | New change (interactive) | `/opsx:new <name> --schema superpowers-bridge` then `/opsx:continue` |
 | New change (one-shot) | `/opsx:ff <name>` |
 | Resume an interrupted change | `/opsx:continue <name>` |
@@ -489,7 +488,7 @@ Current bundle release: **`1.1.0`** (see [VERSION](./VERSION)).
 |---|---|---|---|
 | v1 | `1.5.0` | `6.1.0` | 2026-07-02 |
 
-> Re-attested against **Superpowers 6.1.0** (2026-07-02) via a full v5.1.0→6.1.0 skill diff: only `finishing-a-development-branch` (now push-only) and the merged SDD task-reviewer needed prose alignment; the SDD self-finish conflict (H2) predates v6 and is suppressed by the apply instruction. **OpenSpec 1.5.0** "Stores" is opt-in beta and does not affect this bridge — re-check the `changes/`+`specs/` paths only if a future release makes Stores the default layout.
+> Re-attested against **Superpowers 6.1.0** (2026-07-02) via a full v5.1.0→6.1.0 skill diff: only `finishing-a-development-branch` (its push option no longer auto-creates the PR) and the merged SDD task-reviewer needed prose alignment; the SDD self-finish conflict (H2) predates v6 and is suppressed by the apply instruction. **OpenSpec 1.5.0** "Stores" is opt-in beta and does not affect this bridge — re-check the `changes/`+`specs/` paths only if a future release makes Stores the default layout.
 
 ### How this is checked
 

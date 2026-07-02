@@ -12,7 +12,8 @@ description: >
   If your platform lacks subagent support, use spec-driven instead.
   Each artifact / apply step verifies its required skills before
   invoking and surfaces a clear error if any are missing.
-  brainstorm → proposal → design → specs → tasks → plan → verify → retrospective.
+  brainstorm → proposal → specs, with design branching from brainstorm
+  in parallel; specs + design → tasks → plan → verify → retrospective.
   design is required (reorganizes raw brainstorm output into structured
   Context / Goals / Decisions / Risks / Migration; referenced by tasks
   and plan for implementation guidance).
@@ -81,6 +82,34 @@ artifacts:
     requires:
       - brainstorm
 
+  - id: specs
+    generates: "specs/**/*.md"
+    description: Detailed specifications for the change
+    template: spec.md
+    instruction: |
+      Create specification files that define WHAT the system should do.
+
+      Create one spec file per capability listed in the proposal's Capabilities section.
+      - New capabilities: use the exact kebab-case name from the proposal (specs/<capability>/spec.md).
+      - Modified capabilities: use the existing spec folder name from openspec/specs/<capability>/ when creating the delta spec at specs/<capability>/spec.md.
+
+      Delta operations (use ## headers):
+      - **ADDED Requirements**: New capabilities
+      - **MODIFIED Requirements**: Changed behavior - MUST include full updated content
+      - **REMOVED Requirements**: Deprecated features - MUST include **Reason** and **Migration**
+      - **RENAMED Requirements**: Name changes only - use FROM:/TO: format
+
+      Format requirements:
+      - Each requirement: `### Requirement: <name>` followed by description
+      - Use SHALL/MUST for normative requirements (avoid should/may)
+      - Each scenario: `#### Scenario: <name>` with WHEN/THEN format
+      - **CRITICAL**: Scenarios MUST use exactly 4 hashtags (`####`). Using 3 hashtags or bullets will fail silently.
+      - Every requirement MUST have at least one scenario.
+
+      Specs should be testable - each scenario is a potential test case.
+    requires:
+      - proposal
+
   - id: design
     generates: design.md
     description: Technical design document with implementation details
@@ -112,34 +141,6 @@ artifacts:
       Good design docs explain the "why" behind technical decisions.
     requires:
       - brainstorm
-
-  - id: specs
-    generates: "specs/**/*.md"
-    description: Detailed specifications for the change
-    template: spec.md
-    instruction: |
-      Create specification files that define WHAT the system should do.
-
-      Create one spec file per capability listed in the proposal's Capabilities section.
-      - New capabilities: use the exact kebab-case name from the proposal (specs/<capability>/spec.md).
-      - Modified capabilities: use the existing spec folder name from openspec/specs/<capability>/ when creating the delta spec at specs/<capability>/spec.md.
-
-      Delta operations (use ## headers):
-      - **ADDED Requirements**: New capabilities
-      - **MODIFIED Requirements**: Changed behavior - MUST include full updated content
-      - **REMOVED Requirements**: Deprecated features - MUST include **Reason** and **Migration**
-      - **RENAMED Requirements**: Name changes only - use FROM:/TO: format
-
-      Format requirements:
-      - Each requirement: `### Requirement: <name>` followed by description
-      - Use SHALL/MUST for normative requirements (avoid should/may)
-      - Each scenario: `#### Scenario: <name>` with WHEN/THEN format
-      - **CRITICAL**: Scenarios MUST use exactly 4 hashtags (`####`). Using 3 hashtags or bullets will fail silently.
-      - Every requirement MUST have at least one scenario.
-
-      Specs should be testable - each scenario is a potential test case.
-    requires:
-      - proposal
 
   - id: tasks
     generates: tasks.md
@@ -210,7 +211,7 @@ artifacts:
       yet produced reviewable changes.
 
       1. Commit evidence (must return > 0):
-         git log --oneline $(git merge-base HEAD origin/main 2>/dev/null || git merge-base HEAD origin/master 2>/dev/null || git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null)..HEAD | wc -l
+         git log --oneline $(git merge-base HEAD origin/main 2>/dev/null || git merge-base HEAD origin/master 2>/dev/null || git merge-base HEAD origin/HEAD 2>/dev/null || git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null)..HEAD | wc -l
 
       2. Task progress (must return > 0):
          grep -cE '^\s*- \[x\]' openspec/changes/<change-name>/tasks.md
@@ -468,7 +469,8 @@ artifacts:
       - verify
 
 # v6 notes: subagent-driven-development (6.x) applies explicit per-dispatch
-# model selection (Sonnet for mechanical steps, Opus for reasoning) and keeps
+# model selection (the skill is model-agnostic — e.g. a fast, cheap model for
+# mechanical steps, the most capable for reasoning) and keeps
 # a durable .superpowers/sdd/ progress ledger for long runs. Both are handled
 # by the executor automatically — no instruction here duplicates them.
 apply:
@@ -593,8 +595,9 @@ apply:
 
        After retrospective + archive are both done, use the Skill
        tool to invoke **superpowers:finishing-a-development-branch**.
-       In Superpowers v6 this PUSHES the branch; it does NOT open a
-       PR/MR for you (the `gh pr create` step was removed upstream).
+       In Superpowers v6 finishing presents merge / push / keep / discard
+       options; on the push option it only pushes the branch and does NOT
+       open a PR/MR for you (the `gh pr create` step was removed upstream).
        Opening the MR/PR is a separate human step — on GitLab use
        `glab`; do NOT auto-open or auto-merge.
 

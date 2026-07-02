@@ -6,6 +6,8 @@
 
 本 repo 採用 [`superpowers-bridge`](https://github.com/AdrianTheopold/openspec-schemas/tree/main/superpowers-bridge) 銜接 OpenSpec 與 Superpowers。整合規則(語言、artifact 路徑、PRECHECK)以該 bridge README 為準;以下是給 Claude 的 routing 指引。
 
+> **前置條件:** 本 schema 的 opsx 流程需要 OpenSpec 的**擴充(expanded)** workflow profile(執行 `openspec config profile`,選取完整 workflow 集,再跑 `openspec update`)。預設的**核心(core)** profile 缺少 `new/continue/ff/verify/bulk-archive/onboard` —— 也就是下面引用到的指令。
+
 ### 入口分流
 
 | 你看到的觸發 | 應該怎麼做 |

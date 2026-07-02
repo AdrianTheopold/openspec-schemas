@@ -6,6 +6,8 @@
 
 This repo uses [`superpowers-bridge`](https://github.com/AdrianTheopold/openspec-schemas/tree/main/superpowers-bridge) to bridge OpenSpec and Superpowers. Integration rules (language, artifact paths, PRECHECK) follow that bridge's README; this section is the routing guidance for Claude.
 
+> **Prerequisite:** this schema's opsx flow requires OpenSpec's **expanded** workflow profile (run `openspec config profile`, select the full workflow set, then `openspec update`). The default **core** profile lacks `new/continue/ff/verify/bulk-archive/onboard` — the commands referenced below.
+
 ### Entry routing
 
 | Trigger you observe | What to do |

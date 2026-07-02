@@ -188,7 +188,7 @@ OpenSpec 管 **「做什麼」**(artifact 生命週期:proposal / specs / tasks 
 | 反模式 | 為什麼錯 |
 |---|---|
 | schema 已安裝後仍讓 brainstorming 寫到 `docs/superpowers/specs/` | 繞過 [schema.yaml](./schema.yaml) line 35-39 的 redirection,留下 orphan artifact |
-| 讓 writing-plans 寫到 `docs/superpowers/plans/` | 同理(schema.yaml line 169-171) |
+| 讓 writing-plans 寫到 `docs/superpowers/plans/` | 同理(schema.yaml line 180-182) |
 | TBD 還沒收斂就升級到 opsx | 那些 TBD 在 apply phase 一樣會擋住進度,只是把問題往後挪 |
 | 對 bug fix / typo 也建 change | 流程儀式 > 實質風險,反而拖慢交付 |
 
@@ -347,7 +347,7 @@ Superpowers skill 有預設輸出路徑(例如 brainstorming 寫到 `docs/superp
 /opsx:archive
 ```
 
-> **Profile 註記:** `/opsx:new` 屬於 OpenSpec 的**擴充(expanded)** workflow profile。用**核心(core)** profile 初始化的 repo 不會有它(也沒有 `/opsx:bulk-archive`)—— 用 `openspec update` 啟用 expanded profile,或直接用等效的 CLI:`openspec new change <name> --schema superpowers-bridge` 再接 `/opsx:continue`。(`/opsx:new` 是唯一接受 `--schema` 的建立指令;`/opsx:propose` 與 `/opsx:ff` 使用專案的預設 schema。)
+> **Profile 註記 —— 本 bridge 的 opsx 流程需要 OpenSpec 的擴充(expanded)workflow profile。** 核心(core)profile(`openspec init` 的預設)只提供 `propose, explore, apply, sync, archive`;擴充專屬的指令是 `new, continue, ff, verify, bulk-archive, onboard` —— 本 bridge 的流程從頭到尾都用到 `/opsx:continue`、`/opsx:ff`、`/opsx:verify`,不只 `/opsx:new`。啟用擴充指令請執行 `openspec config profile`(在互動選單選取完整 workflow 集)再跑 `openspec update`;單獨跑 `openspec update` **不會**切換 profile。若必須留在 core,只有第一步有 CLI 等效指令(`openspec new change <name> --schema superpowers-bridge`)—— `/opsx:continue`/`/opsx:verify` 沒有等效,因此實務上必須啟用擴充 profile。(`/opsx:new` 是唯一接受 `--schema` 的建立指令;`/opsx:propose` 與 `/opsx:ff` 使用專案的預設 schema。)
 
 ### 切回 spec-driven
 ```bash
@@ -381,12 +381,12 @@ skill 缺失 → STOP 並通知使用者,不靜默 fallback,本 schema 內也沒
 
 #### 2. Executor — `superpowers:subagent-driven-development`
 
-Main agent 讀 `plan.md`,為每個 micro-task 派發 fresh subagent。每個 subagent 自動傳遞:
+Main agent 讀 `plan.md`,為每個 micro-task 派發 fresh subagent:
 
-- **TDD**(`superpowers:test-driven-development`):先寫失敗測試 → 看著它 fail → 寫最小程式碼 → pass;production code 寫在沒測試之前會被刪掉重來
-- **per-task code review**(`superpowers:requesting-code-review`):spec compliance review + code quality review;Critical 級問題擋下進度
+- **TDD**(`superpowers:test-driven-development`):每個 subagent 自動傳遞 —— 先寫失敗測試 → 看著它 fail → 寫最小程式碼 → pass;production code 寫在沒測試之前會被刪掉重來
+- **per-task review**:每個 task 完成後由 controller 派發 subagent-driven-development 自己的 merged task-reviewer(spec compliance + code quality)—— 不是另外呼叫一個 skill;Critical 級問題擋下進度
 
-完成 coarse task 就更新 `tasks.md` checkbox。所有 task 跑完後,對整個 implementation 再做一次 final code review。
+完成 coarse task 就更新 `tasks.md` checkbox。所有 task 跑完後,對整個 branch 再做一次 final code review(`superpowers:requesting-code-review`)。
 
 本 schema **不支援** `superpowers:executing-plans` 作為 fallback。理由見下方「六個值得記住的設計觸點」段。
 
@@ -410,7 +410,7 @@ Evidence-first 反思:§0 Evidence(量化前置數據 —— commit 數、diff �
 
 #### 6. Completion — `superpowers:finishing-a-development-branch`
 
-確認 tests 全綠、呈現 merge / PR / keep-branch / discard 選項、清理 worktree。**PR 是最後一步** —— 若 retro 或 archive 還沒跑,先補完。
+確認 tests 全綠、呈現 merge / PR / keep-branch / discard 選項。worktree 只在 merge 或 discard 選項時清理;push/PR 路徑會保留它,方便你依 PR feedback 迭代。**PR 是最後一步** —— 若 retro 或 archive 還沒跑,先補完。
 
 ---
 
@@ -418,7 +418,6 @@ Evidence-first 反思:§0 Evidence(量化前置數據 —— commit 數、diff �
 
 | 情境 | 指令 |
 |---|---|
-| 首次 clone 專案後 | `bash scripts/install-git-hooks.sh` |
 | 新 change(互動式) | `/opsx:new <name> --schema superpowers-bridge` 接著多次 `/opsx:continue` |
 | 新 change(一鍵) | `/opsx:ff <name>` |
 | 恢復中斷的 change | `/opsx:continue <name>` |
@@ -489,7 +488,7 @@ LLM 不必解讀 timing 文字 —— 跑指令、看結果即可。這是顧慮
 |---|---|---|---|
 | v1 | `1.5.0` | `6.1.0` | 2026-07-02 |
 
-> 已對 **Superpowers 6.1.0**(2026-07-02)做完整 v5.1.0→6.1.0 skill diff 重新對齊:只有 `finishing-a-development-branch`(現在只 push)與合併後的 SDD task-reviewer 需要 prose 對齊;SDD self-finish 衝突(H2)早於 v6 就存在,由 apply instruction 抑制。**OpenSpec 1.5.0** 的 "Stores" 是 opt-in beta,不影響本 bridge —— 只有未來某版把 Stores 設為預設 layout 時,才需重新檢查 `changes/`+`specs/` 路徑。
+> 已對 **Superpowers 6.1.0**(2026-07-02)做完整 v5.1.0→6.1.0 skill diff 重新對齊:只有 `finishing-a-development-branch`(push 選項不再自動開 PR)與合併後的 SDD task-reviewer 需要 prose 對齊;SDD self-finish 衝突(H2)早於 v6 就存在,由 apply instruction 抑制。**OpenSpec 1.5.0** 的 "Stores" 是 opt-in beta,不影響本 bridge —— 只有未來某版把 Stores 設為預設 layout 時,才需重新檢查 `changes/`+`specs/` 路徑。
 
 ### 驗證機制
 
