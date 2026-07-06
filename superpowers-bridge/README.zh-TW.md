@@ -10,7 +10,7 @@
 >
 > 整合**完全發生在 prompt 層**——不修改 Superpowers 任何程式碼,不修改 OpenSpec CLI。Schema 版本:v1。
 >
-> 本 repo 是 [JiangWay/openspec-schemas](https://github.com/JiangWay/openspec-schemas) 的 **fork**(upstream commit `f5d4040`),自 2026-07-02 起獨立維護。歡迎回饋 upstream PR。
+> 本 repo 是 [JiangWay/openspec-schemas](https://github.com/JiangWay/openspec-schemas) 的 **fork**(upstream commit `f5d4040`),自 2026-07-02 起作為實際維護的 working fork 獨立維護(upstream 已停止維護);會依需要自由分歧,不以回饋 upstream PR 為目標。
 
 ---
 

@@ -10,7 +10,7 @@
 >
 > The integration lives entirely at the prompt layer — no Superpowers source modified, no OpenSpec CLI changes. Schema version: v1.
 >
-> **Fork** of [JiangWay/openspec-schemas](https://github.com/JiangWay/openspec-schemas) (upstream commit `f5d4040`), maintained independently since 2026-07-02. Upstream-PR-back welcome.
+> **Fork** of [JiangWay/openspec-schemas](https://github.com/JiangWay/openspec-schemas) (upstream commit `f5d4040`), independently maintained since 2026-07-02 as the actively-maintained working fork (upstream is inactive); it diverges as needed and is not aimed at upstream PR-back.
 
 ---
 
