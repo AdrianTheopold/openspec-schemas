@@ -488,7 +488,7 @@ LLM 不必解讀 timing 文字 —— 跑指令、看結果即可。這是顧慮
 |---|---|---|---|
 | v1 | `1.5.0` | `6.1.0` | 2026-07-02 |
 
-> 已對 **Superpowers 6.1.0**(2026-07-02)做完整 v5.1.0→6.1.0 skill diff 重新對齊:只有 `finishing-a-development-branch`(push 選項不再自動開 PR)與合併後的 SDD task-reviewer 需要 prose 對齊;SDD self-finish 衝突(H2)早於 v6 就存在,由 apply instruction 抑制。**OpenSpec 1.5.0** 的 "Stores" 是 opt-in beta,不影響本 bridge —— 只有未來某版把 Stores 設為預設 layout 時,才需重新檢查 `changes/`+`specs/` 路徑。
+> 已對 **Superpowers 6.1.0**(2026-07-02)做完整 v5.1.0→6.1.0 skill diff 重新對齊:只有 `finishing-a-development-branch`(push 選項不再自動開 PR)與合併後的 SDD task-reviewer 需要 prose 對齊;SDD self-finish 衝突早於 v6 就存在,由 apply instruction 抑制。**OpenSpec 1.5.0** 的 "Stores" 是 opt-in beta,不影響本 bridge —— 只有未來某版把 Stores 設為預設 layout 時,才需重新檢查 `changes/`+`specs/` 路徑。
 
 ### 驗證機制
 
