@@ -386,7 +386,7 @@ Main agent 讀 `plan.md`,為每個 micro-task 派發 fresh subagent:
 - **TDD**(`superpowers:test-driven-development`):每個 subagent 自動傳遞 —— 先寫失敗測試 → 看著它 fail → 寫最小程式碼 → pass;production code 寫在沒測試之前會被刪掉重來
 - **per-task review**:每個 task 完成後由 controller 派發 subagent-driven-development 自己的 merged task-reviewer(spec compliance + code quality)—— 不是另外呼叫一個 skill;Critical 級問題擋下進度
 
-完成 coarse task 就更新 `tasks.md` checkbox。所有 task 跑完後,對整個 branch 再做一次 final code review(`superpowers:requesting-code-review`)。
+task 清掉時,兩份進 git 的 ledger 都要更新 —— `tasks.md` 的粗粒度 checkbox,以及該 task 在 `plan.md` 的 step box —— 和 SDD progress ledger 那一行寫在同一個 bookkeeping 步驟裡。若某個 step 是被延後而非完成,當下就在 `plan.md` 標成 `[~]`,因為 verify §7 讀的正是這個標記。所有 task 跑完後,對整個 branch 再做一次 final code review(`superpowers:requesting-code-review`)。
 
 本 schema **不支援** `superpowers:executing-plans` 作為 fallback。理由見下方「六個值得記住的設計觸點」段。
 
@@ -482,7 +482,7 @@ LLM 不必解讀 timing 文字 —— 跑指令、看結果即可。這是顧慮
 
 本 schema 撰寫時所對齊的 upstream 基準版本。這是**歷史快照,不是端對端相容性承諾** — CI 無法在 headless 環境跑完整的 prompt-layer workflow,行為相容性依賴 drift 觸發人類檢核。
 
-目前 bundle release: **`1.1.0`**(見 [VERSION](./VERSION))。
+目前 bundle release: **`1.2.0`**(見 [VERSION](./VERSION))。
 
 | superpowers-bridge | OpenSpec CLI | Superpowers plugin | 基準日期 |
 |---|---|---|---|
@@ -527,6 +527,8 @@ Brainstorming 是多輪互動對話,需要使用者參與。把它做為第一�
 - `plan.md` → 指導 subagent 逐步實作(executor 的輸入)
 
 apply 要求 `plan` 而非 `tasks`,因為 executor 需要 micro-step 才能有效工作;`tracks: tasks.md` 確保進度仍由粗粒度 checkbox 追蹤。
+
+用途不同,但**兩份都是 executor 必須維護的 committed ledger** —— `tracks: tasks.md` 只點出 OpenSpec 會解析的那一份,不等於整個 bookkeeping 責任。`plan.md` 的 step box 有它自己的任務:verify §7 會讀其中的 `[~]` deferred 列,所以沒維護的 `plan.md` 會無聲地讓 deferred-dogfood 檢查失效 —— 明明有延後的 step,卻回報「沒有延後」。因此 apply step 2 要求兩份檔案都和 SDD ledger 那一行在同一步更新。
 
 ### 降級策略
 
