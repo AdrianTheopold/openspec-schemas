@@ -303,6 +303,15 @@ artifacts:
          Blocks only if §7 is empty AND plan.md has `[~]` rows (means
          the gap analysis was skipped, not that gaps don't exist).
 
+         A blank §7 is only evidence of "nothing deferred" if plan.md
+         was actually maintained during apply (see apply step 2's
+         ticking rule). Before concluding no deferrals, confirm
+         plan.md's step boxes reflect the work: an all-unchecked
+         plan.md means the ledger was never maintained, so the absence
+         of `[~]` rows says nothing about whether steps were deferred.
+         In that case, reconstruct the deferral state from the SDD
+         ledger and the commits, tick plan.md to match, and re-run.
+
       Verify MAY be re-run multiple times as the implementation is
       refined — each run overwrites verify.md with current state.
 
@@ -517,14 +526,29 @@ apply:
 
        Tell the executor:
        - Read plan.md in this change directory for micro-tasks
-       - Tick tasks.md checkboxes IN THE SAME bookkeeping message where
-         you append the SDD progress-ledger line for a cleared task:
-         when a task's review comes back clean, flip its `- [ ]` to
-         `- [x]` in openspec/changes/<name>/tasks.md AND append the
-         ledger line together. tasks.md is the committed source of
-         truth (it travels in the PR diff and gates verify); the ledger
-         is throwaway per-worktree scratch. Never leave tasks.md
-         all-unchecked — the verify PRECHECK below will falsely STOP.
+       - Tick BOTH committed ledgers IN THE SAME bookkeeping message
+         where you append the SDD progress-ledger line for a cleared
+         task. When a task's review comes back clean, do all three
+         together: flip its `- [ ]` to `- [x]` in
+         openspec/changes/<name>/tasks.md, flip that task's step boxes
+         in openspec/changes/<name>/plan.md, AND append the ledger
+         line. Treat "the ledger step" as covering all three — a rule
+         written for only one of the two committed files gets followed
+         for that one and missed for the other.
+         Both .md files are committed sources of truth that travel in
+         the PR diff; the SDD ledger is throwaway per-worktree scratch.
+         Each un-ticked file fails differently, and neither failure
+         announces itself as bookkeeping:
+         - An all-unchecked tasks.md makes the verify PRECHECK below
+           falsely STOP.
+         - An unmaintained plan.md silently disarms verify §7. That
+           check reads plan.md for `[~]` deferred rows, so a manual /
+           dogfood step actually deferred during apply is never marked
+           `[~]` — §7 then renders legitimately blank and reports "no
+           deferrals" for a cycle that had them, which is exactly the
+           "deferred-and-gapped" case §7 exists to surface at archive.
+         So when you defer a step rather than clear it, mark it `[~]`
+         in plan.md at that moment; `[~]` is what verify §7 consumes.
        - Work within the created worktree
        - STOP after the final whole-branch review passes. Do NOT invoke
          superpowers:finishing-a-development-branch and do NOT remove or
