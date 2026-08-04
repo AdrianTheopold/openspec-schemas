@@ -10,8 +10,10 @@ description: >
   because the alternative executor (executing-plans) loses TDD and
   code-review transitive activation, defeating Superpowers' value.
   If your platform lacks subagent support, use spec-driven instead.
-  Each artifact / apply step verifies its required skills before
-  invoking and surfaces a clear error if any are missing.
+  Each artifact / apply step that invokes a Superpowers skill
+  PRECHECKs it and STOPs with a clear error if it is missing; the one
+  OpenSpec skill used (openspec-verify-change) deliberately has a
+  documented manual fallback instead of a STOP.
   brainstorm → proposal → specs, with design branching from brainstorm
   in parallel; specs + design → tasks → plan → verify → retrospective.
   design is required (reorganizes raw brainstorm output into structured

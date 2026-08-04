@@ -75,9 +75,13 @@ and Scenarios of `specs/*.md`:
 ## 5. Implementation Signal
 
 - [ ] No unstaged files in the worktree
-- [ ] All relevant commits pushed
+- [ ] All code changes committed
 
 **Commit range** (if known): `<from-sha>..<to-sha>`
+
+> Scoped to *committed*, not pushed, on purpose: verify runs at apply step 3 and the branch is
+> pushed at step 6, so a "pushed" box here could never be truthfully ticked. If you need the push
+> recorded, it belongs to the finish step, not this report.
 
 ---
 
