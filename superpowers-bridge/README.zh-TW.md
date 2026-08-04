@@ -187,8 +187,8 @@ OpenSpec 管 **「做什麼」**(artifact 生命週期:proposal / specs / tasks 
 
 | 反模式 | 為什麼錯 |
 |---|---|
-| schema 已安裝後仍讓 brainstorming 寫到 `docs/superpowers/specs/` | 繞過 [schema.yaml](./schema.yaml) line 35-39 的 redirection,留下 orphan artifact |
-| 讓 writing-plans 寫到 `docs/superpowers/plans/` | 同理(schema.yaml line 180-182) |
+| schema 已安裝後仍讓 brainstorming 寫到 `docs/superpowers/specs/` | 繞過 [schema.yaml](./schema.yaml) 中 **brainstorm** artifact instruction 的 `IMPORTANT output redirection` 段,留下 orphan artifact。verify §6 會偵測到 |
+| 讓 writing-plans 寫到 `docs/superpowers/plans/` | 同理 —— 對應的是 **plan** artifact instruction 裡的同一段。verify §6 會偵測到 |
 | TBD 還沒收斂就升級到 opsx | 那些 TBD 在 apply phase 一樣會擋住進度,只是把問題往後挪 |
 | 對 bug fix / typo 也建 change | 流程儀式 > 實質風險,反而拖慢交付 |
 
@@ -454,7 +454,7 @@ TDD 與 code-review 平常藏在 `subagent-driven-development` 的 SKILL.md 裡�
 
 時序敏感的 artifact 在 instruction 開頭跑具體 shell 證據檢查:
 
-- **verify**:`git log <base>..HEAD | wc -l > 0` 且 `grep -c '^- \[x\]' tasks.md > 0`
+- **verify**:`git log <base>..HEAD | wc -l > 0` 且 `grep -cE '^\s*- \[x\]' tasks.md > 0` 且 `grep -cE '^\s*- \[[x~]\]' plan.md > 0`
 - **retrospective**:`test -f verify.md` 且 `! grep -q '^- \[x\] ❌ FAIL' verify.md`
 
 LLM 不必解讀 timing 文字 —— 跑指令、看結果即可。這是顧慮 #1 第 2 層,以及顧慮 #2 的緩解。
@@ -482,7 +482,7 @@ LLM 不必解讀 timing 文字 —— 跑指令、看結果即可。這是顧慮
 
 本 schema 撰寫時所對齊的 upstream 基準版本。這是**歷史快照,不是端對端相容性承諾** — CI 無法在 headless 環境跑完整的 prompt-layer workflow,行為相容性依賴 drift 觸發人類檢核。
 
-目前 bundle release: **`1.2.0`**(見 [VERSION](./VERSION))。
+目前 bundle release: **`1.3.0`**(見 [VERSION](./VERSION))。
 
 | superpowers-bridge | OpenSpec CLI | Superpowers plugin | 基準日期 |
 |---|---|---|---|

@@ -215,10 +215,20 @@ artifacts:
 
       2. Task progress (must return > 0):
          grep -cE '^\s*- \[x\]' openspec/changes/<change-name>/tasks.md
-         (This returns 0 only if the apply executor failed to tick
-         tasks.md as tasks cleared — see apply step 2's ticking rule;
-         a 0 here on a genuinely-complete apply is a bookkeeping miss,
-         not incomplete work. Tick the boxes, then re-run.)
+
+      3. Step progress (must return > 0):
+         grep -cE '^\s*- \[[x~]\]' openspec/changes/<change-name>/plan.md
+
+      A 0 from either means the apply executor failed to maintain that
+      ledger as tasks cleared — see apply step 2's ticking rule. On a
+      genuinely-complete apply, a 0 is a bookkeeping miss, not
+      incomplete work: tick the boxes, then re-run. Both files are
+      gated because a rule that names one of them gets followed for
+      that one and missed for the other, and an unmaintained plan.md
+      silently disarms check 7 below (it counts `[~]` rows that were
+      never written). Command 3 accepts `[x]` or `[~]`, so a plan whose
+      steps were all deferred still passes — deferral is a recorded
+      outcome, not a missing one.
 
       Only after BOTH return positive numbers, proceed to invoke
       the verification skill below.
@@ -240,10 +250,15 @@ artifacts:
          `"valid": true`. If any item fails, record the issues and
          return to fix the underlying artifact before proceeding.
 
-      2. **Task completion**: Confirm every checkbox in tasks.md is
-         `- [x]`. For any `- [ ]` remaining, document the reason
-         (e.g. manual / out-of-scope / blocked) and whether it blocks
-         archive.
+      2. **Task completion**: Confirm every checkbox in BOTH committed
+         ledgers — tasks.md and plan.md — is `- [x]` (or `- [~]` for a
+         deliberately deferred plan.md step). For any `- [ ]`
+         remaining in either file, document the reason (e.g. manual /
+         out-of-scope / blocked) and whether it blocks archive. Report
+         the two files separately: an all-unchecked plan.md beside a
+         fully-ticked tasks.md is the signature of a bookkeeping miss
+         rather than unfinished work, and it means check 7's `[~]`
+         count cannot be trusted.
 
       3. **Delta spec sync state**: For each directory under
          `openspec/changes/<name>/specs/`, compare against the
@@ -263,13 +278,17 @@ artifacts:
 
       6. **Front-door routing leak detector** (warning, non-blocking):
 
-         For projects using superpowers-bridge, design output
-         should never land in `docs/superpowers/specs/` — the
-         brainstorm artifact's output redirection (see this
-         schema's brainstorm.instruction) routes it to
-         `openspec/changes/<name>/brainstorm.md`. Run:
+         For projects using superpowers-bridge, neither design nor
+         plan output should land under `docs/superpowers/` — the
+         brainstorm artifact's output redirection (see this schema's
+         brainstorm.instruction) routes design output to
+         `openspec/changes/<name>/brainstorm.md`, and the plan
+         artifact's redirection routes the plan to
+         `openspec/changes/<name>/plan.md`. Check BOTH redirected
+         paths: a detector watching only one reports clean while the
+         other leaks. Run:
 
-           ls docs/superpowers/specs/*.md 2>/dev/null
+           ls docs/superpowers/specs/*.md docs/superpowers/plans/*.md 2>/dev/null
 
          If any files exist, record a WARNING: "Front-door routing
          leak — design output found at docs/superpowers/specs/...;
@@ -329,6 +348,10 @@ artifacts:
       PRECHECK — verify completion evidence:
       Before producing retrospective.md, run these commands. If
       either fails, STOP and tell the user verify must pass first.
+
+      (Substitute <change-name> in the commands below with this
+      change's directory name before running them — pasted verbatim
+      they match nothing and the PRECHECK fails on a passing cycle.)
 
       1. verify.md exists:
          test -f openspec/changes/<change-name>/verify.md
@@ -505,6 +528,14 @@ apply:
        implementation. The user can install the Superpowers plugin,
        or explicitly opt into the manual fallback path described at
        the end of this instruction.
+
+       One further skill is consumed later in this phase and is NOT a
+       STOP: `openspec-verify-change` at step 3, which has a documented
+       manual fallback (run verify's numbered checks by hand). Note its
+       absence as a WARNING at apply start rather than discovering it at
+       step 3, and record the fallback in the retrospective's
+       skipped-skill section — it is listed in that table precisely
+       because it is the skip most likely to actually happen.
 
        Additionally, confirm the project's expected CLI tools are
        on PATH. The exact list depends on the project — read

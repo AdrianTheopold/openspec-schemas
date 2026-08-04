@@ -187,8 +187,8 @@ If any condition is missing, keep brainstorming. When all five hold:
 
 | Anti-pattern | Why it's wrong |
 |---|---|
-| Letting brainstorming write to `docs/superpowers/specs/` after the schema is installed | Bypasses redirection at [schema.yaml](./schema.yaml) lines 35-39; produces orphan artifacts |
-| Letting writing-plans write to `docs/superpowers/plans/` | Same reason (schema.yaml lines 180-182) |
+| Letting brainstorming write to `docs/superpowers/specs/` after the schema is installed | Bypasses the `IMPORTANT output redirection` block in the **brainstorm** artifact's instruction ([schema.yaml](./schema.yaml)); produces orphan artifacts. Verify §6 detects it. |
+| Letting writing-plans write to `docs/superpowers/plans/` | Same reason — the equivalent block in the **plan** artifact's instruction. Verify §6 detects it. |
 | Promoting to opsx with unresolved blocking TBDs | Those TBDs will block apply phase too — promotion just defers the same problem |
 | Opening a change for bug fix / typo / config tweak | Process ceremony exceeds actual risk; slows delivery without value |
 
@@ -454,7 +454,7 @@ This schema requires a subagent-capable platform (Claude Code, Codex, etc.). The
 
 Each timing-sensitive artifact runs concrete shell evidence checks at the start of its instruction:
 
-- **verify**: `git log <base>..HEAD | wc -l > 0` AND `grep -c '^- \[x\]' tasks.md > 0`
+- **verify**: `git log <base>..HEAD | wc -l > 0` AND `grep -cE '^\s*- \[x\]' tasks.md > 0` AND `grep -cE '^\s*- \[[x~]\]' plan.md > 0`
 - **retrospective**: `test -f verify.md` AND `! grep -q '^- \[x\] ❌ FAIL' verify.md`
 
 The LLM does not need to interpret timing prose — it runs commands and reads results. This is layer 2 of concern #1 / mitigation for concern #2.
@@ -482,7 +482,7 @@ A bundle release `1.x.y` is a published cut of schema major `v1`. A future schem
 
 Baseline versions this schema was authored against. This is a **historical snapshot, not an end-to-end compatibility guarantee** — CI cannot run the full prompt-layer workflow in headless mode, so behavioral compatibility relies on human review when drift fires.
 
-Current bundle release: **`1.2.0`** (see [VERSION](./VERSION)).
+Current bundle release: **`1.3.0`** (see [VERSION](./VERSION)).
 
 | superpowers-bridge | OpenSpec CLI | Superpowers plugin | Baseline as of |
 |---|---|---|---|
