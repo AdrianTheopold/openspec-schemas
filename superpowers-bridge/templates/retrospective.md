@@ -60,6 +60,7 @@ Commit chain (chronological):
 | superpowers:subagent-driven-development          |      |
 | (transitive) superpowers:test-driven-development |      |
 | (transitive) superpowers:requesting-code-review  |      |
+| openspec-verify-change                           |      |
 | superpowers:finishing-a-development-branch       |      |
 
 > **Default expectation**: all ✓. Every skill is part of the schema's design;
