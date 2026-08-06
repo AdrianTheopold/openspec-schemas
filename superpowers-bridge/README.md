@@ -187,8 +187,8 @@ If any condition is missing, keep brainstorming. When all five hold:
 
 | Anti-pattern | Why it's wrong |
 |---|---|
-| Letting brainstorming write to `docs/superpowers/specs/` after the schema is installed | Bypasses redirection at [schema.yaml](./schema.yaml) lines 35-39; produces orphan artifacts |
-| Letting writing-plans write to `docs/superpowers/plans/` | Same reason (schema.yaml lines 180-182) |
+| Letting brainstorming write to `docs/superpowers/specs/` after the schema is installed | Bypasses the `IMPORTANT output redirection` block in the **brainstorm** artifact's instruction ([schema.yaml](./schema.yaml)); produces orphan artifacts. Verify §6 detects it. |
+| Letting writing-plans write to `docs/superpowers/plans/` | Same reason — the equivalent block in the **plan** artifact's instruction. Verify §6 detects it. |
 | Promoting to opsx with unresolved blocking TBDs | Those TBDs will block apply phase too — promotion just defers the same problem |
 | Opening a change for bug fix / typo / config tweak | Process ceremony exceeds actual risk; slows delivery without value |
 
@@ -386,7 +386,7 @@ Main agent reads `plan.md`, dispatches a fresh subagent per micro-task:
 - **TDD** (`superpowers:test-driven-development`): each subagent transitively activates it — write failing test → watch it fail → minimal code → pass; production code without prior test gets deleted
 - **Per-task review**: after each task the controller dispatches subagent-driven-development's own merged task-reviewer (spec-compliance + code-quality) — not a separate skill invocation; critical issues block forward motion
 
-Coarse `tasks.md` checkboxes tick as tasks complete. After all tasks, a final whole-branch code review (`superpowers:requesting-code-review`) covers the implementation.
+Both committed ledgers tick as tasks complete — the coarse `tasks.md` checkboxes and the cleared task's `plan.md` step boxes — in the same bookkeeping step as the SDD progress-ledger line. A step deferred rather than cleared is marked `[~]` in `plan.md` at that moment, because that is what verify §7 reads. After all tasks, a final whole-branch code review (`superpowers:requesting-code-review`) covers the implementation.
 
 This schema does NOT support `superpowers:executing-plans` as a fallback. See the "Six design touches" section below for rationale.
 
@@ -454,7 +454,7 @@ This schema requires a subagent-capable platform (Claude Code, Codex, etc.). The
 
 Each timing-sensitive artifact runs concrete shell evidence checks at the start of its instruction:
 
-- **verify**: `git log <base>..HEAD | wc -l > 0` AND `grep -c '^- \[x\]' tasks.md > 0`
+- **verify**: `git log <base>..HEAD | wc -l > 0` AND `grep -cE '^\s*- \[x\]' tasks.md > 0` AND `grep -cE '^\s*- \[[x~]\]' plan.md > 0`
 - **retrospective**: `test -f verify.md` AND `! grep -q '^- \[x\] ❌ FAIL' verify.md`
 
 The LLM does not need to interpret timing prose — it runs commands and reads results. This is layer 2 of concern #1 / mitigation for concern #2.
@@ -482,7 +482,7 @@ A bundle release `1.x.y` is a published cut of schema major `v1`. A future schem
 
 Baseline versions this schema was authored against. This is a **historical snapshot, not an end-to-end compatibility guarantee** — CI cannot run the full prompt-layer workflow in headless mode, so behavioral compatibility relies on human review when drift fires.
 
-Current bundle release: **`1.1.0`** (see [VERSION](./VERSION)).
+Current bundle release: **`1.3.1`** (see [VERSION](./VERSION)).
 
 | superpowers-bridge | OpenSpec CLI | Superpowers plugin | Baseline as of |
 |---|---|---|---|
@@ -527,6 +527,8 @@ Brainstorming is multi-turn interactive dialogue requiring user participation. M
 - `plan.md` → guides subagents step by step (the executor's input)
 
 Apply requires `plan` (not `tasks`) because the executor needs micro-steps; `tracks: tasks.md` ensures progress is still surfaced via the coarse checkboxes.
+
+Different purposes, but **both are committed ledgers the executor must maintain** — `tracks: tasks.md` names only what OpenSpec parses, not the whole bookkeeping duty. `plan.md`'s step boxes carry a job of their own: verify §7 reads them for `[~]` deferred rows, so an unmaintained `plan.md` disarms the deferred-dogfood gap check silently, reporting "no deferrals" for a cycle that had them. Apply step 2 therefore requires both files to be ticked in the same step as the SDD ledger line.
 
 ### Fallback strategy
 

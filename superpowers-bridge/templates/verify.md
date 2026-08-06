@@ -29,9 +29,14 @@ If any items fail, list id + issues:
 
 ---
 
-## 2. Task Completion (`tasks.md`)
+## 2. Task Completion (`tasks.md` + `plan.md`)
 
-- [ ] All `- [ ]` have become `- [x]`
+- [ ] `tasks.md` — all `- [ ]` have become `- [x]`
+- [ ] `plan.md` — all step boxes are `- [x]`, or `- [~]` where deliberately deferred
+
+> Report the two separately. An all-unchecked `plan.md` beside a fully-ticked `tasks.md` is the
+> signature of a bookkeeping miss rather than unfinished work — and it makes §7's `[~]` count
+> meaningless, since the rows it reads were never written.
 
 **Incomplete tasks** (if any):
 
@@ -70,22 +75,28 @@ and Scenarios of `specs/*.md`:
 ## 5. Implementation Signal
 
 - [ ] No unstaged files in the worktree
-- [ ] All relevant commits pushed
+- [ ] All code changes committed
 
 **Commit range** (if known): `<from-sha>..<to-sha>`
+
+> Scoped to *committed*, not pushed, on purpose: verify runs at apply step 3 and the branch is
+> pushed at step 6, so a "pushed" box here could never be truthfully ticked. If you need the push
+> recorded, it belongs to the finish step, not this report.
 
 ---
 
 ## 6. Front-Door Routing Leak Detector (warning, non-blocking)
 
-Design output should not land in `docs/superpowers/specs/` (the brainstorm
-artifact's output redirection routes it to
-`openspec/changes/<name>/brainstorm.md`).
+Neither design nor plan output should land under `docs/superpowers/` — the brainstorm artifact's
+output redirection routes design output to `openspec/changes/<name>/brainstorm.md`, and the plan
+artifact's routes the plan to `openspec/changes/<name>/plan.md`. Both directories are checked,
+because a detector watching only one of the two redirected paths reports clean while the other
+leaks.
 
 Detection:
 
 ```bash
-ls docs/superpowers/specs/*.md 2>/dev/null
+ls docs/superpowers/specs/*.md docs/superpowers/plans/*.md 2>/dev/null
 ```
 
 - [ ] No files, or any present are legitimate pre-schema-install holdovers
@@ -121,6 +132,11 @@ it in the retrospective's Misses.
 
 > **When this section may be left blank**: if plan.md has no `[~]`-marked rows at all, this section need not be filled (blank = PASS).
 > As soon as plan.md contains any `[~]`, this section must enumerate each one, otherwise the Overall Decision should be downgraded to FAIL.
+>
+> **But first confirm plan.md was maintained** (§2). A blank §7 means "nothing was deferred" only
+> if the step ledger reflects the work. An all-unchecked plan.md means nobody maintained it, so the
+> absence of `[~]` rows says nothing about whether steps were deferred — reconstruct the deferral
+> state from the SDD ledger and the commits, tick plan.md to match, and re-run verify.
 
 ---
 

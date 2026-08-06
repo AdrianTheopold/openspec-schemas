@@ -187,8 +187,8 @@ OpenSpec 管 **「做什麼」**(artifact 生命週期:proposal / specs / tasks 
 
 | 反模式 | 為什麼錯 |
 |---|---|
-| schema 已安裝後仍讓 brainstorming 寫到 `docs/superpowers/specs/` | 繞過 [schema.yaml](./schema.yaml) line 35-39 的 redirection,留下 orphan artifact |
-| 讓 writing-plans 寫到 `docs/superpowers/plans/` | 同理(schema.yaml line 180-182) |
+| schema 已安裝後仍讓 brainstorming 寫到 `docs/superpowers/specs/` | 繞過 [schema.yaml](./schema.yaml) 中 **brainstorm** artifact instruction 的 `IMPORTANT output redirection` 段,留下 orphan artifact。verify §6 會偵測到 |
+| 讓 writing-plans 寫到 `docs/superpowers/plans/` | 同理 —— 對應的是 **plan** artifact instruction 裡的同一段。verify §6 會偵測到 |
 | TBD 還沒收斂就升級到 opsx | 那些 TBD 在 apply phase 一樣會擋住進度,只是把問題往後挪 |
 | 對 bug fix / typo 也建 change | 流程儀式 > 實質風險,反而拖慢交付 |
 
@@ -386,7 +386,7 @@ Main agent 讀 `plan.md`,為每個 micro-task 派發 fresh subagent:
 - **TDD**(`superpowers:test-driven-development`):每個 subagent 自動傳遞 —— 先寫失敗測試 → 看著它 fail → 寫最小程式碼 → pass;production code 寫在沒測試之前會被刪掉重來
 - **per-task review**:每個 task 完成後由 controller 派發 subagent-driven-development 自己的 merged task-reviewer(spec compliance + code quality)—— 不是另外呼叫一個 skill;Critical 級問題擋下進度
 
-完成 coarse task 就更新 `tasks.md` checkbox。所有 task 跑完後,對整個 branch 再做一次 final code review(`superpowers:requesting-code-review`)。
+task 清掉時,兩份進 git 的 ledger 都要更新 —— `tasks.md` 的粗粒度 checkbox,以及該 task 在 `plan.md` 的 step box —— 和 SDD progress ledger 那一行寫在同一個 bookkeeping 步驟裡。若某個 step 是被延後而非完成,當下就在 `plan.md` 標成 `[~]`,因為 verify §7 讀的正是這個標記。所有 task 跑完後,對整個 branch 再做一次 final code review(`superpowers:requesting-code-review`)。
 
 本 schema **不支援** `superpowers:executing-plans` 作為 fallback。理由見下方「六個值得記住的設計觸點」段。
 
@@ -454,7 +454,7 @@ TDD 與 code-review 平常藏在 `subagent-driven-development` 的 SKILL.md 裡�
 
 時序敏感的 artifact 在 instruction 開頭跑具體 shell 證據檢查:
 
-- **verify**:`git log <base>..HEAD | wc -l > 0` 且 `grep -c '^- \[x\]' tasks.md > 0`
+- **verify**:`git log <base>..HEAD | wc -l > 0` 且 `grep -cE '^\s*- \[x\]' tasks.md > 0` 且 `grep -cE '^\s*- \[[x~]\]' plan.md > 0`
 - **retrospective**:`test -f verify.md` 且 `! grep -q '^- \[x\] ❌ FAIL' verify.md`
 
 LLM 不必解讀 timing 文字 —— 跑指令、看結果即可。這是顧慮 #1 第 2 層,以及顧慮 #2 的緩解。
@@ -482,7 +482,7 @@ LLM 不必解讀 timing 文字 —— 跑指令、看結果即可。這是顧慮
 
 本 schema 撰寫時所對齊的 upstream 基準版本。這是**歷史快照,不是端對端相容性承諾** — CI 無法在 headless 環境跑完整的 prompt-layer workflow,行為相容性依賴 drift 觸發人類檢核。
 
-目前 bundle release: **`1.1.0`**(見 [VERSION](./VERSION))。
+目前 bundle release: **`1.3.1`**(見 [VERSION](./VERSION))。
 
 | superpowers-bridge | OpenSpec CLI | Superpowers plugin | 基準日期 |
 |---|---|---|---|
@@ -527,6 +527,8 @@ Brainstorming 是多輪互動對話,需要使用者參與。把它做為第一�
 - `plan.md` → 指導 subagent 逐步實作(executor 的輸入)
 
 apply 要求 `plan` 而非 `tasks`,因為 executor 需要 micro-step 才能有效工作;`tracks: tasks.md` 確保進度仍由粗粒度 checkbox 追蹤。
+
+用途不同,但**兩份都是 executor 必須維護的 committed ledger** —— `tracks: tasks.md` 只點出 OpenSpec 會解析的那一份,不等於整個 bookkeeping 責任。`plan.md` 的 step box 有它自己的任務:verify §7 會讀其中的 `[~]` deferred 列,所以沒維護的 `plan.md` 會無聲地讓 deferred-dogfood 檢查失效 —— 明明有延後的 step,卻回報「沒有延後」。因此 apply step 2 要求兩份檔案都和 SDD ledger 那一行在同一步更新。
 
 ### 降級策略
 
