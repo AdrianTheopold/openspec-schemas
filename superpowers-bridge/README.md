@@ -4,7 +4,7 @@
 
 [![Schema Structure](https://github.com/AdrianTheopold/openspec-schemas/actions/workflows/validate-schemas.yml/badge.svg?branch=main)](https://github.com/AdrianTheopold/openspec-schemas/actions/workflows/validate-schemas.yml)
 [![OpenSpec baseline](https://img.shields.io/badge/OpenSpec_baseline-1.5.0-0277bd)](#compatibility)
-[![Superpowers baseline](https://img.shields.io/badge/Superpowers_baseline-6.1.0-0277bd)](#compatibility)
+[![Superpowers baseline](https://img.shields.io/badge/Superpowers_baseline-6.2.0-0277bd)](#compatibility)
 
 > Bridges [OpenSpec](https://github.com/Fission-AI/OpenSpec)'s artifact governance (the **what**) with [obra/superpowers](https://github.com/obra/superpowers) execution skills (the **how**) into a single workflow. Adds an evidence-first `retrospective` artifact filling a gap Superpowers does not natively cover.
 >
@@ -308,7 +308,7 @@ APPLY ━━━━━━━━━━━━━━━━━━━━━━━━�
 
 Plus one OpenSpec built-in: `openspec-verify-change` (apply step 3, produces `verify.md`).
 
-> **No `executing-plans` fallback.** This schema is opinionated: it requires a subagent-capable platform (Claude Code, Codex, etc.). The alternative executor `superpowers:executing-plans` does not transitively activate TDD or code-review (verified against its [SKILL.md](https://github.com/obra/superpowers/blob/v6.1.0/skills/executing-plans/SKILL.md)) — falling back would silently degrade Superpowers' core value. If your platform lacks subagent support, use the built-in `spec-driven` schema instead.
+> **No `executing-plans` fallback.** This schema is opinionated: it requires a subagent-capable platform (Claude Code, Codex, etc.). The alternative executor `superpowers:executing-plans` does not transitively activate TDD or code-review (verified against its [SKILL.md](https://github.com/obra/superpowers/blob/v6.2.0/skills/executing-plans/SKILL.md)) — falling back would silently degrade Superpowers' core value. If your platform lacks subagent support, use the built-in `spec-driven` schema instead.
 
 ### Output redirection
 
@@ -448,7 +448,7 @@ TDD and code-review are normally hidden inside `subagent-driven-development`'s S
 
 ### 4. Opinionated: subagent platforms only, no manual fallback
 
-This schema requires a subagent-capable platform (Claude Code, Codex, etc.). The alternative executor `superpowers:executing-plans` does NOT transitively activate TDD or code-review (verified against its [SKILL.md](https://github.com/obra/superpowers/blob/v6.1.0/skills/executing-plans/SKILL.md) — its body has no mention of either, and its Integration section omits both `test-driven-development` and `requesting-code-review`). Falling back to it would silently lose what Superpowers brings to this integration. We prefer to fail loud at Step 0 and direct users to the built-in `spec-driven` schema instead.
+This schema requires a subagent-capable platform (Claude Code, Codex, etc.). The alternative executor `superpowers:executing-plans` does NOT transitively activate TDD or code-review (verified against its [SKILL.md](https://github.com/obra/superpowers/blob/v6.2.0/skills/executing-plans/SKILL.md) — its body has no mention of either, and its Integration section omits both `test-driven-development` and `requesting-code-review`). Falling back to it would silently lose what Superpowers brings to this integration. We prefer to fail loud at Step 0 and direct users to the built-in `spec-driven` schema instead.
 
 ### 5. Evidence-based PRECHECK for verify and retrospective (Layer 2 capability detection)
 
@@ -482,12 +482,15 @@ A bundle release `1.x.y` is a published cut of schema major `v1`. A future schem
 
 Baseline versions this schema was authored against. This is a **historical snapshot, not an end-to-end compatibility guarantee** — CI cannot run the full prompt-layer workflow in headless mode, so behavioral compatibility relies on human review when drift fires.
 
-Current bundle release: **`1.3.1`** (see [VERSION](./VERSION)).
+Current bundle release: **`1.3.2`** (see [VERSION](./VERSION)).
 
 | superpowers-bridge | OpenSpec CLI | Superpowers plugin | Baseline as of |
 |---|---|---|---|
+| v1 | `1.5.0` | `6.2.0` | 2026-08-12 |
 | v1 | `1.5.0` | `6.1.0` | 2026-07-02 |
 
+> Re-attested against **Superpowers 6.2.0** (2026-08-12), claim-by-claim against the installed skills. One behavioral change absorbed: `finishing-a-development-branch` regained PR/MR creation — its push option now pushes AND opens the PR/MR via the forge CLI, which apply step 6 sanctions (auto-merge stays forbidden); its menu is merge / push / keep, with discard only on an explicit request. All other load-bearing claims hold: SDD still ends by invoking finishing (the apply-instruction suppression stays necessary), still transitively enforces TDD + requesting-code-review with the merged task-reviewer prompt; `executing-plans` still activates neither (the fallback stays unsupported); `using-git-worktrees` still defaults to `.worktrees/`.
+>
 > Re-attested against **Superpowers 6.1.0** (2026-07-02) via a full v5.1.0→6.1.0 skill diff: only `finishing-a-development-branch` (its push option no longer auto-creates the PR) and the merged SDD task-reviewer needed prose alignment; the SDD self-finish conflict predates v6 and is suppressed by the apply instruction. **OpenSpec 1.5.0** "Stores" is opt-in beta and does not affect this bridge — re-check the `changes/`+`specs/` paths only if a future release makes Stores the default layout.
 
 ### How this is checked
