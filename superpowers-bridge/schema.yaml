@@ -656,11 +656,14 @@ apply:
 
        After retrospective + archive are both done, use the Skill
        tool to invoke **superpowers:finishing-a-development-branch**.
-       In Superpowers v6 finishing presents merge / push / keep / discard
-       options; on the push option it only pushes the branch and does NOT
-       open a PR/MR for you (the `gh pr create` step was removed upstream).
-       Opening the MR/PR is a separate human step — on GitLab use
-       `glab`; do NOT auto-open or auto-merge.
+       In Superpowers 6.2.0 finishing re-runs the full test suite on
+       the tree being integrated, confirms the base branch, and
+       presents merge / push / keep options (discard exists only as a
+       response to an explicit request); on the push option it pushes
+       the branch AND creates the MR/PR via the forge CLI (gh /
+       glab), reporting the URL. Creating the MR/PR this way is
+       sanctioned. Merging is not: NEVER merge or arm auto-merge —
+       the merge button belongs to your human partner.
 
        The pushed branch MUST contain the complete archived cycle
        (all 8 artifacts, specs synced, change under archive/). If it
