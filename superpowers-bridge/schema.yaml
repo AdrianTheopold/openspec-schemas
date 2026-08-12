@@ -622,6 +622,10 @@ apply:
        `verify` artifact by invoking **openspec-verify-change**
        to check completeness, correctness, and coherence.
        Re-run verify until all blocking issues are resolved.
+       A PASS verify is mid-cycle, not an endpoint: steps 4–5
+       (retrospective, archive) gate the PR/MR (step 6) and must
+       land on the same branch — if the session ends after verify,
+       the next session picks up at step 4, not at the merge button.
 
     4. **Retrospective (write while context is hot)**:
 
