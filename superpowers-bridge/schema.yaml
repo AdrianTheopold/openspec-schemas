@@ -197,6 +197,27 @@ artifacts:
       Note (Superpowers 6.x): writing-plans emits a "## Global
       Constraints" block and per-task "Interfaces" blocks; the
       implementer MUST honor both.
+
+      Reuse check — this schema adds it because writing-plans does not.
+      That skill's Self-Review runs three checks (spec coverage,
+      placeholder scan, type consistency) and all three compare the plan
+      to the spec or to itself; none compares it to the codebase. So a
+      plan can be flawless against its spec and still instruct someone
+      to build what the repo already has.
+
+      Before the plan is final, for EVERY "Create:" entry: search this
+      repo and its sibling repos for code that already does that job.
+      Then either reuse it, or write into the plan which existing code
+      you found and why it is not reused. Name what you searched — an
+      unnamed search did not happen.
+
+      A "Create:" entry is where a duplicate gets locked in. "Modify:"
+      entries invite the question naturally, because you must find the
+      file first; creating feels like it carries no prior-art question
+      at all. And once the entry is in the plan it reads as settled, so
+      neither the implementer nor the reviewer asks again. Design, plan
+      and apply each add authority without adding verification, and the
+      duplicate becomes harder to see the further it travels.
     requires:
       - tasks
 
