@@ -3,8 +3,8 @@
 [English](./README.md) · [繁體中文](./README.zh-TW.md)
 
 [![Schema Structure](https://github.com/AdrianTheopold/openspec-schemas/actions/workflows/validate-schemas.yml/badge.svg?branch=main)](https://github.com/AdrianTheopold/openspec-schemas/actions/workflows/validate-schemas.yml)
-[![OpenSpec baseline](https://img.shields.io/badge/OpenSpec_baseline-1.5.0-0277bd)](#相容性)
-[![Superpowers baseline](https://img.shields.io/badge/Superpowers_baseline-6.2.0-0277bd)](#相容性)
+[![OpenSpec baseline](https://img.shields.io/badge/OpenSpec_baseline-1.13.0-0277bd)](#相容性)
+[![Superpowers baseline](https://img.shields.io/badge/Superpowers_baseline-6.3.0-0277bd)](#相容性)
 
 > 把 [OpenSpec](https://github.com/Fission-AI/OpenSpec) 的 artifact 治理流程(**做什麼**)與 [obra/superpowers](https://github.com/obra/superpowers) 的執行技能(**怎麼做**)整合為單一工作流。額外提供 evidence-first 的 `retrospective` artifact,補上 Superpowers 沒有的 retro 能力。
 >
@@ -482,13 +482,18 @@ LLM 不必解讀 timing 文字 —— 跑指令、看結果即可。這是顧慮
 
 本 schema 撰寫時所對齊的 upstream 基準版本。這是**歷史快照,不是端對端相容性承諾** — CI 無法在 headless 環境跑完整的 prompt-layer workflow,行為相容性依賴 drift 觸發人類檢核。
 
-目前 bundle release: **`1.3.2`**(見 [VERSION](./VERSION))。
+目前 bundle release: **`1.4.0`**(見 [VERSION](./VERSION))。
 
 | superpowers-bridge | OpenSpec CLI | Superpowers plugin | 基準日期 |
 |---|---|---|---|
+| v1 | `1.13.0` | `6.3.0` | 2026-09-16 |
 | v1 | `1.5.0` | `6.2.0` | 2026-08-12 |
 | v1 | `1.5.0` | `6.1.0` | 2026-07-02 |
 
+> 已對 **OpenSpec 1.13.0**(2026-09-16,bundle 1.4.0)重新對齊,僅限 OpenSpec 側。結構面:schema 檔的語法自 1.4.1 起未變(五個頂層 key),`openspec schema validate` 通過、instructions 可正常產生、本 schema 提及的每個 CLI 指令仍然存在。吸收的變更:bridge 原本從 1.4.1 `spec-driven` 複製的四段 artifact instruction(proposal、specs、design、tasks)已依 1.13 的文字更新 —— 命名 capability 前先以 `openspec list --specs` + `openspec show --type spec` 盤點既有 spec(plan artifact reuse check 在 spec 層的對應)、零 delta 的 change 只能靠 `skip_specs: true` 通過 `openspec validate`、新 capability 的 delta 必須以 `## Purpose` 開頭(否則 archive 會留下 `TBD` 佔位)、支援巢狀 `<capability-path>`、每個 task 必須寫明如何驗證、design 的 Open Questions 僅限可延後的未知。另新增一條 upstream 沒有的規則:MODIFIED 區塊必須保留主 spec 仍有的每個 scenario(1.13 會在 validate 與 archive 時強制)。未受影響:stores 仍為 opt-in 且未使用;bridge 刻意維持 repo 相對的 `openspec/specs/` 路徑。
+>
+> 已對 **Superpowers 6.3.0**(2026-09-16,bundle 1.4.0)以完整 v6.2.0→v6.3.0 skill diff 重新核對,已安裝版本與 upstream tag 完全一致。未變且仍成立:`executing-plans` 不觸發 TDD 與 code-review(檔案相同);`using-git-worktrees` 預設 `.worktrees/`(相同);`test-driven-development` 與 `requesting-code-review/SKILL.md` 相同;SDD 仍以呼叫 finishing + 刪除 workspace 結尾(apply 的抑制仍屬必要),每個 task 仍由合併的 spec-compliance + code-quality reviewer 審查;finishing 仍重跑測試、提供 merge / push / keep,discard 只在明確輸入時發生,push 時建立 PR/MR。吸收三項行為變更:(1)**brainstorming** 現在會分類為 spike / bounded / architectural,只有 architectural 路徑會寫 spec 並交給 writing-plans —— brainstorm instruction 將分類固定為 architectural,因為進入本 schema 的 change 已通過入口門檻;(2)**writing-plans** 以 `**Spec:**` 標頭開頭,SDD 將其視為 ruling 的最終依據 —— plan instruction 與 template 以 change 的 delta specs + design.md 填入,避免 ruling 成為暫定;(3)**subagent-driven-development** 遇到 plan 衝突改為自行裁定而非詢問(「rulings, not stalls」),僅在四類情況停下,並在刪除 workspace 時輸出完整的「Rulings I made」清單 —— 正是本 bridge 抑制的步驤 —— 因此 apply step 2 要求 executor 在回報中附上該清單,verify check 4 逐條對照 specs,retrospective §3 記錄之。另外兩項 6.3.0 變更無需 bridge 調整:finishing 在 worktree 移除被拒時改為詢問而非強制,implementer / reviewer prompt 新增不得再派 subagent 的約定。
+>
 > 已對 **Superpowers 6.2.0**(2026-08-12)逐項核對已安裝的 skills 重新對齊。吸收一項行為變更:`finishing-a-development-branch` 恢復了自動建 PR/MR —— push 選項現在會 push 分支**並**透過 forge CLI 開 PR/MR,apply step 6 已明文允許(auto-merge 仍然禁止);選單為 merge / push / keep,discard 只在使用者明確要求時出現。其餘 load-bearing 主張全部成立:SDD 仍以呼叫 finishing 結尾(apply instruction 的抑制仍屬必要)、仍 transitively 強制 TDD + requesting-code-review 並使用合併後的 task-reviewer prompt;`executing-plans` 依然兩者皆不觸發(fallback 維持不支援);`using-git-worktrees` 預設仍是 `.worktrees/`。
 >
 > 已對 **Superpowers 6.1.0**(2026-07-02)做完整 v5.1.0→6.1.0 skill diff 重新對齊:只有 `finishing-a-development-branch`(push 選項不再自動開 PR)與合併後的 SDD task-reviewer 需要 prose 對齊;SDD self-finish 衝突早於 v6 就存在,由 apply instruction 抑制。**OpenSpec 1.5.0** 的 "Stores" 是 opt-in beta,不影響本 bridge —— 只有未來某版把 Stores 設為預設 layout 時,才需重新檢查 `changes/`+`specs/` 路徑。

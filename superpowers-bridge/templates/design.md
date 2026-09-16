@@ -1,7 +1,8 @@
 ## Context
 
 <!--
-Background, current state, constraints, stakeholders.
+Current state and constraints that shape the approach — see proposal.md for
+the motivation and don't restate it.
 brainstorm.md records the exploration process (alternatives considered +
 chosen direction); this file picks up the chosen direction and expands it
 into the full technical design.
@@ -48,4 +49,9 @@ changes".
 
 ## Open Questions
 
-<!-- Outstanding decisions or unknowns to resolve -->
+<!--
+Only unknowns that can safely be answered later without changing the specs,
+the approach, or the task breakdown. A question that would change any of
+those is a decision you skipped — resolve it with the user now. Omit the
+section if none.
+-->
