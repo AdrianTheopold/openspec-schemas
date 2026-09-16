@@ -37,6 +37,20 @@ artifacts:
 
       Use the Skill tool to invoke **superpowers:brainstorming**.
 
+      Path classification (Superpowers 6.3.0+): the skill first
+      classifies the request as spike / bounded / architectural, and
+      only the architectural path writes a design and hands off to
+      writing-plans — bounded ends in a short in-chat design followed by
+      direct implementation with no plan document, spike in a reported
+      recommendation. Inside this schema the answer is fixed: a change
+      that reached this artifact already passed the bridge's entry gate
+      (README § Entry & exit gates), so state the classification as
+      architectural and follow that path. Do NOT take the bounded exit
+      or the spike exit — the artifacts downstream of this one ARE the
+      written spec and plan. If brainstorming itself concludes the work
+      is a spike or bounded, that is a signal to leave the schema for a
+      direct PR, not to shortcut inside it.
+
       IMPORTANT output redirection:
       - Do NOT write to `docs/superpowers/specs/`. Instead, write the
         brainstorming output directly to this change's `brainstorm.md`.
@@ -327,6 +341,15 @@ artifacts:
       Constraints" block and per-task "Interfaces" blocks; the
       implementer MUST honor both.
 
+      Spec header (Superpowers 6.3.0+): writing-plans opens the plan
+      with a `**Spec:**` line naming the document the plan argues from,
+      and subagent-driven-development reads it as the binding authority
+      for its rulings — a plan with no reachable spec gets a ledger note
+      and every ruling made under it is provisional. Fill it with this
+      change's artifacts: `openspec/changes/<change-name>/specs/` (the
+      delta specs) and `openspec/changes/<change-name>/design.md`. Never
+      leave it blank and never point it at `docs/superpowers/specs/`.
+
       Reuse check — this schema adds it because writing-plans does not.
       That skill's Self-Review runs three checks (spec coverage,
       placeholder scan, type consistency) and all three compare the plan
@@ -423,6 +446,11 @@ artifacts:
       4. **Design/specs coherence**: Spot-check that design.md
          decisions reference or align with the requirements listed
          in specs/. Record any drift as a warning (non-blocking).
+         Include the executor's "Rulings I made" list (apply step 2)
+         in this check: a ruling that alters spec-level behavior is
+         drift — blocking until the delta spec is amended to match or
+         the ruling is reversed in code; every other ruling is recorded
+         here so retrospective §3 can pick it up.
 
       5. **Implementation signal**: Confirm all code changes are
          committed (no unstaged files in the worktree). Cite the
@@ -517,6 +545,12 @@ artifacts:
       Only after both succeed, proceed.
 
       Write a retrospective of this change with evidence-first analysis.
+
+      §3 Plan deviations MUST list every `Ruling:` the executor reported
+      at apply step 2 (Superpowers 6.3.0+ rules instead of asking).
+      Rulings are decisions taken on the human's behalf; this table is
+      where they become reviewable after the fact — one row each, with
+      the ruling's own cost-if-wrong in the Why column.
 
       IMPORTANT timing note:
       - retrospective.md is produced AFTER apply phase completes and
@@ -740,6 +774,21 @@ apply:
          survive for steps 3-5 (verify / retrospective / archive).
          Return control to the apply controller after the final review;
          report the commit range and the ledger path.
+       - Rulings (Superpowers 6.3.0+): subagent-driven-development no
+         longer stops to ask on plan conflicts, ambiguities or plan
+         defects — it rules, records `Ruling: <what> — <why> — <cost if
+         wrong>` in its ledger, and continues, stopping only for the
+         four classes it names (irreversible or destructive operations,
+         security-sensitive actions, side effects outside the worktree
+         such as merge / push / publish, and a plan where every path
+         forward is a guess). It normally emits its exhaustive "Rulings
+         I made" list at the moment it deletes its workspace — the very
+         step this bridge suppresses. So: include the complete "Rulings
+         I made" list in the report back to the apply controller, in
+         the order made, each with what it costs if wrong. A ruling
+         that dies with the ledger was a decision made in secret. The
+         controller hands that list to verify (check 4) and the
+         retrospective (§3).
 
        IMPORTANT — transitive skill activation:
        subagent-driven-development internally enforces the
@@ -806,7 +855,8 @@ apply:
 
        After retrospective + archive are both done, use the Skill
        tool to invoke **superpowers:finishing-a-development-branch**.
-       In Superpowers 6.2.0 finishing re-runs the full test suite on
+       In Superpowers 6.2.0+ (re-attested at 6.3.0) finishing re-runs
+       the full test suite on
        the tree being integrated, confirms the base branch, and
        presents merge / push / keep options (discard exists only as a
        response to an explicit request); on the push option it pushes
