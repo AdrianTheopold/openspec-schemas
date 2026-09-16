@@ -68,17 +68,38 @@ artifacts:
 
       Read brainstorm.md for the validated design. Extract:
       - **Why**: The motivation (from brainstorming discussion)
-      - **What Changes**: Specific changes agreed upon
+      - **What Changes**: Specific changes agreed upon. Mark breaking changes with **BREAKING**.
       - **Capabilities**: Identify which specs will be created or modified:
-        - **New Capabilities**: List capabilities being introduced. Each becomes a new `specs/<name>/spec.md`. Use kebab-case names.
-        - **Modified Capabilities**: List existing capabilities whose REQUIREMENTS are changing. Check `openspec/specs/` for existing spec names.
+        - **New Capabilities**: List capabilities being introduced. Each becomes a new `specs/<capability-path>/spec.md`. Use kebab-case for path segments you introduce (e.g. `user-auth` or `identity/user-auth`) and follow the project's existing spec organization.
+        - **Modified Capabilities**: List existing capabilities whose REQUIREMENTS are changing. Only include if spec-level behavior changes (not just implementation details). Each needs a delta spec file. Use the exact existing path under `openspec/specs/`. Leave empty if no requirement changes.
       - **Impact**: Affected code, APIs, dependencies, or systems.
 
       Since brainstorming already explored the problem space,
       this should be a concise extraction, not a new exploration.
 
       IMPORTANT: The Capabilities section is critical. It creates the contract between
-      proposal and specs phases. Each capability listed here will need a spec file.
+      proposal and specs phases. Research existing specs before filling it in:
+      run `openspec list --specs` for the project's capability inventory, then
+      `openspec show "<spec-id>" --type spec --json --no-scenarios` for any that
+      look related — that returns a capability's purpose and requirement texts
+      without pulling whole spec files into context. Keep `--type spec`: a change
+      and a spec sharing a name is otherwise an ambiguous-item error, and
+      `openspec list` without `--specs` lists in-flight changes, never what the
+      project already covers. Reuse an existing capability's exact path instead
+      of introducing a near-duplicate name. The filtered read is only an
+      overview: before deciding what is already covered, read each relevant spec
+      in full, scenarios included, with `openspec show "<spec-id>" --type spec`.
+      This is the spec-level twin of the plan artifact's reuse check — that one
+      asks what code a `Create:` entry duplicates; this asks what capability a
+      new spec duplicates.
+
+      Every change must either declare at least one capability (new or
+      modified) or explicitly opt out of specs: `openspec validate` rejects a
+      change with zero deltas unless the change's `.openspec.yaml` sets
+      `skip_specs: true`. Use it only when no spec-level behavior changes (pure
+      refactor, tooling, docs) — specs describe behavior, so if behavior does
+      not change, no spec should change either. Do not invent a requirement
+      just to satisfy validation.
 
       Keep it concise (1-2 pages). Focus on the "why" not the "how".
     requires:
@@ -91,9 +112,33 @@ artifacts:
     instruction: |
       Create specification files that define WHAT the system should do.
 
+      A spec is a behavior contract, not an implementation plan.
+
+      Good spec content:
+      - Observable behavior users or downstream systems rely on
+      - Inputs, outputs, and error conditions
+      - External constraints (security, privacy, reliability, compatibility)
+      - Scenarios that can be tested or explicitly validated
+
+      Avoid in specs:
+      - Internal class/function names
+      - Library or framework choices
+      - Step-by-step implementation details
+      - Detailed execution plans (those belong in design.md, tasks.md or plan.md)
+
+      Quick test: if the implementation can change without changing externally
+      visible behavior, it likely does not belong in the spec.
+
       Create one spec file per capability listed in the proposal's Capabilities section.
-      - New capabilities: use the exact kebab-case name from the proposal (specs/<capability>/spec.md).
-      - Modified capabilities: use the existing spec folder name from openspec/specs/<capability>/ when creating the delta spec at specs/<capability>/spec.md.
+      `<capability-path>` is the spec directory relative to `specs/` (for example,
+      `user-auth` or `identity/user-auth`). Preserve the full path:
+      - New capabilities: use the exact path from the proposal at `specs/<capability-path>/spec.md`. Any path segment newly introduced in the proposal must be kebab-case. Follow the project's existing organization; do not add a new domain level when the project uses a flat layout.
+      - Modified capabilities: use the exact existing path from `openspec/specs/<capability-path>/` when creating the delta at `specs/<capability-path>/spec.md`. Run `openspec list --specs` to confirm that path before writing the delta — a mistyped or invented path targets a capability that does not exist rather than the one you meant. Do not move or rename the capability.
+
+      There must be at least one spec file unless the change's `.openspec.yaml`
+      sets `skip_specs: true` (no spec-level behavior change) — `openspec validate`
+      rejects a zero-delta change without that marker. If the proposal lists no
+      capabilities and `skip_specs` is not set, revisit the proposal first.
 
       Delta operations (use ## headers):
       - **ADDED Requirements**: New capabilities
@@ -107,6 +152,54 @@ artifacts:
       - Each scenario: `#### Scenario: <name>` with WHEN/THEN format
       - **CRITICAL**: Scenarios MUST use exactly 4 hashtags (`####`). Using 3 hashtags or bullets will fail silently.
       - Every requirement MUST have at least one scenario.
+
+      New capabilities only: start the delta spec with a `## Purpose` section —
+      one or two sentences (50+ characters, or `openspec validate --strict`
+      reports it as too brief) describing what the capability is for. Archive
+      copies it into the main spec it creates; without it the new main spec is
+      left with a `TBD ... Update Purpose after archive` placeholder to fill in
+      by hand. Do NOT add `## Purpose` to a delta for an existing capability —
+      that spec already has one and the delta's is ignored. To change an
+      existing capability's Purpose, including a leftover `TBD` placeholder,
+      edit `openspec/specs/<capability-path>/spec.md` directly.
+
+      MODIFIED requirements workflow:
+      1. Locate the existing requirement in `openspec/specs/<capability-path>/spec.md`
+      2. Copy the ENTIRE requirement block (from `### Requirement:` through all scenarios)
+      3. Paste under `## MODIFIED Requirements` and edit to reflect new behavior
+      4. Ensure header text matches exactly (whitespace-insensitive)
+
+      A MODIFIED block replaces the whole requirement at archive time, so it MUST
+      still carry every scenario the main spec has that this change does not
+      deliberately remove. `openspec validate` errors on a MODIFIED block that
+      omits one, and archive refuses rather than dropping scenarios silently. To
+      drop a scenario on purpose, keep the block complete and state the removal
+      in the proposal's What Changes.
+
+      Common pitfall: Using MODIFIED with partial content loses detail at archive time.
+      If adding new concerns without changing existing behavior, use ADDED instead.
+
+      Example (a new capability, so it opens with `## Purpose`):
+      ```
+      ## Purpose
+
+      Lets users take their data out of the product in a portable format.
+
+      ## ADDED Requirements
+
+      ### Requirement: User can export data
+      The system SHALL allow users to export their data in CSV format.
+
+      #### Scenario: Successful export
+      - **WHEN** user clicks "Export" button
+      - **THEN** system downloads a CSV file with all user data
+
+      ## REMOVED Requirements
+
+      ### Requirement: Legacy export
+      **Reason**: Replaced by new export system
+      **Migration**: Use new export endpoint at /api/v2/export
+      ```
 
       Specs should be testable - each scenario is a potential test case.
     requires:
@@ -132,14 +225,24 @@ artifacts:
         inference from brainstorm.md content)
 
       Sections:
-      - **Context**: Background, current state, constraints, stakeholders
-      - **Goals / Non-Goals**: What this design achieves and explicitly excludes
+      - **Context**: Only the current state and constraints needed to explain the approach. Reference the proposal for motivation instead of restating it (e.g. "See proposal.md - Why").
+      - **Goals / Non-Goals**: What this design achieves and explicitly excludes. Don't restate the proposal's scope - add only design-level boundaries.
       - **Decisions**: Key technical choices with rationale (why X over Y?). Include alternatives considered per decision.
       - **Risks / Trade-offs**: Known limitations, things that could go wrong. Format: [Risk] → Mitigation
       - **Migration Plan**: Steps to deploy, rollback strategy (if applicable)
-      - **Open Questions**: Outstanding decisions or unknowns to resolve
+      - **Open Questions**: Unknowns that can safely be answered later without
+        changing the specs, the approach, or the task breakdown. Omit if none.
+
+      Open questions are for genuinely deferrable unknowns, not decisions you
+      skipped. If a question would change the specs, the chosen approach, or
+      the task breakdown, resolve it now - ask the user instead of guessing.
+      brainstorm.md usually already holds the answer; a question that survived
+      brainstorming unresolved is a signal to go back to the user, not forward.
 
       Focus on architecture and approach, not line-by-line implementation.
+      The proposal covers why and what; design covers how. Reference the
+      proposal for motivation and the specs for requirements - if a section
+      would only restate them, point to them instead.
       Good design docs explain the "why" behind technical decisions.
     requires:
       - brainstorm
@@ -151,6 +254,10 @@ artifacts:
     instruction: |
       Create the task list that breaks down the implementation work.
 
+      Before writing tasks, check design.md for Open Questions. If any of them
+      would change what gets built, resolve them with the user first - do not
+      bake an unstated assumption into the task list.
+
       **IMPORTANT: Follow the template below exactly.** The apply phase parses
       checkbox format to track progress. Tasks not using `- [ ]` won't be tracked.
 
@@ -159,6 +266,28 @@ artifacts:
       - Each task MUST be a checkbox: `- [ ] X.Y Task description`
       - Tasks should be small enough to complete in one session
       - Order tasks by dependency (what must be done first?)
+      - Each task MUST state how to verify completion (a test, command,
+        observable behavior, or delivered artifact). Put the verification in
+        that task's checkbox description. Use a separate verification task only
+        when it checks broader integration or system behavior that spans
+        multiple implementation tasks.
+
+      Example:
+      ```
+      ## 1. Setup
+
+      - [ ] 1.1 Create new module structure and verify expected files are present
+      - [ ] 1.2 Add dependencies to package.json and verify package installation succeeds
+
+      ## 2. Core Implementation
+
+      - [ ] 2.1 Implement data export function and verify the export test passes
+      - [ ] 2.2 Add CSV formatting utilities and verify unit tests cover quoting and delimiters
+      ```
+
+      tasks.md is the coarse ledger; plan.md (next artifact) breaks each task
+      into micro-steps for the executor. Keep tasks at the "one reviewable
+      unit" grain and leave the step-by-step to plan.md.
 
       Reference specs for what needs to be built and design.md for
       how to build it (architecture decisions, trade-offs, migration).

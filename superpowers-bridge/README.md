@@ -3,7 +3,7 @@
 [English](./README.md) · [繁體中文](./README.zh-TW.md)
 
 [![Schema Structure](https://github.com/AdrianTheopold/openspec-schemas/actions/workflows/validate-schemas.yml/badge.svg?branch=main)](https://github.com/AdrianTheopold/openspec-schemas/actions/workflows/validate-schemas.yml)
-[![OpenSpec baseline](https://img.shields.io/badge/OpenSpec_baseline-1.5.0-0277bd)](#compatibility)
+[![OpenSpec baseline](https://img.shields.io/badge/OpenSpec_baseline-1.13.0-0277bd)](#compatibility)
 [![Superpowers baseline](https://img.shields.io/badge/Superpowers_baseline-6.2.0-0277bd)](#compatibility)
 
 > Bridges [OpenSpec](https://github.com/Fission-AI/OpenSpec)'s artifact governance (the **what**) with [obra/superpowers](https://github.com/obra/superpowers) execution skills (the **how**) into a single workflow. Adds an evidence-first `retrospective` artifact filling a gap Superpowers does not natively cover.
@@ -482,13 +482,16 @@ A bundle release `1.x.y` is a published cut of schema major `v1`. A future schem
 
 Baseline versions this schema was authored against. This is a **historical snapshot, not an end-to-end compatibility guarantee** — CI cannot run the full prompt-layer workflow in headless mode, so behavioral compatibility relies on human review when drift fires.
 
-Current bundle release: **`1.3.2`** (see [VERSION](./VERSION)).
+Current bundle release: **`1.4.0`** (see [VERSION](./VERSION)).
 
 | superpowers-bridge | OpenSpec CLI | Superpowers plugin | Baseline as of |
 |---|---|---|---|
+| v1 | `1.13.0` | `6.2.0` | 2026-09-16 |
 | v1 | `1.5.0` | `6.2.0` | 2026-08-12 |
 | v1 | `1.5.0` | `6.1.0` | 2026-07-02 |
 
+> Re-attested against **OpenSpec 1.13.0** (2026-09-16, bundle 1.4.0) on the OpenSpec side only. Structural: the schema-file grammar is unchanged since 1.4.1 (five top-level keys), `openspec schema validate` passes, instructions render, and every CLI command this schema names still exists. Absorbed: four artifact instructions the bridge had copied from the 1.4.1 `spec-driven` schema (proposal, specs, design, tasks) were refreshed from 1.13's text — spec inventory via `openspec list --specs` + `openspec show --type spec` before naming capabilities (the spec-level twin of the plan artifact's reuse check), `skip_specs: true` as the only way a zero-delta change passes `openspec validate`, `## Purpose` on a new capability's delta (else archive leaves a `TBD` placeholder), nested `<capability-path>` names, verification stated per task, and design open questions restricted to deferrable unknowns. Added without an upstream counterpart: a MODIFIED block must keep every scenario the main spec still has, which 1.13 enforces at validate and archive. Not affected: stores stay opt-in and unused; the bridge keeps repo-relative `openspec/specs/` paths on purpose. **Superpowers 6.3.0 is installed but was not re-attested claim-by-claim; 6.2.0 remains the attested Superpowers baseline.**
+>
 > Re-attested against **Superpowers 6.2.0** (2026-08-12), claim-by-claim against the installed skills. One behavioral change absorbed: `finishing-a-development-branch` regained PR/MR creation — its push option now pushes AND opens the PR/MR via the forge CLI, which apply step 6 sanctions (auto-merge stays forbidden); its menu is merge / push / keep, with discard only on an explicit request. All other load-bearing claims hold: SDD still ends by invoking finishing (the apply-instruction suppression stays necessary), still transitively enforces TDD + requesting-code-review with the merged task-reviewer prompt; `executing-plans` still activates neither (the fallback stays unsupported); `using-git-worktrees` still defaults to `.worktrees/`.
 >
 > Re-attested against **Superpowers 6.1.0** (2026-07-02) via a full v5.1.0→6.1.0 skill diff: only `finishing-a-development-branch` (its push option no longer auto-creates the PR) and the merged SDD task-reviewer needed prose alignment; the SDD self-finish conflict predates v6 and is suppressed by the apply instruction. **OpenSpec 1.5.0** "Stores" is opt-in beta and does not affect this bridge — re-check the `changes/`+`specs/` paths only if a future release makes Stores the default layout.
