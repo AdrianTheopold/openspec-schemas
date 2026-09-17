@@ -44,11 +44,15 @@ Commit chain (chronological):
 - 🟡 [painful  | evidence: ...] <description>
 - 📌 [nit      | evidence: ...] <description>
 
-## 3. Plan deviations
+## 3. Plan deviations and rulings
 
-| Plan task | What changed | Why |
-|-----------|--------------|-----|
-| 1.2       | ...          | ... |
+> Every `Ruling:` the executor reported at apply step 2 gets a row here —
+> subagent-driven-development (6.3.0+) rules on plan conflicts instead of
+> asking, so this table is where those decisions become reviewable.
+
+| Plan task | What changed | Why (for a ruling: its cost if wrong) | Source |
+|-----------|--------------|----------------------------------------|--------|
+| 1.2       | ...          | ...                                    | ruling / review / user |
 
 ## 4. Skill / workflow compliance
 

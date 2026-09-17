@@ -4,13 +4,25 @@ Delta spec template for a change.
 This template demonstrates the 4 delta section types; use whichever you
 actually need:
 - ADDED / MODIFIED / REMOVED / RENAMED
-Filename & location: openspec/changes/<change-name>/specs/<capability>/spec.md
-(`<capability>` matches the openspec/specs/<capability>/ directory name)
+Filename & location: openspec/changes/<change-name>/specs/<capability-path>/spec.md
+(`<capability-path>` matches the openspec/specs/<capability-path>/ directory,
+nested paths such as `identity/user-auth` included)
 
 Hard format rules (validated by OpenSpec):
 - A Requirement sentence MUST contain `SHALL` or `MUST`
 - Every Requirement MUST have at least one `#### Scenario:`
 - Scenarios MUST use level-4 headings (`####`); level-3 or bullets fail silently
+- A MODIFIED block MUST keep every scenario the main spec still has
+-->
+
+## Purpose
+
+<!--
+New capabilities only: one or two sentences (50+ characters) on what this
+capability is for. Archive copies it into the new main spec; without it the
+main spec is left with a "TBD" placeholder. DELETE this whole section for a
+delta on an existing capability — its Purpose is already set and a delta's is
+ignored.
 -->
 
 ## ADDED Requirements
@@ -35,7 +47,9 @@ trimming), otherwise the delta apply at archive time will fail because it
 can't find the matching requirement.
 
 **MUST paste the full modified content** (not just a diff), because OpenSpec
-archive applies MODIFIED by full-text replacement.
+archive applies MODIFIED by full-text replacement — including every scenario
+the main spec still has. `openspec validate` errors on a MODIFIED block that
+omits one, and archive refuses to drop scenarios silently.
 -->
 
 ### Requirement: <!-- the same header as in the existing spec -->

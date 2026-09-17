@@ -142,10 +142,22 @@ it in the retrospective's Misses.
 
 ## Overall Decision
 
-- [ ] ✅ PASS — may proceed to finishing-a-development-branch and archive
+- [ ] ✅ PASS — proceed in order: retrospective → archive → invoke
+  **superpowers:finishing-a-development-branch** (its push option publishes the branch)
 - [ ] ⚠️ PASS WITH WARNINGS — may proceed, but note: `<explanation>`
 - [ ] ❌ FAIL — return to the failing artifact, fix it, and re-run verify
 
 **Next step**:
 
 <describe the next action>
+
+> **A PASS here is mid-cycle, not the end.** Do not open — and never merge — the
+> PR/MR before `retrospective.md` and the archived change (spec delta synced into
+> `openspec/specs/`, folder moved under `openspec/changes/archive/`) are committed
+> on THIS branch. A branch that merges with the change still active leaves the main
+> spec stale and forces a later session to reconstruct the retrospective cold
+> (schema apply steps 4–6 are the canonical sequence). This binds any session that
+> picks the branch up after verify — deploy gates and click-throughs do not reorder it.
+> The publish step goes through **superpowers:finishing-a-development-branch** (skill
+> invocation, not a bare `git push`): it re-runs the full suite on the tree being
+> integrated and leaves the integration decision to your human partner.

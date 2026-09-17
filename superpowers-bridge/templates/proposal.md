@@ -33,21 +33,28 @@ be described with a simple list.
 
 ### New Capabilities
 <!--
-Capabilities being introduced. Replace <name> with kebab-case identifier.
-Naming rule (see openspec/specs/README.md): use a compound noun (at least
-2 words), e.g. `user-auth`, `data-export`, `api-rate-limiting` — not a single
-bare word.
-Each creates specs/<name>/spec.md
+Capabilities being introduced. Replace <capability-path> with a kebab-case
+identifier that follows the project's existing spec organization (flat
+`user-auth`, or nested `identity/user-auth` only where the project already
+nests). Naming rule (see openspec/specs/README.md): use a compound noun (at
+least 2 words), e.g. `user-auth`, `data-export`, `api-rate-limiting` — not a
+single bare word. Run `openspec list --specs` first so a new name does not
+near-duplicate an existing capability.
+Each creates specs/<capability-path>/spec.md
 -->
-- `<name>`: <brief description of what this capability covers>
+- `<capability-path>`: <brief description of what this capability covers>
 
 ### Modified Capabilities
 <!--
 Existing capabilities whose REQUIREMENTS are changing (not just implementation).
 Only list here if spec-level behavior changes. Each needs a delta spec file.
-Use existing spec names from openspec/specs/. Leave empty if no requirement changes.
+Use the exact existing path under openspec/specs/. Leave empty if no
+requirement changes. A change with no capabilities at all (pure refactor,
+tooling, docs) must set `skip_specs: true` in its .openspec.yaml — openspec
+validate rejects a zero-delta change without that marker. Do not invent a
+requirement just to satisfy validation.
 -->
-- `<existing-name>`: <what requirement is changing>
+- `<existing-capability-path>`: <what requirement is changing>
 
 ## Impact
 
