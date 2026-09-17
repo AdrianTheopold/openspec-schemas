@@ -3,8 +3,8 @@
 [English](./README.md) · [繁體中文](./README.zh-TW.md) · [Tiếng Việt](./README.vi-VN.md)
 
 [![Schema Structure](https://github.com/AdrianTheopold/openspec-schemas/actions/workflows/validate-schemas.yml/badge.svg?branch=main)](https://github.com/AdrianTheopold/openspec-schemas/actions/workflows/validate-schemas.yml)
-[![OpenSpec baseline](https://img.shields.io/badge/OpenSpec_baseline-1.5.0-0277bd)](#compatibility)
-[![Superpowers baseline](https://img.shields.io/badge/Superpowers_baseline-6.1.0-0277bd)](#compatibility)
+[![OpenSpec baseline](https://img.shields.io/badge/OpenSpec_baseline-1.13.0-0277bd)](#compatibility)
+[![Superpowers baseline](https://img.shields.io/badge/Superpowers_baseline-6.3.0-0277bd)](#compatibility)
 
 > Kết nối **artifact governance** của [OpenSpec](https://github.com/Fission-AI/OpenSpec) (**what**) với **execution skills** của [obra/superpowers](https://github.com/obra/superpowers) (**how**) vào một workflow duy nhất. Thêm artifact `retrospective` theo hướng evidence-first để lấp khoảng trống mà Superpowers không cover.
 >
@@ -90,7 +90,7 @@ Upgrade the superpowers-bridge schema in this project:
 8. Show me the final state.
 ```
 
-> `<locale>` mặc định là `vi-VN` nếu CLAUDE.md của bạn dùng tiếng Việt (Vietnamese), hoặc không suffix (English). Claude tự động detect từ nội dung CLAUDE.md hiện tại.
+> `<locale>` mặc định là `zh-TW` nếu CLAUDE.md của bạn dùng Traditional Chinese, hoặc không suffix (English). Claude tự động detect từ nội dung CLAUDE.md hiện tại.
 
 ### Upgrade Method 2: Manual bash
 
@@ -320,7 +320,7 @@ APPLY ━━━━━━━━━━━━━━━━━━━━━━━━�
 
 Thêm một OpenSpec built-in: `openspec-verify-change` (apply step 3, tạo ra `verify.md`).
 
-> **Không có fallback `executing-plans`.** Schema này có opinion: nó yêu cầu nền tảng hỗ trợ subagent (Claude Code, Codex, v.v.). Executor thay thế `superpowers:executing-plans` không kích hoạt transitive TDD hoặc code-review (đã kiểm tra với [SKILL.md](https://github.com/obra/superpowers/blob/v6.1.0/skills/executing-plans/SKILL.md) của nó) — fallback sẽ âm thầm làm giảm core value của Superpowers. Nếu nền tảng của bạn không hỗ trợ subagent, hãy dùng built-in `spec-driven` schema.
+> **Không có fallback `executing-plans`.** Schema này có opinion: nó yêu cầu nền tảng hỗ trợ subagent (Claude Code, Codex, v.v.). Executor thay thế `superpowers:executing-plans` không kích hoạt transitive TDD hoặc code-review (đã kiểm tra với [SKILL.md](https://github.com/obra/superpowers/blob/v6.3.0/skills/executing-plans/SKILL.md) của nó) — fallback sẽ âm thầm làm giảm core value của Superpowers. Nếu nền tảng của bạn không hỗ trợ subagent, hãy dùng built-in `spec-driven` schema.
 
 ### Output redirection
 
@@ -378,7 +378,7 @@ Các Superpowers skills có default output paths (ví dụ: brainstorming ghi v�
 
 `/opsx:apply` kích hoạt các bước trong `apply.instruction` của [schema.yaml](./schema.yaml):
 
-### 0. Pre-flight — kiểm tra Superpowers skills cần thiết
+#### 0. Pre-flight — kiểm tra Superpowers skills cần thiết
 
 Xác nhận các skill sau đã được cài trước khi tiếp tục:
 
@@ -463,7 +463,7 @@ TDD và code-review bình thường bị ẩn trong SKILL.md của `subagent-dri
 
 ### 4. Opinionated: chỉ nền tảng subagent, không manual fallback
 
-Schema này yêu cầu nền tảng hỗ trợ subagent (Claude Code, Codex, v.v.). Executor thay thế `superpowers:executing-plans` KHÔNG kích hoạt transitive TDD hoặc code-review (đã kiểm tra với [SKILL.md](https://github.com/obra/superpowers/blob/v6.1.0/skills/executing-plans/SKILL.md) — body của nó không đề cập tới cả hai, và Integration section omit cả `test-driven-development` lẫn `requesting-code-review`). Fallback sang nó sẽ âm thầm mất đi giá trị Superpowers mang lại cho integration này. Chúng tôi thà fail loud ở Step 0 và hướng người dùng tới built-in `spec-driven` schema.
+Schema này yêu cầu nền tảng hỗ trợ subagent (Claude Code, Codex, v.v.). Executor thay thế `superpowers:executing-plans` KHÔNG kích hoạt transitive TDD hoặc code-review (đã kiểm tra với [SKILL.md](https://github.com/obra/superpowers/blob/v6.3.0/skills/executing-plans/SKILL.md) — body của nó không đề cập tới cả hai, và Integration section omit cả `test-driven-development` lẫn `requesting-code-review`). Fallback sang nó sẽ âm thầm mất đi giá trị Superpowers mang lại cho integration này. Chúng tôi thà fail loud ở Step 0 và hướng người dùng tới built-in `spec-driven` schema.
 
 ### 5. Evidence-based PRECHECK cho verify và retrospective (Layer 2 capability detection)
 
@@ -497,12 +497,20 @@ Bundle release `1.x.y` là một published cut của schema major `v1`. Schema m
 
 Baseline versions mà schema này được author dựa trên. Đây là **historical snapshot, không phải end-to-end compatibility guarantee** — CI không thể chạy full prompt-layer workflow trong headless mode, nên behavioral compatibility dựa vào human review khi drift xảy ra.
 
-Bundle release hiện tại: **`1.1.0`** (xem [VERSION](./VERSION)).
+Bundle release hiện tại: **`1.4.0`** (xem [VERSION](./VERSION)).
 
 | superpowers-bridge | OpenSpec CLI | Superpowers plugin | Baseline as of |
 | --- | --- | --- | --- |
+| v1 | `1.13.0` | `6.3.0` | 2026-09-16 |
+| v1 | `1.5.0` | `6.2.0` | 2026-08-12 |
 | v1 | `1.5.0` | `6.1.0` | 2026-07-02 |
 
+> Đã re-attest với **OpenSpec 1.13.0** (2026-09-16, bundle 1.4.0), chỉ phía OpenSpec. Về cấu trúc: grammar của schema file không đổi từ 1.4.1 (năm top-level keys), `openspec schema validate` pass, instructions render bình thường, và mọi CLI command mà schema này nhắc tới vẫn tồn tại. Các thay đổi đã hấp thụ: bốn artifact instructions mà bridge từng copy từ `spec-driven` schema 1.4.1 (proposal, specs, design, tasks) đã được refresh theo text của 1.13 — kiểm kê spec hiện có bằng `openspec list --specs` + `openspec show --type spec` trước khi đặt tên capabilities (bản đôi ở spec-level của reuse check trong plan artifact), `skip_specs: true` là cách duy nhất để một change zero-delta pass `openspec validate`, delta của capability mới phải mở đầu bằng `## Purpose` (nếu không archive sẽ để lại placeholder `TBD`), hỗ trợ nested `<capability-path>`, mỗi task phải ghi rõ cách verify, và design open questions chỉ giới hạn ở unknowns có thể defer. Thêm một quy tắc upstream không có: block MODIFIED phải giữ mọi scenario mà main spec vẫn có (1.13 enforce ở validate và archive). Không bị ảnh hưởng: stores vẫn opt-in và không dùng; bridge cố ý giữ paths `openspec/specs/` tương đối theo repo.
+>
+> Đã re-attest với **Superpowers 6.3.0** (2026-09-16, bundle 1.4.0) qua full v6.2.0→v6.3.0 skill diff, bản đã cài xác nhận giống hệt upstream tag. Không đổi và vẫn đúng: `executing-plans` không kích hoạt cả TDD lẫn code-review (file giống hệt); `using-git-worktrees` mặc định `.worktrees/` (giống hệt); `test-driven-development` và `requesting-code-review/SKILL.md` giống hệt; SDD vẫn kết thúc bằng việc gọi finishing + xóa workspace (suppression của apply vẫn cần thiết) và vẫn review mỗi task bằng merged spec-compliance + code-quality reviewer; finishing vẫn chạy lại suite, đưa ra merge / push / keep với discard chỉ khi có typed request rõ ràng, và tạo PR/MR khi push. Ba behavioral changes đã hấp thụ: (1) **brainstorming** giờ phân loại spike / bounded / architectural và chỉ architectural path mới viết spec rồi handoff cho writing-plans — brainstorm instruction chốt classification là architectural, vì một change vào schema này đã qua entry gate; (2) **writing-plans** mở plan bằng header `**Spec:**` mà SDD coi là binding authority cho rulings — plan instruction và template điền vào đó delta specs + design.md của change để không ruling nào là provisional; (3) **subagent-driven-development** tự ruling khi gặp plan conflicts thay vì hỏi ("rulings, not stalls"), chỉ dừng ở bốn classes đã nêu tên, và xuất exhaustive list "Rulings I made" khi xóa workspace — đúng step mà bridge này suppress — nên apply step 2 giờ yêu cầu list đó trong report của executor, verify check 4 test từng ruling với specs, và retrospective §3 ghi lại. Hai thay đổi 6.3.0 khác không cần gì từ bridge: finishing hỏi trước khi worktree removal bị từ chối thay vì ép buộc, và implementer / reviewer prompts có thêm no-subagents contract.
+>
+> Đã re-attest với **Superpowers 6.2.0** (2026-08-12), đối chiếu claim-by-claim với installed skills. Một behavioral change đã hấp thụ: `finishing-a-development-branch` lấy lại PR/MR creation — push option giờ push VÀ mở PR/MR qua forge CLI, điều mà apply step 6 cho phép (auto-merge vẫn cấm); menu là merge / push / keep, với discard chỉ khi có explicit request. Mọi load-bearing claims còn lại vẫn đúng: SDD vẫn kết thúc bằng việc gọi finishing (suppression của apply-instruction vẫn cần thiết), vẫn transitively enforce TDD + requesting-code-review với merged task-reviewer prompt; `executing-plans` vẫn không kích hoạt cả hai (fallback vẫn unsupported); `using-git-worktrees` vẫn mặc định `.worktrees/`.
+>
 > Đã re-attest với **Superpowers 6.1.0** (2026-07-02) qua full v5.1.0→6.1.0 skill diff: chỉ `finishing-a-development-branch` (tùy chọn push không còn auto-create PR) và merged SDD task-reviewer cần prose alignment; SDD self-finish conflict có từ trước v6 và bị suppress bởi apply instruction. **OpenSpec 1.5.0** "Stores" là opt-in beta và không ảnh hưởng tới bridge này — chỉ cần kiểm tra lại `changes/`+`specs/` paths nếu future release biến Stores thành default layout.
 
 ### Cách kiểm tra
