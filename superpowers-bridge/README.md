@@ -1,6 +1,6 @@
 # superpowers-bridge Schema
 
-[English](./README.md) · [繁體中文](./README.zh-TW.md)
+[English](./README.md) · [繁體中文](./README.zh-TW.md) · [Tiếng Việt](./README.vi-VN.md)
 
 [![Schema Structure](https://github.com/AdrianTheopold/openspec-schemas/actions/workflows/validate-schemas.yml/badge.svg?branch=main)](https://github.com/AdrianTheopold/openspec-schemas/actions/workflows/validate-schemas.yml)
 [![OpenSpec baseline](https://img.shields.io/badge/OpenSpec_baseline-1.13.0-0277bd)](#compatibility)

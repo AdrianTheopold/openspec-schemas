@@ -1,6 +1,9 @@
 # superpowers-bridge Schema
 
-[English](./README.md) · [繁體中文](./README.zh-TW.md)
+[English](./README.md) · [繁體中文](./README.zh-TW.md) · [Tiếng Việt](./README.vi-VN.md)
+
+> **社群維護的翻譯**:本頁由社群貢獻並維護,可能落後於 [`README.md`](./README.md)。兩者不一致時,以英文版為準。
+> *Community-maintained translation — it may lag behind [`README.md`](./README.md). Where the two disagree, the English version is authoritative.*
 
 [![Schema Structure](https://github.com/AdrianTheopold/openspec-schemas/actions/workflows/validate-schemas.yml/badge.svg?branch=main)](https://github.com/AdrianTheopold/openspec-schemas/actions/workflows/validate-schemas.yml)
 [![OpenSpec baseline](https://img.shields.io/badge/OpenSpec_baseline-1.13.0-0277bd)](#相容性)
@@ -308,7 +311,7 @@ APPLY ━━━━━━━━━━━━━━━━━━━━━━━━�
 
 加上一個 OpenSpec built-in:`openspec-verify-change`(apply step 3,產出 `verify.md`)。
 
-> **不支援 `executing-plans` fallback**。本 schema 是 opinionated 的:要求 subagent-capable 平台(Claude Code、Codex 等)。替代 executor `superpowers:executing-plans` 並**不會** transitively 觸發 TDD 或 code-review(已對 [SKILL.md](https://github.com/obra/superpowers/blob/v6.2.0/skills/executing-plans/SKILL.md) 做事實查核 —— body 完全沒提到 TDD 或 code-review,Integration 段也未列出 `test-driven-development` 與 `requesting-code-review`)。退到 executing-plans 等於靜默降級 Superpowers 的核心價值。若你的平台沒有 subagent 支援,改用 OpenSpec 內建的 `spec-driven` schema。
+> **不支援 `executing-plans` fallback**。本 schema 是 opinionated 的:要求 subagent-capable 平台(Claude Code、Codex 等)。替代 executor `superpowers:executing-plans` 並**不會** transitively 觸發 TDD 或 code-review(已對 [SKILL.md](https://github.com/obra/superpowers/blob/v6.3.0/skills/executing-plans/SKILL.md) 做事實查核 —— body 完全沒提到 TDD 或 code-review,Integration 段也未列出 `test-driven-development` 與 `requesting-code-review`)。退到 executing-plans 等於靜默降級 Superpowers 的核心價值。若你的平台沒有 subagent 支援,改用 OpenSpec 內建的 `spec-driven` schema。
 
 ### Output redirection(產出重導)
 
@@ -448,7 +451,7 @@ TDD 與 code-review 平常藏在 `subagent-driven-development` 的 SKILL.md 裡�
 
 ### 4. Opinionated:只支援 subagent 平台,沒有手動 fallback
 
-本 schema 要求 subagent-capable 平台(Claude Code、Codex 等)。替代 executor `superpowers:executing-plans` **不會** transitively 觸發 TDD 或 code-review(已對其 [SKILL.md](https://github.com/obra/superpowers/blob/v6.2.0/skills/executing-plans/SKILL.md) 做事實查核 —— body 完全沒提及這兩者,Integration 段也未列出 `test-driven-development` 與 `requesting-code-review`)。退到 executing-plans 等於靜默丟掉 Superpowers 帶給整合的核心價值。我們選擇在 Step 0 fail loud,並指引使用者改用內建的 `spec-driven` schema。
+本 schema 要求 subagent-capable 平台(Claude Code、Codex 等)。替代 executor `superpowers:executing-plans` **不會** transitively 觸發 TDD 或 code-review(已對其 [SKILL.md](https://github.com/obra/superpowers/blob/v6.3.0/skills/executing-plans/SKILL.md) 做事實查核 —— body 完全沒提及這兩者,Integration 段也未列出 `test-driven-development` 與 `requesting-code-review`)。退到 executing-plans 等於靜默丟掉 Superpowers 帶給整合的核心價值。我們選擇在 Step 0 fail loud,並指引使用者改用內建的 `spec-driven` schema。
 
 ### 5. Evidence-based PRECHECK for verify and retrospective(Layer 2 capability detection)
 
