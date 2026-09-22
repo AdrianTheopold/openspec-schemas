@@ -2,6 +2,9 @@
 
 [English](./README.md) · [繁體中文](./README.zh-TW.md) · [Tiếng Việt](./README.vi-VN.md)
 
+> **社群維護的翻譯**:本頁由社群貢獻並維護,可能落後於 [`README.md`](./README.md)。兩者不一致時,以英文版為準。
+> *Community-maintained translation — it may lag behind [`README.md`](./README.md). Where the two disagree, the English version is authoritative.*
+
 [![Schema Structure](https://github.com/AdrianTheopold/openspec-schemas/actions/workflows/validate-schemas.yml/badge.svg?branch=main)](https://github.com/AdrianTheopold/openspec-schemas/actions/workflows/validate-schemas.yml)
 [![OpenSpec baseline](https://img.shields.io/badge/OpenSpec_baseline-1.13.0-0277bd)](#相容性)
 [![Superpowers baseline](https://img.shields.io/badge/Superpowers_baseline-6.3.0-0277bd)](#相容性)
