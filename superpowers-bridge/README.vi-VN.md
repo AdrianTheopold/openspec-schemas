@@ -6,19 +6,19 @@
 [![OpenSpec baseline](https://img.shields.io/badge/OpenSpec_baseline-1.13.0-0277bd)](#compatibility)
 [![Superpowers baseline](https://img.shields.io/badge/Superpowers_baseline-6.3.0-0277bd)](#compatibility)
 
-> Kết nối **artifact governance** của [OpenSpec](https://github.com/Fission-AI/OpenSpec) (**what**) với **execution skills** của [obra/superpowers](https://github.com/obra/superpowers) (**how**) vào một workflow duy nhất. Thêm artifact `retrospective` theo hướng evidence-first để lấp khoảng trống mà Superpowers không cover.
+> Kết nối **artifact governance** của [OpenSpec](https://github.com/Fission-AI/OpenSpec) (**what**) với **execution skills** của [obra/superpowers](https://github.com/obra/superpowers) (**how**) vào một workflow duy nhất. Thêm artifact `retrospective` theo hướng ưu tiên bằng chứng để lấp khoảng trống mà Superpowers không hỗ trợ.
 >
-> Toàn bộ integration nằm ở **prompt layer** — không sửa source Superpowers, không thay đổi OpenSpec CLI. Schema version: v1.
+> Toàn bộ việc tích hợp nằm ở **prompt layer** — không sửa mã nguồn Superpowers, không thay đổi OpenSpec CLI. Schema version: v1.
 >
-> **Fork** từ [JiangWay/openspec-schemas](https://github.com/JiangWay/openspec-schemas) (upstream commit `f5d4040`), được maintain độc lập từ 2026-07-02. Fork này đang được actively maintain (upstream không còn hoạt động); nó phân nhánh khi cần và không nhắm tới việc backPR lên upstream.
+> **Fork** từ [JiangWay/openspec-schemas](https://github.com/JiangWay/openspec-schemas) (upstream commit `f5d4040`), được duy trì độc lập từ 2026-07-02. Fork này đang được bảo trì một cách tích cực (upstream không còn hoạt động); nó phân nhánh khi cần và không nhắm tới việc đóng góp lên upstream.
 
 ---
 
 ## Cài đặt
 
-### Method 1: Claude Code one-shot prompt (recommended)
+### Cách 1: Prompt một lần cho Claude Code (khuyên dùng)
 
-Copy và paste đoạn sau vào Claude Code tại project root:
+Sao chép và dán đoạn sau vào Claude Code tại thư mục gốc của project:
 
 ```
 Install the superpowers-bridge schema for OpenSpec into this project:
@@ -38,16 +38,16 @@ Install the superpowers-bridge schema for OpenSpec into this project:
 Giải thích các bước:
 
 1. Kiểm tra project đã có thư mục `openspec/` chưa (chạy `openspec init` nếu chưa).
-2. Clone `https://github.com/AdrianTheopold/openspec-schemas` vào thư mục temp.
-3. Copy thư mục `superpowers-bridge/` vào `openspec/schemas/superpowers-bridge/`.
+2. Tạo bản sao của `https://github.com/AdrianTheopold/openspec-schemas` vào thư mục temp.
+3. Sao chép thư mục `superpowers-bridge/` vào `openspec/schemas/superpowers-bridge/`.
 4. Chạy `openspec schema validate superpowers-bridge` để kiểm tra.
 5. Chạy `openspec schemas` và xác nhận `superpowers-bridge` đã được liệt kê.
-6. Nếu có `CLAUDE.md` ở project root, hỏi tôi có muốn chèn **workflow-routing fragment** từ `templates/adopters/CLAUDE.md.fragment.<locale>.md` không (tự động detect locale từ nội dung CLAUDE.md; mặc định zh-TW cho Traditional Chinese, không suffix cho English). Nếu tôi đồng ý, append fragment như một section mới. Nếu không có CLAUDE.md thì bỏ qua.
+6. Nếu có `CLAUDE.md` ở project root, hỏi tôi có muốn chèn **workflow-routing fragment** từ `templates/adopters/CLAUDE.md.fragment.<locale>.md` không (tự động phát hiện locale từ nội dung CLAUDE.md; mặc định zh-TW cho Traditional Chinese, không suffix cho English và Vietnamese). Nếu tôi đồng ý, thêm fragment như một section mới. Nếu không có CLAUDE.md thì bỏ qua.
 7. Dọn dẹp thư mục temp.
-8. Kiểm tra Superpowers plugin đã cài chưa bằng `claude plugin list`. Nếu chưa, chạy `claude plugin install superpowers@claude-plugins-official`.
-9. Show tôi kết quả cuối cùng.
+8. Kiểm tra Superpowers plugin đã được cài chưa bằng `claude plugin list`. Nếu chưa, chạy `claude plugin install superpowers@claude-plugins-official`.
+9. Cho tôi xem kết quả cuối cùng.
 
-### Method 2: Manual bash (CI / môi trường không Claude)
+### Cách 2: Bash thủ công (CI / môi trường không có Claude)
 
 ```bash
 git clone https://github.com/AdrianTheopold/openspec-schemas /tmp/oss
@@ -67,11 +67,11 @@ claude plugin install superpowers@claude-plugins-official  # nếu chưa có
 
 ## Nâng cấp bản cài đặt hiện tại
 
-Nếu project đã có `openspec/schemas/superpowers-bridge/` và bạn muốn pull version mới nhất, dùng một trong các upgrade method bên dưới. Việc nâng cấp sẽ overwrite toàn bộ thư mục `superpowers-bridge/` và có tùy chọn cập nhật CLAUDE.md fragment — xem phần "What the upgrade overwrites" bên dưới.
+Nếu project đã có `openspec/schemas/superpowers-bridge/` và bạn muốn cập nhật bản mới nhất, dùng một trong các cách nâng cấp dưới đây. Việc nâng cấp sẽ ghi đè toàn bộ thư mục `superpowers-bridge/` và có tùy chọn cập nhật CLAUDE.md fragment — xem phần "Những gì bản nâng cấp sẽ ghi đè" bên dưới.
 
-### Upgrade Method 1: Claude Code one-shot prompt (recommended)
+### Phương pháp nâng cấp 1: Prompt một lần cho Claude Code (khuyên dùng)
 
-Tại project root, paste vào Claude Code:
+Tại thư mục gốc của project, dán đoạn dưới đây vào Claude Code:
 
 ```
 Upgrade the superpowers-bridge schema in this project:
@@ -90,63 +90,63 @@ Upgrade the superpowers-bridge schema in this project:
 8. Show me the final state.
 ```
 
-> `<locale>` mặc định là `zh-TW` nếu CLAUDE.md của bạn dùng Traditional Chinese, hoặc không suffix (English). Claude tự động detect từ nội dung CLAUDE.md hiện tại.
+> `<locale>` mặc định là `zh-TW` nếu CLAUDE.md của bạn dùng Traditional Chinese, hoặc không suffix (English). Claude tự động phát hiện từ nội dung CLAUDE.md hiện tại.
 
-### Upgrade Method 2: Manual bash
+### Phương pháp nâng cấp 2: Bash thủ công
 
 ```bash
 # 1. Lấy bundle mới nhất
 git clone https://github.com/AdrianTheopold/openspec-schemas /tmp/oss-upgrade
 
-# 2. Review diff trước (không overwrite mù quáng)
+# 2. Xem lại sự thay đổi trước (không ghi đè một cách mù quáng)
 diff -ruN ~/your-project/openspec/schemas/superpowers-bridge /tmp/oss-upgrade/superpowers-bridge
 
-# 3. Sau khi review xong, overwrite
+# 3. Sau khi xem xét xong, ghi đè
 rm -rf ~/your-project/openspec/schemas/superpowers-bridge
 cp -R /tmp/oss-upgrade/superpowers-bridge ~/your-project/openspec/schemas/superpowers-bridge
 
-# 4. Validate
+# 4. Kiểm tra lại
 cd ~/your-project && openspec schema validate superpowers-bridge
 
 # 5. CLAUDE.md fragment (thủ công)
 # Xem /tmp/oss-upgrade/superpowers-bridge/templates/adopters/CLAUDE.md.fragment.md
-# So sánh với CLAUDE.md của bạn và chèn/cập nhật section tương ứng nếu cần
+# So sánh với CLAUDE.md của bạn và chèn/cập nhật phần tương ứng nếu cần
 
 # 6. Dọn dẹp
 rm -rf /tmp/oss-upgrade
 ```
 
-### What the upgrade overwrites
+### Những gì bản nâng cấp sẽ ghi đè
 
 | Path | Action | Cần thao tác thủ công? |
 | --- | --- | --- |
-| `openspec/schemas/superpowers-bridge/` | Tự động overwrite — toàn bộ thư mục được thay thế từ upstream (`rm -rf` + `cp -R` trong Method 2; tương tự trong Method 1) | Không |
-| `CLAUDE.md` (project root) | Thư mục schema chứa `templates/adopters/CLAUDE.md.fragment.<locale>.md`; procedure upgrade sẽ diff CLAUDE.md hiện tại với fragment và chờ ack trước khi chèn/thay thế | Có — review diff, chọn insert / replace / keep |
+| `openspec/schemas/superpowers-bridge/` | Tự động ghi đè — toàn bộ thư mục được thay thế từ upstream (`rm -rf` + `cp -R` trong Phương pháp 2; tương tự trong Phương pháp 1) | Không |
+| `CLAUDE.md` (project root) | Thư mục schema chứa `templates/adopters/CLAUDE.md.fragment.<locale>.md`; các bước nâng cấp sẽ xem sự thay đổi của CLAUDE.md hiện tại với fragment và chờ xác nhận trước khi chèn/thay thế | Có — xem xét thay đổi, chọn chèn / thay thế / giữ lại |
 
-> Thư mục bridge là monolithic — bạn lấy toàn bộ version mới hoặc giữ nguyên version cũ. Không có per-file opt-in. CLAUDE.md là file project-root duy nhất upgrade động tới, và không bao giờ động tới nếu không có ack của bạn.
+> Thư mục bridge là nguyên khối — bạn lấy toàn bộ phiên bản mới hoặc giữ nguyên phiên bản cũ. Không có per-file opt-in. CLAUDE.md là file duy nhất ở thư mục gốc của project mà sự nâng cấp động tới, và không bao giờ động tới nếu không có xác nhận của bạn.
 >
-> Các change đang in-flight (bất kỳ phase nào: brainstorm / design / specs / ...) vẫn valid vì schema graph (`requires:` edges, PRECHECK, artifact dependencies) không thay đổi trong v1.x. Các `verify.md` / `retrospective.md` có sẵn từ trước upgrade vẫn đọc được; nếu bạn chạy lại `/opsx:verify` hoặc `/opsx:continue → retrospective` trên chúng, cấu trúc template mới sẽ được áp dụng khi overwrite.
+> Các thay đổi đang diễn ra (bất kỳ giai đoạn nào: brainstorm / design / specs / ...) vẫn có hiệu lực vì schema graph (`requires:` edges, PRECHECK, artifact dependencies) không thay đổi trong v1.x. Các `verify.md` / `retrospective.md` có sẵn từ trước nâng cấp vẫn đọc được; nếu bạn chạy lại `/opsx:verify` hoặc `/opsx:continue → retrospective` trên chúng, cấu trúc template mới sẽ được áp dụng khi ghi đè.
 >
-> Nếu future upgrade thay đổi schema graph về mặt cấu trúc (artifact add/remove, `requires:` edge thay đổi, PRECHECK thay đổi), README sẽ có thêm version field và migration guide. v1 → v1.x chỉ thay đổi prose, an toàn và không cần migration.
+> Nếu nâng cấp trong tương lại thay đổi schema graph về mặt cấu trúc (artifact thêm/xóa, `requires:` edge thay đổi, PRECHECK thay đổi), README sẽ có thêm thuộc tính lưu phiên bản và hướng dẫn chuyển đổi. v1 → v1.x chỉ thay đổi giọng văn, an toàn và không cần chuyển đổi.
 
 ---
 
 ## Vấn đề schema này giải quyết
 
-OpenSpec quản lý **what to do** (artifact lifecycle: proposal / specs / tasks / verify, v.v.). Superpowers quản lý **how to do it** (execution discipline: brainstorming, writing-plans, TDD, code review). Mỗi hệ thống đều tốt khi đứng một mình; nhưng khi kết hợp trong phát triển thực tế xuất hiện 3 structural problems:
+OpenSpec quản lý **what to do** (artifact lifecycle: proposal / specs / tasks / verify, v.v.). Superpowers quản lý **how to do it** (quy tắc thực hiện: brainstorming, writing-plans, TDD, code review). Mỗi hệ thống đều tốt khi đứng một mình; nhưng khi kết hợp trong phát triển thực tế xuất hiện 3 vấn đề cấu trúc:
 
-1. **Output duplication** — brainstorming ghi design output vào `docs/superpowers/specs/`; OpenSpec tạo lại `proposal.md` / `design.md` trong change directory, nội dung chồng chéo.
-2. **Task fragmentation** — `tasks.md` của OpenSpec (coarse checkboxes) và `plan.md` của Superpowers (TDD micro-steps) mô tả cùng một công việc với format, vị trí và progress tracker khác nhau.
-3. **Manual orchestration** — người dùng phải tự quyết định mỗi bước nên gọi skill nào; hai hệ thống không tự kết nối với nhau.
+1. **Đầu ra lặp lại** — brainstorming ghi đầu ra của design vào `docs/superpowers/specs/`; OpenSpec tạo lại `proposal.md` / `design.md` trong thư mục change, nội dung chồng chéo.
+2. **Nhiệm vụ phân mảnh** — `tasks.md` của OpenSpec (coarse checkboxes) và `plan.md` của Superpowers (TDD micro-steps) mô tả cùng một công việc với định dạng, vị trí và công cụ theo dõi tiến độ khác nhau.
+3. **Điều phối thủ công** — người dùng phải tự quyết định mỗi bước nên gọi skill nào; hai hệ thống không tự kết nối với nhau.
 
 ### Tại sao là custom schema mà không sửa skills hiện có?
 
 Hai phương án đã được cân nhắc và bị từ chối:
 
-- **Thêm custom fields vào `config.yaml`** (ví dụ `skill_bindings`): OpenSpec CLI không nhận diện được — không validation, không discoverability, phải sửa nhiều file SKILL.md.
-- **Sửa trực tiếp opsx skill files**: invasive (ảnh hưởng mọi change) và fragile (bị overwrite khi nâng cấp SKILL.md).
+- **Thêm các trường riêng vào `config.yaml`** (ví dụ `skill_bindings`): OpenSpec CLI không nhận diện được — không xác nhận, không được tìm thấy, phải sửa nhiều file SKILL.md.
+- **Sửa trực tiếp opsx skill files**: xâm lấn (ảnh hưởng mọi change) và dễ hỏng (bị ghi đè khi nâng cấp SKILL.md).
 
-Custom schema sử dụng **cơ chế project-level schema native** của OpenSpec: CLI validate cấu trúc, `openspec schemas` tự động liệt kê, mỗi change chọn schema độc lập (`--schema spec-driven` hoặc `--schema superpowers-bridge`), và không sửa bất kỳ SKILL.md hay command file nào.
+Custom schema sử dụng **cơ chế project-level schema native** của OpenSpec: CLI xác nhận cấu trúc, `openspec schemas` tự động liệt kê, mỗi change chọn schema độc lập (`--schema spec-driven` hoặc `--schema superpowers-bridge`), và không sửa bất kỳ SKILL.md hay file lệnh nào.
 
 ---
 
