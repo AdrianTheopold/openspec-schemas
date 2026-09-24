@@ -124,7 +124,9 @@ rm -rf /tmp/oss-upgrade
 | `CLAUDE.md` (project root) | Thư mục schema chứa `templates/adopters/CLAUDE.md.fragment.<locale>.md`; procedure upgrade sẽ diff CLAUDE.md hiện tại với fragment và chờ ack trước khi chèn/thay thế | Có — review diff, chọn insert / replace / keep |
 
 > Thư mục bridge là monolithic — bạn lấy toàn bộ version mới hoặc giữ nguyên version cũ. Không có per-file opt-in. CLAUDE.md là file project-root duy nhất upgrade động tới, và không bao giờ động tới nếu không có ack của bạn.
+>
 > Các change đang in-flight (bất kỳ phase nào: brainstorm / design / specs / ...) vẫn valid vì schema graph (`requires:` edges, PRECHECK, artifact dependencies) không thay đổi trong v1.x. Các `verify.md` / `retrospective.md` có sẵn từ trước upgrade vẫn đọc được; nếu bạn chạy lại `/opsx:verify` hoặc `/opsx:continue → retrospective` trên chúng, cấu trúc template mới sẽ được áp dụng khi overwrite.
+>
 > Nếu future upgrade thay đổi schema graph về mặt cấu trúc (artifact add/remove, `requires:` edge thay đổi, PRECHECK thay đổi), README sẽ có thêm version field và migration guide. v1 → v1.x chỉ thay đổi prose, an toàn và không cần migration.
 
 ---
@@ -198,8 +200,8 @@ Nếu thiếu bất kỳ điều kiện nào, tiếp tục brainstorming. Khi c�
 
 | Anti-pattern | Tại sao sai |
 | --- | --- |
-| Để brainstorming ghi vào `docs/superpowers/specs/` sau khi schema đã được cài | Bypass redirect ở [schema.yaml](./schema.yaml) dòng 35-39; tạo orphan artifacts |
-| Để writing-plans ghi vào `docs/superpowers/plans/` | Lý do tương tự (schema.yaml dòng 180-182) |
+| Để brainstorming ghi vào `docs/superpowers/specs/` sau khi schema đã được cài | Bypass block `IMPORTANT output redirection` trong instruction của artifact **brainstorm** ([schema.yaml](./schema.yaml)); tạo orphan artifacts. Verify §6 phát hiện điều này. |
+| Để writing-plans ghi vào `docs/superpowers/plans/` | Lý do tương tự — block tương đương trong instruction của artifact **plan**. Verify §6 phát hiện điều này. |
 | Promote lên opsx với unresolved blocking TBDs | Các TBD đó sẽ block apply phase — promotion chỉ trì hoãn vấn đề |
 | Mở change cho bug fix / typo / config tweak | Process ceremony vượt quá risk thực tế; chậm delivery mà không có giá trị |
 
@@ -300,8 +302,7 @@ APPLY ━━━━━━━━━━━━━━━━━━━━━━━━�
   6. superpowers:finishing-a-development-branch (🏁 push là BƯỚC CUỐI)
 ```
 
-> **Timing notes**:
-
+> **Timing notes** (lý do đầy đủ trong "Six design touches" #6):
 > - `verify.md` khai báo `requires: plan` trong graph nhưng thực tế được tạo ra ở apply step 3.
 > - `retrospective.md` khai báo `requires: verify` và theo Step 4 được tạo **trước** finish/push (step 6) — để branch được push bao gồm toàn bộ cycle đã archive (artifacts done, spec synced, change folder dưới `archive/`).
 > - Các edge `requires:` là file-existence dependencies cho graph engine của OpenSpec; runtime ordering nằm trong instruction prose.
@@ -401,7 +402,7 @@ Main agent đọc `plan.md`, dispatch subagent mới cho mỗi micro-task:
 - **TDD** (`superpowers:test-driven-development`): mỗi subagent kích hoạt transitive — viết failing test → xem nó fail → code tối thiểu → pass; production code không có test trước sẽ bị xóa
 - **Per-task review**: sau mỗi task, controller dispatch merged task-reviewer của subagent-driven-development (spec-compliance + code-quality) — không phải skill riêng; critical issues chặn forward motion
 
-Coarse `tasks.md` checkboxes được tick khi tasks hoàn thành. Sau tất cả tasks, final whole-branch code review (`superpowers:requesting-code-review`) bao phủ toàn bộ implementation.
+Cả hai committed ledgers đều được tick khi tasks hoàn thành — coarse `tasks.md` checkboxes và các `plan.md` step boxes của task đã clear — trong cùng bookkeeping step với SDD progress-ledger line. Một step bị defer thay vì clear được đánh dấu `[~]` trong `plan.md` ngay tại thời điểm đó, vì đó chính là thứ verify §7 đọc. Sau tất cả tasks, final whole-branch code review (`superpowers:requesting-code-review`) bao phủ toàn bộ implementation.
 
 Schema này KHÔNG hỗ trợ `superpowers:executing-plans` làm fallback. Xem phần "Six design touches" bên dưới để biết lý do.
 
@@ -469,7 +470,7 @@ Schema này yêu cầu nền tảng hỗ trợ subagent (Claude Code, Codex, v.v
 
 Mỗi timing-sensitive artifact chạy các concrete shell evidence checks ở đầu instruction:
 
-- **verify**: `git log <base>..HEAD | wc -l > 0` VÀ `grep -c '^- \[x\]' tasks.md > 0`
+- **verify**: `git log <base>..HEAD | wc -l > 0` AND `grep -cE '^\s*- \[x\]' tasks.md > 0` AND `grep -cE '^\s*- \[[x~]\]' plan.md > 0`
 - **retrospective**: `test -f verify.md` VÀ `! grep -q '^- \[x\] ❌ FAIL' verify.md`
 
 LLM không cần diễn giải timing prose — nó chạy lệnh và đọc kết quả. Đây là layer 2 của concern #1 / mitigation cho concern #2.
@@ -550,6 +551,8 @@ Brainstorming là multi-turn interactive dialogue cần người dùng tham gia.
 - `plan.md` → hướng dẫn subagent từng bước (input của executor)
 
 Apply yêu cầu `plan` (không phải `tasks`) vì executor cần micro-steps; `tracks: tasks.md` đảm bảo progress vẫn được hiển thị qua coarse checkboxes.
+
+Mục đích khác nhau, nhưng **cả hai đều là committed ledgers mà executor phải duy trì** — `tracks: tasks.md` chỉ nêu thứ OpenSpec parse, không phải toàn bộ bookkeeping duty. Các `plan.md` step boxes có nhiệm vụ riêng: verify §7 đọc chúng để tìm `[~]` deferred rows, nên một `plan.md` không được duy trì sẽ âm thầm vô hiệu hóa deferred-dogfood gap check — báo cáo "no deferrals" cho một cycle thực sự có deferrals. Vì vậy apply step 2 yêu cầu cả hai files được tick trong cùng step với SDD ledger line.
 
 ### Fallback strategy
 
