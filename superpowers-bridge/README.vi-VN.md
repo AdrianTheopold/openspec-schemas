@@ -42,7 +42,7 @@ Giải thích các bước:
 3. Sao chép thư mục `superpowers-bridge/` vào `openspec/schemas/superpowers-bridge/`.
 4. Chạy `openspec schema validate superpowers-bridge` để kiểm tra.
 5. Chạy `openspec schemas` và xác nhận `superpowers-bridge` đã được liệt kê.
-6. Nếu có `CLAUDE.md` ở project root, hỏi tôi có muốn chèn **workflow-routing fragment** từ `templates/adopters/CLAUDE.md.fragment.<locale>.md` không (tự động phát hiện locale từ nội dung CLAUDE.md; mặc định zh-TW cho Traditional Chinese, không suffix cho English và Vietnamese). Nếu tôi đồng ý, thêm fragment như một section mới. Nếu không có CLAUDE.md thì bỏ qua.
+6. Nếu có `CLAUDE.md` ở project root, hỏi tôi có muốn chèn **workflow-routing fragment** từ `templates/adopters/CLAUDE.md.fragment.<locale>.md` không (tự động phát hiện locale từ nội dung CLAUDE.md; mặc định zh-TW cho Traditional Chinese, không suffix cho English). Nếu tôi đồng ý, thêm fragment như một section mới. Nếu không có CLAUDE.md thì bỏ qua.
 7. Dọn dẹp thư mục temp.
 8. Kiểm tra Superpowers plugin đã được cài chưa bằng `claude plugin list`. Nếu chưa, chạy `claude plugin install superpowers@claude-plugins-official`.
 9. Cho tôi xem kết quả cuối cùng.
