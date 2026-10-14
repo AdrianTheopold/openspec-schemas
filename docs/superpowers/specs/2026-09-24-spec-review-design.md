@@ -125,7 +125,7 @@ maintain than restating each check as a prose rule, and each row retires when th
 matching upstream change lands.
 
 **Alternatives considered**: restating every check as a prose rule — roughly fifteen
-rules to keep current instead of the four groups in Decision 5.
+rules to keep current instead of the five groups in Decision 5.
 
 ### Decision 4: OpenSpec's authoring rules, by pointer
 
@@ -147,7 +147,7 @@ text the bundle already refreshes.
 
 ### Decision 5: The rules this bundle adds
 
-**Decision**: Four rule groups that OpenSpec carries in no instruction. Each is written
+**Decision**: Five rule groups that OpenSpec carries in no instruction. Each is written
 in the rule file as the rule, the test a reviewer applies, and one before/after example.
 
 1. **One behavior per requirement.**
@@ -193,10 +193,28 @@ in the rule file as the rule, the test a reviewer applies, and one before/after 
    gateway."
    After: "THEN the order is rejected before it is stored."
 
+5. **Titles name the behavior, never a planning label.**
+   Source: OpenSpec matches requirements by title — a MODIFIED block must use "the
+   exact same normalized header", and changing a title needs a RENAMED entry
+   (this bundle's `templates/spec.md`) — and `docs/writing-specs.md`
+   asks for scenario titles that name the case.
+   Test: does a requirement or scenario title carry a decision, task, phase or item
+   label — "(D9)", "(L1)", "Task 3", "P6" — or anything else a reader cannot decode
+   from the spec alone? It fails. A parenthesis that describes behavior, such as
+   "(admin only)", is fine.
+   Before: "### Requirement: Order validation (D4)"
+   After: "### Requirement: Orders are validated before they are stored"
+   A label in a title is worse than one in body text: the title is the identity
+   archive matches on, so the label outlives the decision it named, and every later
+   change that modifies the requirement must repeat it or rename it. In a survey of
+   thirteen public repositories using OpenSpec, none labelled a title this way.
+
 **Why**: These are the gaps left after Decisions 3 and 4. Groups 1 and 2 are OpenSpec's
 own guidance, published in its docs but missing from the specs instruction; the
 upstream change that moves them there would retire both groups here. Groups 3 and 4
-follow from how archive works and are not written down upstream.
+follow from how archive works and are not written down upstream; group 5 follows
+from how archive matches requirements, and upstream states the matching rule but not
+this consequence of it.
 
 **Alternatives considered**: a larger rule set that includes style — excluded by
 Decision 6.
@@ -297,7 +315,7 @@ Outline of `superpowers-bridge/spec-review.md`:
    8 (Decision 9); what counts as a finding (Decision 6).
 2. **What OpenSpec already checks** — the table of Decision 3.
 3. **OpenSpec's authoring rules** — the pointer of Decision 4.
-4. **Rules this bundle adds** — the four groups of Decision 5, each with source, test and
+4. **Rules this bundle adds** — the five groups of Decision 5, each with source, test and
    before/after.
 5. **Thresholds** — Decision 7, including which pass reads the delta count.
 6. **Report format** — one line per finding:
