@@ -1,6 +1,7 @@
 # Spec review step — design spec
 
-> Validated design from brainstorming session, 2026-09-24.
+> Validated design from brainstorming session, 2026-09-24. Revised 2026-10-15 with the
+> findings of a second review round (Context, rule groups 6 and 7, Decision 10).
 > Target: superpowers-bridge 1.5.0, against OpenSpec CLI 1.13.0.
 > Companion work: changes proposed to Fission-AI/OpenSpec itself are listed under
 > [Upstream changes](#upstream-changes). They are not part of this bundle.
@@ -44,6 +45,24 @@ change):
 
 `openspec validate <change>` reads the delta specs only. OpenSpec does compute most of
 the missing facts, just elsewhere — which is what Decision 3 relies on.
+
+**A second round** — archiving two related changes in the same repository, months after
+both were merged — found five more classes of defect, again all past
+`openspec validate --strict`:
+
+- a requirement claiming its test suite keeps four interpreters in agreement, when the
+  suite compared three; verify had accepted the claim;
+- a requirement in the main spec still naming a public function that a merged change
+  had removed;
+- two unarchived changes that both modified one requirement, each written against the
+  same old text — whichever archived second would have been refused, or would have
+  restored the old wording;
+- both changes merged unarchived, although the bundle's apply instruction archives
+  before the pull request, so the main spec described a removed API for months;
+- about 140 code comments citing planning labels — design decisions (`D9`), task
+  numbers (`Task 5`), review fix tags (`FIX-2`) — which no longer resolve once the
+  change folder is archived, and which collide across changes: two designs each had a
+  `D9`. Rewriting them was the largest part of the cleanup.
 
 ## Goals
 
@@ -117,6 +136,12 @@ OpenSpec command that already computes it, and says how to read the output:
 | Archive will refuse the delta | same output | An INFO issue whose message begins `Archive would refuse this delta` is a finding |
 | `proposal.md` parses | `openspec show <change> --json` | An entry with `"severity": "error"` in `status` is a finding |
 | Requirement length, scenario content, delta count | `openspec show <change> --json --deltas-only` | Read each `requirement.text`, each `scenarios[].rawText`, and `deltaCount`. A scenario whose `rawText` has no WHEN or THEN step is a finding. Length and delta count follow [Decision 7](#decision-7-length-and-delta-count-thresholds-prompt-a-rule) |
+| A main spec the change touches still has the `TBD` Purpose placeholder | `openspec validate <capability> --type spec --strict` for each capability with a delta | The placeholder warning is a finding. A delta's `## Purpose` only seeds a spec that does not exist yet, so the fix is an edit to the main spec itself |
+
+When the first row reports a MODIFIED block dropping a main-spec scenario because the
+block rewrote it under a new title, the fix is to carry the scenario under its old
+title, reworded if the behavior changed — archive matches scenarios by title. Copying
+the old text back unchanged is right only if the old wording is still true.
 
 **Why**: OpenSpec already computes most of what `validate <change>` leaves out:
 archive refusals are reported at INFO, `show` parses the proposal, and `--deltas-only`
@@ -125,7 +150,7 @@ maintain than restating each check as a prose rule, and each row retires when th
 matching upstream change lands.
 
 **Alternatives considered**: restating every check as a prose rule — roughly fifteen
-rules to keep current instead of the five groups in Decision 5.
+rules to keep current instead of the seven groups in Decision 5.
 
 ### Decision 4: OpenSpec's authoring rules, by pointer
 
@@ -147,7 +172,7 @@ text the bundle already refreshes.
 
 ### Decision 5: The rules this bundle adds
 
-**Decision**: Five rule groups that OpenSpec carries in no instruction. Each is written
+**Decision**: Seven rule groups that OpenSpec carries in no instruction. Each is written
 in the rule file as the rule, the test a reviewer applies, and one before/after example.
 
 1. **One behavior per requirement.**
@@ -209,12 +234,39 @@ in the rule file as the rule, the test a reviewer applies, and one before/after 
    change that modifies the requirement must repeat it or rename it. In a survey of
    thirteen public repositories using OpenSpec, none labelled a title this way.
 
+6. **A claim matches its enforcement.**
+   Source: archive turns the delta into the source of truth; a requirement that
+   overstates what is checked becomes a false guarantee there.
+   Test: where a requirement names how it is enforced or verified — a test suite, an
+   index, a validation step — does that mechanism exist and cover exactly what the
+   sentence says? Quantifiers and counts ("all", "every", "four", "always") are checked
+   against the code and tests, not against the design. A mismatch fails: reword the
+   claim to what is enforced, or add the missing enforcement.
+   Before: "The parity suite MUST keep all three payment adapters in agreement." — the
+   suite runs two of them.
+   After: "The parity suite MUST keep the card and invoice adapters in agreement; the
+   wallet adapter is pinned by tests of its request shape."
+
+7. **A removed or renamed name leaves no reference behind.**
+   Source: archive applies only the blocks a change carries; a requirement the change
+   does not touch keeps its old wording.
+   Test: for every public name the change removes or renames — a REMOVED or RENAMED
+   requirement, or an API the proposal retires — search the main specs of the touched
+   capabilities. Any other requirement that still names it needs a MODIFIED block in
+   this change.
+   Before: the change removes `list_orders()`; the main spec's requirement "Orders
+   expose their totals" still says "`list_orders()` SHALL return …".
+   After: the change carries a MODIFIED block for that requirement naming the
+   replacement.
+
 **Why**: These are the gaps left after Decisions 3 and 4. Groups 1 and 2 are OpenSpec's
 own guidance, published in its docs but missing from the specs instruction; the
 upstream change that moves them there would retire both groups here. Groups 3 and 4
 follow from how archive works and are not written down upstream; group 5 follows
 from how archive matches requirements, and upstream states the matching rule but not
-this consequence of it.
+this consequence of it. Groups 6 and 7 are the review-time form of a check the
+verification step already intends — that spec, code and tests agree — narrowed to the
+two ways the second round in Context showed it failing.
 
 **Alternatives considered**: a larger rule set that includes style — excluded by
 Decision 6.
@@ -295,6 +347,18 @@ path, resolved as in Decision 2. The subagent runs the commands of Decision 3, a
 rule, the quoted text and a suggested fix — or reports "No findings." Any finding makes
 the Overall Decision ❌ FAIL (Decision 6).
 
+Check 8 also runs two checks that look beyond the change's own delta specs:
+
+- **Sibling changes.** For every capability the change has a delta for, list
+  `openspec/changes/*/specs/<capability>/`. Another unarchived change that MODIFIES,
+  RENAMES or REMOVES a requirement this change also MODIFIES, RENAMES or REMOVES is a
+  finding: both were written against the same main-spec text, and `openspec validate`
+  checks each change against the current main spec only, so it cannot see the
+  collision. The fix is an archive order — the earlier change first — and a rewrite of
+  the later change's block against the archived text. A sibling that only ADDs
+  requirements does not collide.
+- **Planning labels in code**, per [Decision 10](#decision-10-code-comments-carry-reasons-commits-carry-the-trace).
+
 **Why**: The bridge's artifact graph has no archive node: archive runs through
 OpenSpec's `/opsx:archive`, which this repository does not own. Verify is authored
 here, runs after apply and before archive, and already decides whether a change is
@@ -307,6 +371,46 @@ context adds no dependency. Check 1 runs `openspec validate --all --json` withou
   new node for every adopter.
 - A review on demand only — see Decision 1.
 
+### Decision 10: Code comments carry reasons, commits carry the trace
+
+**Decision**: Comments, docstrings and messages in the code a change adds state the
+reason in words. They do not cite planning labels — design decisions (`D9`), task or
+step numbers (`Task 5`, `Step 2`), review fix tags (`FIX-2`), or files of the change
+folder (`design.md`, `plan.md`). Where a comment still needs its source, it names the
+change: "decision D9 of the change `add-order-validation`". The link from code to
+decision and task lives in the commit message, which names both.
+
+Three parts:
+
+1. **Prevention.** The apply instruction — authored in this repository, not inherited —
+   tells the controller to include this rule in every task brief it hands an
+   implementing subagent, and to name the decision and task in the commit message
+   instead.
+2. **Detection.** Check 8 searches the lines the change adds outside `openspec/` —
+   `git diff <base>...HEAD` against the branch the change merges into — for
+   `\bD[0-9]+\b`, `\bTasks? [0-9]`, `\bStep [0-9]`, `\bFIX-[0-9]`, `design\.md` and
+   `plan\.md`. Each hit that is not scoped by the change's name is a finding. `git` is
+   already required, so this adds no dependency.
+3. **Repair guidance.** In the rule file: state the reason; if the source still
+   matters, scope it with the change's name.
+
+**Why**: Implementing subagents work from task briefs that name decisions and tasks,
+and they copy those labels into comments as traceability. A label is local to the
+document that defines it. Once the change folder is archived it no longer says which
+document it means, task lists are renumbered as work moves, and two changes each have
+a `D9`, so the same label in one codebase means two different things (Context, second
+round). The traceability is real and worth keeping; a commit message keeps it without
+leaving it in the code, and stays resolvable as long as the history is kept.
+
+**Alternatives considered**:
+- A line in the plan instruction only — the plan is read by the controller, not by the
+  subagent that writes the comment, so it does not reach the point where labels are
+  written.
+- Banning labels without a replacement — loses the traceability, which then comes
+  back as labels.
+- A per-repository convention only — each adopter would rediscover it, and the
+  bundle's own task briefs would keep producing the labels.
+
 ## The rule file
 
 Outline of `superpowers-bridge/spec-review.md`:
@@ -315,10 +419,12 @@ Outline of `superpowers-bridge/spec-review.md`:
    8 (Decision 9); what counts as a finding (Decision 6).
 2. **What OpenSpec already checks** — the table of Decision 3.
 3. **OpenSpec's authoring rules** — the pointer of Decision 4.
-4. **Rules this bundle adds** — the five groups of Decision 5, each with source, test and
+4. **Rules this bundle adds** — the seven groups of Decision 5, each with source, test and
    before/after.
-5. **Thresholds** — Decision 7, including which pass reads the delta count.
-6. **Report format** — one line per finding:
+5. **Beyond the delta specs** — the sibling-change check of Decision 9 and the code-label
+   check of Decision 10, with its search patterns and repair guidance.
+6. **Thresholds** — Decision 7, including which pass reads the delta count.
+7. **Report format** — one line per finding:
    `<file>:<line> — rule <n> — "<quoted text>" — <suggested fix>`, or `No findings.`
 
 ## Upstream changes
@@ -356,20 +462,30 @@ each change retires from `spec-review.md` once it reaches a bundle refresh.
   regardless.
 - [Risk] The rule file drifts from the upstream docs it cites → Mitigation: every rule
   names its source, and re-attestation re-reads the sources.
-- [Trade-off] Every adopter's verify gains a blocking check → Accepted: it reads the
-  delta specs only, not code, and runs once per verify.
+- [Trade-off] Every adopter's verify gains a blocking check → Accepted: it runs once per
+  verify, and the only part that reads code is a search of the change's added lines.
+- [Risk] The code-label search flags a token that is not a planning label — a variable
+  `D2`, a domain code → Mitigation: the hit is shown with its line, and the human can
+  drop it (Decision 6); the patterns are anchored to word boundaries.
+- [Risk] A change is merged before it is archived, as both changes in the second round
+  were, although the apply instruction already archives before the pull request →
+  Not mitigated by this design: verify runs before archive and cannot see a merge. See
+  Open Questions.
 
 ## Migration Plan
 
-- Bundle 1.5.0: `spec-review.md`, the note in `templates/spec.md`, verify check 8, the
-  `## 8.` section in `templates/verify.md`, `README.md` and `README.zh-TW.md` (lifecycle
-  and verify description), `VERSION`.
+- Bundle 1.5.0: `spec-review.md`, the note in `templates/spec.md`, verify check 8 (with
+  the sibling-change and code-label checks), the `## 8.` section in
+  `templates/verify.md`, the task-brief rule and commit-message trace in the apply
+  instruction (Decision 10), `README.md` and `README.zh-TW.md` (lifecycle and verify
+  description), `VERSION`.
 - CI: `openspec schema validate superpowers-bridge` must still pass with the extra file
   in the bundle.
 - Acceptance before release: run check 8 against a delta spec with no defects —
   expect `No findings.` — and against a delta spec seeded with one defect per rule group
-  and per row of Decision 3's table — expect each seeded defect found exactly once, and
-  nothing else.
+  and per row of Decision 3's table, plus a sibling change modifying the same
+  requirement and one labelled code comment — expect each seeded defect found exactly
+  once, and nothing else.
 - Adopters refresh their installed bundle. A change already past verify is unaffected;
   a change that re-runs verify gets check 8.
 - Rollback: reinstall 1.4.0.
@@ -379,3 +495,8 @@ each change retires from `spec-review.md` once it reaches a bundle refresh.
 - Whether the acceptance fixtures are committed to this repository, as documentation of
   what each rule catches, or stay in a scratch project. Deferrable: it changes neither
   the rules nor the touchpoints.
+- How to keep a change from being merged before it is archived. The apply instruction
+  already orders archive before the pull request; the second round shows it is
+  skipped. A guard would sit outside the bundle (a local check that an adopter repo's
+  default branch carries no change whose implementation is merged but whose folder is
+  not archived), so it is not part of 1.5.0.
