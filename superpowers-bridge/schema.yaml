@@ -22,7 +22,9 @@ description: >
   Context / Goals / Decisions / Risks / Migration; referenced by tasks
   and plan for implementation guidance).
   Apply phase uses git worktrees + subagent-driven-development
-  (brings TDD and code-review transitively).
+  (a fresh implementer and a fresh reviewer per task, and a final
+  whole-branch review); TDD reaches each task through the plan's
+  test-first steps, which the plan artifact requires.
 
 artifacts:
   - id: brainstorm
@@ -417,6 +419,16 @@ artifacts:
          signature and tests do not determine (Superpowers 6.4.2+)
       4. Add commit points after each task
 
+      Test-first steps are required, not just expected: every task that
+      adds or changes behavior MUST open with a step that writes the
+      failing test and a step that runs it and expects it to fail,
+      before any implementation step. This is how TDD reaches apply —
+      subagent-driven-development does not load test-driven-development
+      itself; its implementer writes tests "following TDD if task says
+      to", so a task without those steps is implemented without TDD.
+      A task with no behavior to test (pure scaffolding or config)
+      says so in one line instead.
+
       Pass the tasks.md content to the skill as the input for
       decomposition. The plan should reference the specs and
       design artifacts in this change directory.
@@ -487,10 +499,10 @@ artifacts:
          git log --oneline $(git merge-base HEAD origin/main 2>/dev/null || git merge-base HEAD origin/master 2>/dev/null || git merge-base HEAD origin/HEAD 2>/dev/null || git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null)..HEAD | wc -l
 
       2. Task progress (must return > 0):
-         grep -cE '^\s*- \[x\]' openspec/changes/<change-name>/tasks.md
+         grep -cE '^\s*([-*+]|[0-9]{1,9}[.)])\s*\[\s*[xX]\s*\]([^([]|$)' openspec/changes/<change-name>/tasks.md
 
       3. Step progress (must return > 0):
-         grep -cE '^\s*- \[[x~]\]' openspec/changes/<change-name>/plan.md
+         grep -cE '^\s*([-*+]|[0-9]{1,9}[.)])\s*\[\s*[xX~]\s*\]([^([]|$)' openspec/changes/<change-name>/plan.md
 
       A 0 from either means the apply executor failed to maintain that
       ledger as tasks cleared — see apply step 2's ticking rule. On a
@@ -501,7 +513,9 @@ artifacts:
       silently disarms check 7 below (it counts `[~]` rows that were
       never written). Command 3 accepts `[x]` or `[~]`, so a plan whose
       steps were all deferred still passes — deferral is a recorded
-      outcome, not a missing one.
+      outcome, not a missing one. Both patterns mirror what OpenSpec
+      (1.14.3) counts as a done box: `x` or `X` with any spacing inside
+      the brackets, after a `-`, `*`, `+` or `1.` / `1)` marker.
 
       Only after BOTH return positive numbers, proceed to invoke
       the verification skill below.
@@ -803,8 +817,10 @@ apply:
 
        - superpowers:using-git-worktrees
        - superpowers:subagent-driven-development
-         (transitively: superpowers:test-driven-development,
-                        superpowers:requesting-code-review)
+       - superpowers:test-driven-development (the discipline the
+         plan's test-first steps follow; SDD does not load it itself)
+       - superpowers:requesting-code-review (its reviewer prompt runs
+         SDD's final whole-branch review)
        - superpowers:finishing-a-development-branch
 
        If any required skill is missing, STOP and inform the user —
@@ -888,18 +904,26 @@ apply:
          controller hands that list to verify (check 4) and the
          retrospective (§3).
 
-       IMPORTANT — transitive skill activation:
-       subagent-driven-development internally enforces the
-       following skills, so you do NOT need to invoke them
-       manually:
-       - **superpowers:test-driven-development** — every task
-         follows RED-GREEN-REFACTOR. Implementation code written
-         before a failing test is deleted.
-       - **superpowers:requesting-code-review** — invoked only for
-         the FINAL whole-branch review before apply concludes.
-         Per-task review is handled INSIDE subagent-driven-development
-         by its own merged task-reviewer prompt (spec compliance +
-         code quality), not by a separate skill invocation.
+       IMPORTANT — where TDD and code review come from:
+       you do NOT invoke either skill manually here.
+       - **TDD comes from the plan, not from the executor.**
+         subagent-driven-development does not load
+         superpowers:test-driven-development (its SKILL.md has not
+         named it since Superpowers 6.2.0); its implementer prompt
+         says "Write tests (following TDD if task says to)". Each
+         task says to: the plan artifact requires every behavior
+         task to open with a failing-test step and a run-it-to-fail
+         step. The implementer reports RED and GREEN evidence for
+         such a task, and the merged task reviewer reads that
+         evidence. So hand plan.md to the executor as written — a
+         task whose test-first steps are dropped or reordered loses
+         TDD silently.
+       - **superpowers:requesting-code-review** — its reviewer prompt
+         (code-reviewer.md) runs the FINAL whole-branch review before
+         apply concludes. Per-task review is handled INSIDE
+         subagent-driven-development by its own merged task-reviewer
+         prompt (spec compliance + code quality), not by a separate
+         skill invocation.
 
        NOTE: subagent-driven-development's own flow ends by invoking
        finishing-a-development-branch + worktree cleanup; under THIS
@@ -909,10 +933,11 @@ apply:
        suppression is by instruction.
 
        This schema does NOT support `superpowers:executing-plans`
-       as a fallback for non-subagent platforms. Per its SKILL.md
-       (Superpowers 6.4.1+), executing-plans does load
-       test-driven-development and verification-before-completion and
-       ends with one fresh whole-branch review, but the executor
+       as a fallback for non-subagent platforms. TDD is not the
+       reason: per its SKILL.md (Superpowers 6.4.1+), executing-plans
+       loads test-driven-development itself (SDD relies on the plan
+       for it), loads verification-before-completion and ends with
+       one fresh whole-branch review. The reason is that the executor
        implements every task itself in one context, with no reviewer
        per task — it gives up exactly the fresh context per task and
        the per-task review gate this apply phase is built on.

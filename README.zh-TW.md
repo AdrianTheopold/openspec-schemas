@@ -8,7 +8,7 @@
 
 | Bridge | 用途 | 狀態 |
 |--------|------|------|
-| [`superpowers-bridge`](./superpowers-bridge/) | 把 OpenSpec 的 artifact 治理流程與 [obra/superpowers](https://github.com/obra/superpowers) 的執行技能(brainstorming、writing-plans、TDD-via-subagents、code review、finishing)串接成一個工作流。額外加上 evidence-first 的 `retrospective` artifact,補上 Superpowers 沒有的 retro 能力。 | v1 |
+| [`superpowers-bridge`](./superpowers-bridge/) | 把 OpenSpec 的 artifact 治理流程與 [obra/superpowers](https://github.com/obra/superpowers) 的執行技能(brainstorming、writing-plans、由 subagent 執行的 test-first plan step、code review、finishing)串接成一個工作流。額外加上 evidence-first 的 `retrospective` artifact,補上 Superpowers 沒有的 retro 能力。 | v1 |
 
 ## 為什麼另外開一個 repo?
 

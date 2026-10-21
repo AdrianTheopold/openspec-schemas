@@ -214,7 +214,7 @@ brainstorm ──┬──→ proposal ──→ specs ──┐
 | 起點 | proposal(手動撰寫) | **brainstorm**(調用 brainstorming skill) |
 | Plan 層級 | tasks(粗粒度) | tasks + **plan**(TDD micro-step) |
 | apply 需要 | tasks | **plan** |
-| apply 方式 | 標準 task-by-task | **worktree + subagent-driven-development**(含 TDD + code-review 傳遞) |
+| apply 方式 | 標準 task-by-task | **worktree + subagent-driven-development**(per-task review;TDD 經由 plan 的 test-first step) |
 | Post-apply | (無) | **verify** + **retrospective** artifacts |
 | 新增 artifacts | — | brainstorm, plan, verify, retrospective |
 
@@ -248,7 +248,7 @@ flowchart TD
         direction TB
         A0["<b>0. Pre-flight skill check</b>"]
         A1["<b>1. Workspace</b><br/><i>using-git-worktrees</i>"]
-        A2["<b>2. Executor</b><br/><i>subagent-driven-development</i><br/>↳ TDD + code-review(傳遞)"]
+        A2["<b>2. Executor</b><br/><i>subagent-driven-development</i><br/>↳ per-task review · TDD 經由 plan step"]
         A3["<b>3. Verification</b><br/><i>openspec-verify-change</i> → verify.md"]
         A4["<b>4. Retrospective</b> → retrospective.md<br/>(finish 之前;hot context)"]
         A5["<b>5. Archive</b><br/><i>openspec archive -y</i><br/>(sync delta + 搬 folder)"]
@@ -283,7 +283,7 @@ PLANNING ━━━━━━━━━━━━━━━━━━━━━━━�
 APPLY ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   0. Pre-flight skill check
   1. superpowers:using-git-worktrees
-  2. superpowers:subagent-driven-development(+ TDD + code-review 傳遞)
+  2. superpowers:subagent-driven-development(+ per-task review;TDD 經由 plan step)
   3. openspec-verify-change → verify.md ◄┐
                               │           │ blocking → 回去修
                               ▼           │
@@ -305,8 +305,8 @@ APPLY ━━━━━━━━━━━━━━━━━━━━━━━━�
 | 2 | `superpowers:writing-plans` | `plan` artifact instruction | 直接(含 PRECHECK) |
 | 3 | `superpowers:using-git-worktrees` | apply step 1 | 直接 |
 | 4 | `superpowers:subagent-driven-development` | apply step 2 | 直接 |
-| 5 | `superpowers:test-driven-development` | (#4 內部觸發) | **傳遞** |
-| 6 | `superpowers:requesting-code-review` | (#4 內部觸發) | **傳遞** |
+| 5 | `superpowers:test-driven-development` | (#4 內部經由 plan 的 test-first step 遵循) | **經由 plan** |
+| 6 | `superpowers:requesting-code-review` | (其 reviewer prompt 執行 #4 的 final review) | **傳遞** |
 | 7 | `superpowers:finishing-a-development-branch` | apply step 6 | 直接 |
 
 加上一個 OpenSpec built-in:`openspec-verify-change`(apply step 3,產出 `verify.md`)。
@@ -329,7 +329,7 @@ Superpowers skill 有預設輸出路徑(例如 brainstorming 寫到 `docs/superp
 ### 快速流程(推薦)
 ```bash
 /opsx:ff my-feature    # 一條龍:scaffold + brainstorm + proposal + design + specs + tasks + plan
-/opsx:apply            # worktree + subagent-driven-development(含 TDD + code-review)
+/opsx:apply            # worktree + subagent-driven-development(per-task review;TDD 經由 plan step)
 /opsx:verify           # 產出 verify.md(7 項檢查)
 /opsx:continue         # → retrospective(產出 retrospective.md,§0 + 6 sections)
 /opsx:archive          # 封存
@@ -371,7 +371,9 @@ Superpowers skill 有預設輸出路徑(例如 brainstorming 寫到 `docs/superp
 確認以下 skill 都安裝才繼續:
 
 - `superpowers:using-git-worktrees`
-- `superpowers:subagent-driven-development`(傳遞依賴:`test-driven-development`、`requesting-code-review`)
+- `superpowers:subagent-driven-development`
+- `superpowers:test-driven-development`(經由 plan 的 test-first step 遵循;SDD 本身不載入它)
+- `superpowers:requesting-code-review`(其 reviewer prompt 執行 SDD 最後的整個 branch review)
 - `superpowers:finishing-a-development-branch`
 
 skill 缺失 → STOP 並通知使用者,不靜默 fallback,本 schema 內也沒有 manual mode。建議使用者在那個 change 改用 OpenSpec 內建的 `spec-driven` schema,或安裝缺失的 skill 後重來。
@@ -386,7 +388,7 @@ skill 缺失 → STOP 並通知使用者,不靜默 fallback,本 schema 內也沒
 
 Main agent 讀 `plan.md`,為每個 micro-task 派發 fresh subagent:
 
-- **TDD**(`superpowers:test-driven-development`):每個 subagent 自動傳遞 —— 先寫失敗測試 → 看著它 fail → 寫最小程式碼 → pass;production code 寫在沒測試之前會被刪掉重來
+- **TDD**(`superpowers:test-driven-development`):經由 plan 而非 SDD 進到每個 task —— plan artifact 要求每個有行為的 task 以「寫失敗測試」與「執行、預期它 fail」開頭,而 SDD 的 implementer 寫測試時「following TDD if task says to」,並回報 RED 與 GREEN 證據,由 task reviewer 檢視
 - **per-task review**:每個 task 完成後由 controller 派發 subagent-driven-development 自己的 merged task-reviewer(spec compliance + code quality)—— 不是另外呼叫一個 skill;Critical 級問題擋下進度
 
 task 清掉時,兩份進 git 的 ledger 都要更新 —— `tasks.md` 的粗粒度 checkbox,以及該 task 在 `plan.md` 的 step box —— 和 SDD progress ledger 那一行寫在同一個 bookkeeping 步驟裡。若某個 step 是被延後而非完成,當下就在 `plan.md` 標成 `[~]`,因為 verify §7 讀的正是這個標記。所有 task 跑完後,對整個 branch 再做一次 final code review(`superpowers:requesting-code-review`)。
@@ -445,9 +447,9 @@ Evidence-first 反思:§0 Evidence(量化前置數據 —— commit 數、diff �
 
 整合**完全**發生在 `instruction:` 欄位(純 prompt)。Superpowers 升版某個 skill 的行為時,本 schema 不用改。只有 skill 被改名或移除時才要 touch `schema.yaml`。
 
-### 3. 傳遞依賴顯式化
+### 3. TDD 與 code review 的來源顯式化
 
-TDD 與 code-review 平常藏在 `subagent-driven-development` 的 SKILL.md 裡。本 schema apply step 2 的 instruction **直接列出**這兩個 transitive activation,讓讀者一眼看懂「apply 階段到底會發生什麼」。
+code review 發生在 `subagent-driven-development` 內部:每個 task 之後由它自己的合併 task reviewer 審查,最後的整個 branch review 則用 `requesting-code-review` 的 reviewer prompt。TDD 則不是:自 Superpowers 6.2.0 起 SDD 的 SKILL.md 就沒有提到 `test-driven-development`,它的 implementer 只在 task 要求時才遵循 TDD。因此 plan artifact 要求每個有行為的 task 都有 test-first step,apply step 2 的 instruction **直接寫明**兩者各自的來源,讓讀者一眼看懂「apply 階段到底會發生什麼」—— 以及為什麼 `plan.md` 交給 executor 時 test-first step 必須完整保留。
 
 ### 4. Opinionated:只支援 subagent 平台,沒有手動 fallback
 
@@ -457,7 +459,7 @@ TDD 與 code-review 平常藏在 `subagent-driven-development` 的 SKILL.md 裡�
 
 時序敏感的 artifact 在 instruction 開頭跑具體 shell 證據檢查:
 
-- **verify**:`git log <base>..HEAD | wc -l > 0` 且 `grep -cE '^\s*- \[x\]' tasks.md > 0` 且 `grep -cE '^\s*- \[[x~]\]' plan.md > 0`
+- **verify**:`git log <base>..HEAD | wc -l > 0` 且 `grep -cE '^\s*([-*+]|[0-9]{1,9}[.)])\s*\[\s*[xX]\s*\]([^([]|$)' tasks.md > 0` 且 `grep -cE '^\s*([-*+]|[0-9]{1,9}[.)])\s*\[\s*[xX~]\s*\]([^([]|$)' plan.md > 0`
 - **retrospective**:`test -f verify.md` 且 `! grep -q '^- \[x\] ❌ FAIL' verify.md`
 
 LLM 不必解讀 timing 文字 —— 跑指令、看結果即可。這是顧慮 #1 第 2 層,以及顧慮 #2 的緩解。
@@ -496,7 +498,7 @@ LLM 不必解讀 timing 文字 —— 跑指令、看結果即可。這是顧慮
 
 > 已對 **OpenSpec 1.14.3**(2026-10-21,bundle 1.4.1)重新對齊 OpenSpec 側。結構面:`openspec schema validate` 通過,每個 artifact 與 apply 的 instructions 都能產生,依 templates 撰寫的 probe change 通過 `openspec validate --strict`。從 1.14.3 `spec-driven` 文字吸收進四段繼承的 instruction:**proposal** —— 新 capability 以持久的系統行為命名,而非這個 change 的工作內容,邊界要內聚、不要包山包海;**specs** —— spec 檔一次寫一個,從第一個還沒有檔案的 capability 開始;每個 requirement 的描述不超過 500 字元,一個 requirement 一個行為(較長的 ADDED requirement 會讓 `--strict` 失敗),且絕不為了長度而在 MODIFIED 下刪減既有 requirement;新 capability 的 delta 第一個 section 是 `## Purpose`;**tasks** —— 只有內容為 `x` 的 checkbox 算完成(其他標記,包括 `[~]`,都視為未完成),不在追蹤進度內的工作以一般條列放在選用的 `## Workflow follow-up` 段落,每個 task group 自行交付自己該有的測試與文件。**design** upstream 未變。templates 加上 upstream 的 H1 標題,以及 capability 命名與長度規則。針對 bridge 的調整:`[~]` 延後標記只用在 `plan.md`;workflow follow-up 列的是 apply steps 3–6 —— 追蹤的 task 永遠不涵蓋 verify、retrospective、archive 或 finish,因為 verify 的 task-completion 檢查要求 `tasks.md` 每個 box 在 archive 前都已勾選。原樣保留:brainstorm-first 的框架、spec 盤點段落、MODIFIED 完整性段落(upstream 沒有對應)、`tasks.md` / `plan.md` 的 ledger 分工。與 1.4.0 一樣刻意不納入:`--store` 參數(stores 仍未使用)。
 >
-> 已對 **Superpowers 7.0.0**(2026-10-21,bundle 1.4.1)以完整 v6.4.2→v7.0.0 skill diff 重新核對,已安裝版本與 upstream tag 完全一致。吸收一項行為變更:**brainstorming** 整個重寫。它不再分類為 spike / bounded / architectural,而是把工作分成 quick task、small change、或需要書面 design 的 project。它的第一則訊息會提議跳過提問,一旦接受,skill 就結束且不產出任何文件。它只在有助於使用者決定時才展示方案比較,以每段約 200–300 字的方式回放 design,並在交付前派一個 fresh 的 builder-check subagent 讀過書面 design。brainstorm instruction 現在固定回答「需要書面 design 的 project」,在本 flow 中關閉跳過提問的出口(手動撰寫 `brainstorm.md` 的路徑仍在),並擋下 skill 交給 writing-plans 的 handoff,因為在本 schema 裡 plan 是後面的 artifact。仍然成立:書面 design 預設寫到 `docs/superpowers/specs/`,且讓位給使用者的偏好,因此 output redirection 依然有效。不影響 bridge:spec-document-reviewer prompt 被移除(由 builder check 取代);`sdd-workspace` 不再覆寫既有的 `.superpowers/sdd/.gitignore`,workspace 仍位於 `.superpowers/sdd/` 底下;`executing-plans` 的 `task-done` script 與 `requesting-code-review` 範例只改了 shell 細節。
+> 已對 **Superpowers 7.0.0**(2026-10-21,bundle 1.4.1)以完整 v6.4.2→v7.0.0 skill diff 重新核對,已安裝版本與 upstream tag 完全一致。吸收一項行為變更:**brainstorming** 整個重寫。它不再分類為 spike / bounded / architectural,而是把工作分成 quick task、small change、或需要書面 design 的 project。它的第一則訊息會提議跳過提問,一旦接受,skill 就結束且不產出任何文件。它只在有助於使用者決定時才展示方案比較,以每段約 200–300 字的方式回放 design,並在交付前派一個 fresh 的 builder-check subagent 讀過書面 design。brainstorm instruction 現在固定回答「需要書面 design 的 project」,在本 flow 中關閉跳過提問的出口(手動撰寫 `brainstorm.md` 的路徑仍在),並擋下 skill 交給 writing-plans 的 handoff,因為在本 schema 裡 plan 是後面的 artifact。仍然成立:書面 design 預設寫到 `docs/superpowers/specs/`,且讓位給使用者的偏好,因此 output redirection 依然有效。不影響 bridge:spec-document-reviewer prompt 被移除(由 builder check 取代);`sdd-workspace` 不再覆寫既有的 `.superpowers/sdd/.gitignore`,workspace 仍位於 `.superpowers/sdd/` 底下;`executing-plans` 的 `task-done` script 與 `requesting-code-review` 範例只改了 shell 細節。另外在此更正一項自 **6.2.0** 起就已過時的說法:bundle 曾宣稱 SDD 會 transitively 強制 TDD。自 v6.2.0 起 SDD 的 SKILL.md 就沒有提到 `test-driven-development`(v6.1.0 時還有),其 implementer prompt 只寫「Write tests (following TDD if task says to)」。TDD 是經由 writing-plans 的 test-first step(task 的第一步「Write the failing test」)進到每個 task,因此 plan instruction 現在明確要求這些 step,apply step 2、touchpoint 表與設計觸點 #3 也改寫為這個機制。不支援 fallback 的理由不再依賴 TDD:`executing-plans` 自己會載入 TDD;此決定建立在 per-task review 與每個 task 的 fresh context 上。
 >
 > 已對 **Superpowers 6.4.2**(2026-10-21,bundle 1.4.1)以 v6.4.1→v6.4.2 skill diff 重新核對 —— 只有 `writing-plans` 有變。plan instruction 吸收的變更:一個 step 是「one action with a checkable result」,不再是 2–5 分鐘的動作;code step 給出精確的 signature、檔案與 spec 釘死的值,只有 signature 與測試無法決定的演算法才附上 body;Self-Review 的 placeholder scan 改為 step scan,並新增第五項檢查 Proportion,比較 plan 與 spec 的長度。plan instruction 的 reuse-check 理由仍成立 —— 五項檢查都是拿 plan 對照 spec 或對照自己,沒有一項對照 codebase —— 檢查數目已更正。
 >
