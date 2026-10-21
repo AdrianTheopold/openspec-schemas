@@ -6,7 +6,8 @@
 > Superpowers 7.0.0, and re-scoped around where human review happens. Spec-review
 > findings are now cleared by the agent, not triaged by the human; the human gate is a
 > deviation report against the adopter's governing sources (Decisions 6, 11–13).
-> Target: superpowers-bridge 1.5.0, against OpenSpec CLI 1.14.2.
+> Target: superpowers-bridge 1.5.0, against OpenSpec CLI 1.14.3, built on bundle 1.4.1
+> (see [Migration Plan](#migration-plan)).
 > Companion work: changes proposed to Fission-AI/OpenSpec itself are listed under
 > [Upstream changes](#upstream-changes). They are not part of this bundle.
 
@@ -689,21 +690,41 @@ The earlier row on task numbering for custom schemas is withdrawn: 1.14.2 commen
 
 ## Migration Plan
 
-- Bundle 1.5.0: `spec-review.md`; the note in `templates/spec.md`; verify checks 8 and 9
+Two releases. The first brings the bundle up to its current upstreams without changing
+its behavior; this design ships in the second, built on that base.
+
+**Bundle 1.4.1 — current upstreams, behavior unchanged.** Ships first, independently of
+this design, because its corrections are due now: the executing-plans claim has been
+false since Superpowers 6.4.1, and the brainstorming and writing-plans claims are stale
+from 7.0.0. Keeping it separate also keeps 1.5.0's rollback clean — reverting the new
+blocking checks must not revert the upstream corrections — and lets 1.5.0's plan and
+acceptance runs start from instruction text that is already current.
+
+- Re-attestation against Superpowers 7.0.0: brainstorming (sizing as quick task / small
+  change / project with a written design, the skip-the-questions exit closed for this
+  flow, design approval in short playback chunks), writing-plans (steps as "one action
+  with a checkable result", code bodies only where signature and tests do not settle
+  them, the execution-method handoff answered with subagent-driven development),
+  executing-plans (the reason this schema does not fall back to it, restated: it now
+  loads test-driven development and ends with a fresh review, but has no per-task review
+  and no fresh context per task), and the README's re-attestation notes for 6.4.1
+  through 7.0.0.
+- The four inherited instructions (proposal, specs, design, tasks) refreshed from the
+  OpenSpec 1.14.3 `spec-driven` schema. This brings in the one-behavior rule Decision 4
+  points to.
+- CI pins OpenSpec 1.14.3.
+
+**Bundle 1.5.0 — this design.**
+
+- `spec-review.md`; the note in `templates/spec.md`; verify checks 8 and 9
   with the `## 8.` and `## 9.` sections in `templates/verify.md`; the Global Constraints
   and commit-step rules in the plan instruction (Decisions 10 and 12); the controller
   backup, the stop rule and the deviation report in the pull request description in the
   apply instruction; `README.md` and `README.zh-TW.md` (lifecycle, verify description,
   and the configuration keys of Decision 13); `VERSION`.
-- Re-attestation against Superpowers 7.0.0 in the same release: the bundle's
-  brainstorming, writing-plans and executing-plans claims moved (brainstorming sizing and
-  its skip-the-questions exit, plan steps as "one action with a checkable result", and
-  executing-plans now loading test-driven development).
-- The specs instruction is refreshed from the OpenSpec 1.14.2 `spec-driven` schema in
-  the same release, which brings in the one-behavior rule Decision 4 points to.
 - CI: `openspec schema validate superpowers-bridge` must still pass with the extra file
   in the bundle, on the CLI version the workflow pins.
-- Acceptance before release, on 1.14.2:
+- Acceptance before release, on 1.14.3:
   - check 8 against a delta spec with no defects — expect `No findings.`;
   - check 8 against a delta spec seeded with one defect per rule group and per row of
     Decision 3's table that 1.14.2 does not already fail, plus a sibling change modifying
@@ -715,7 +736,7 @@ The earlier row on task numbering for custom schemas is withdrawn: 1.14.2 commen
 - Adopters refresh their installed bundle and set the configuration keys of Decision 13
   if they want checks 9 and the safety rules to read their sources. A change already past
   verify is unaffected; a change that re-runs verify gets checks 8 and 9.
-- Rollback: reinstall 1.4.0.
+- Rollback: reinstall 1.4.1.
 
 ## Open Questions
 
