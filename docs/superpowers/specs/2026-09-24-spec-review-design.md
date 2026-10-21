@@ -553,10 +553,15 @@ human instead of dying with the ledger.
 
 ### Decision 12: Safety rules bind every task
 
-**Decision**: The plan instruction copies the adopter's safety rules
+**Decision**: The plan instruction carries the adopter's safety rules
 ([Decision 13](#decision-13-adopter-rulesets-come-from-openspecconfigyaml)) into
 `plan.md`'s `## Global Constraints` section, beside the rule of Decision 10, so that
-they reach every implementer brief and the task reviewer's constraint slot. The apply
+they reach every implementer brief and the task reviewer's constraint slot. They go in
+the form the configuration gives them: the rules themselves, or a pointer with the
+command that loads them — in which case the constraint tells every implementer to load
+the rules before its first action. An adopter whose rules live in a governed source
+gives the pointer, so `plan.md`, which is tracked in the repository, does not become a
+second copy that ages. The apply
 instruction tells the controller to stop and ask the human before any action a safety
 rule reserves for them. The bundle defines no safety content of its own.
 
