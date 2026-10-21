@@ -482,10 +482,11 @@ A bundle release `1.x.y` is a published cut of schema major `v1`. A future schem
 
 Baseline versions this schema was authored against. This is a **historical snapshot, not an end-to-end compatibility guarantee** — CI cannot run the full prompt-layer workflow in headless mode, so behavioral compatibility relies on human review when drift fires.
 
-Current bundle release: **`1.4.0`** (see [VERSION](./VERSION)).
+Current bundle release: **`1.4.1`** (see [VERSION](./VERSION)).
 
 | superpowers-bridge | OpenSpec CLI | Superpowers plugin | Baseline as of |
 |---|---|---|---|
+| v1 | `1.14.3` | `7.0.0` | 2026-10-21 |
 | v1 | `1.13.0` | `6.3.0` | 2026-09-16 |
 | v1 | `1.5.0` | `6.2.0` | 2026-08-12 |
 | v1 | `1.5.0` | `6.1.0` | 2026-07-02 |
