@@ -6,7 +6,7 @@
 > *Community-maintained translation — it may lag behind [`README.md`](./README.md). Where the two disagree, the English version is authoritative.*
 
 [![Schema Structure](https://github.com/AdrianTheopold/openspec-schemas/actions/workflows/validate-schemas.yml/badge.svg?branch=main)](https://github.com/AdrianTheopold/openspec-schemas/actions/workflows/validate-schemas.yml)
-[![OpenSpec baseline](https://img.shields.io/badge/OpenSpec_baseline-1.13.0-0277bd)](#相容性)
+[![OpenSpec baseline](https://img.shields.io/badge/OpenSpec_baseline-1.14.3-0277bd)](#相容性)
 [![Superpowers baseline](https://img.shields.io/badge/Superpowers_baseline-7.0.0-0277bd)](#相容性)
 
 > 把 [OpenSpec](https://github.com/Fission-AI/OpenSpec) 的 artifact 治理流程(**做什麼**)與 [obra/superpowers](https://github.com/obra/superpowers) 的執行技能(**怎麼做**)整合為單一工作流。額外提供 evidence-first 的 `retrospective` artifact,補上 Superpowers 沒有的 retro 能力。
@@ -493,6 +493,8 @@ LLM 不必解讀 timing 文字 —— 跑指令、看結果即可。這是顧慮
 | v1 | `1.5.0` | `6.2.0` | 2026-08-12 |
 | v1 | `1.5.0` | `6.1.0` | 2026-07-02 |
 
+> 已對 **OpenSpec 1.14.3**(2026-10-21,bundle 1.4.1)重新對齊 OpenSpec 側。結構面:`openspec schema validate` 通過,每個 artifact 與 apply 的 instructions 都能產生,依 templates 撰寫的 probe change 通過 `openspec validate --strict`。從 1.14.3 `spec-driven` 文字吸收進四段繼承的 instruction:**proposal** —— 新 capability 以持久的系統行為命名,而非這個 change 的工作內容,邊界要內聚、不要包山包海;**specs** —— spec 檔一次寫一個,從第一個還沒有檔案的 capability 開始;每個 requirement 的描述不超過 500 字元,一個 requirement 一個行為(較長的 ADDED requirement 會讓 `--strict` 失敗),且絕不為了長度而在 MODIFIED 下刪減既有 requirement;新 capability 的 delta 第一個 section 是 `## Purpose`;**tasks** —— 只有內容為 `x` 的 checkbox 算完成(其他標記,包括 `[~]`,都視為未完成),不在追蹤進度內的工作以一般條列放在選用的 `## Workflow follow-up` 段落,每個 task group 自行交付自己該有的測試與文件。**design** upstream 未變。templates 加上 upstream 的 H1 標題,以及 capability 命名與長度規則。針對 bridge 的調整:`[~]` 延後標記只用在 `plan.md`;workflow follow-up 列的是 apply steps 3–6 —— 追蹤的 task 永遠不涵蓋 verify、retrospective、archive 或 finish,因為 verify 的 task-completion 檢查要求 `tasks.md` 每個 box 在 archive 前都已勾選。原樣保留:brainstorm-first 的框架、spec 盤點段落、MODIFIED 完整性段落(upstream 沒有對應)、`tasks.md` / `plan.md` 的 ledger 分工。與 1.4.0 一樣刻意不納入:`--store` 參數(stores 仍未使用)。
+>
 > 已對 **Superpowers 7.0.0**(2026-10-21,bundle 1.4.1)以完整 v6.4.2→v7.0.0 skill diff 重新核對,已安裝版本與 upstream tag 完全一致。吸收一項行為變更:**brainstorming** 整個重寫。它不再分類為 spike / bounded / architectural,而是把工作分成 quick task、small change、或需要書面 design 的 project。它的第一則訊息會提議跳過提問,一旦接受,skill 就結束且不產出任何文件。它只在有助於使用者決定時才展示方案比較,以每段約 200–300 字的方式回放 design,並在交付前派一個 fresh 的 builder-check subagent 讀過書面 design。brainstorm instruction 現在固定回答「需要書面 design 的 project」,在本 flow 中關閉跳過提問的出口(手動撰寫 `brainstorm.md` 的路徑仍在),並擋下 skill 交給 writing-plans 的 handoff,因為在本 schema 裡 plan 是後面的 artifact。仍然成立:書面 design 預設寫到 `docs/superpowers/specs/`,且讓位給使用者的偏好,因此 output redirection 依然有效。不影響 bridge:spec-document-reviewer prompt 被移除(由 builder check 取代);`sdd-workspace` 不再覆寫既有的 `.superpowers/sdd/.gitignore`,workspace 仍位於 `.superpowers/sdd/` 底下;`executing-plans` 的 `task-done` script 與 `requesting-code-review` 範例只改了 shell 細節。
 >
 > 已對 **Superpowers 6.4.2**(2026-10-21,bundle 1.4.1)以 v6.4.1→v6.4.2 skill diff 重新核對 —— 只有 `writing-plans` 有變。plan instruction 吸收的變更:一個 step 是「one action with a checkable result」,不再是 2–5 分鐘的動作;code step 給出精確的 signature、檔案與 spec 釘死的值,只有 signature 與測試無法決定的演算法才附上 body;Self-Review 的 placeholder scan 改為 step scan,並新增第五項檢查 Proportion,比較 plan 與 spec 的長度。plan instruction 的 reuse-check 理由仍成立 —— 五項檢查都是拿 plan 對照 spec 或對照自己,沒有一項對照 codebase —— 檢查數目已更正。

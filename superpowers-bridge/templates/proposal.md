@@ -1,3 +1,5 @@
+# Proposal
+
 ## Why
 
 <!--
@@ -33,7 +35,10 @@ be described with a simple list.
 
 ### New Capabilities
 <!--
-Capabilities being introduced. Replace <capability-path> with a kebab-case
+Capabilities being introduced. Name each capability for a cohesive system
+behavior that can own related requirements as the system evolves — not for
+an implementation task or a proposal section — and avoid broad catch-all
+names. Replace <capability-path> with a kebab-case
 identifier that follows the project's existing spec organization (flat
 `user-auth`, or nested `identity/user-auth` only where the project already
 nests). Naming rule (see openspec/specs/README.md): use a compound noun (at
