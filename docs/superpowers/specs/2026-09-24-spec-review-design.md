@@ -1,8 +1,12 @@
-# Spec review step — design spec
+# Spec review and deviation report — design spec
 
 > Validated design from brainstorming session, 2026-09-24. Revised 2026-10-15 with the
 > findings of a second review round (Context, rule groups 6 and 7, Decision 10).
-> Target: superpowers-bridge 1.5.0, against OpenSpec CLI 1.13.0.
+> Revised 2026-10-21 (third revision): re-checked against OpenSpec CLI 1.14.2 and
+> Superpowers 7.0.0, and re-scoped around where human review happens. Spec-review
+> findings are now cleared by the agent, not triaged by the human; the human gate is a
+> deviation report against the adopter's governing sources (Decisions 6, 11–13).
+> Target: superpowers-bridge 1.5.0, against OpenSpec CLI 1.14.2.
 > Companion work: changes proposed to Fission-AI/OpenSpec itself are listed under
 > [Upstream changes](#upstream-changes). They are not part of this bundle.
 
@@ -27,21 +31,22 @@ carrying three kinds of defect, found only by a manual review after implementati
 The same review raised a fourth finding — implementation mechanism named inside
 requirements — which the author rejected: other systems writing the same data relied
 on that mechanism, so it was externally visible. That rejection shapes
-[Decision 4](#decision-4-openspecs-authoring-rules-by-pointer) and
-[Decision 6](#decision-6-every-spec-review-finding-blocks-verifys-pass): in a review
-that blocks, a rule is only as good as its test.
+[Decision 4](#decision-4-openspecs-authoring-rules-by-pointer): a rule is only as good
+as its test.
 
-**What `openspec validate` does not report** (1.13.0, each verified with a probe
-change):
+**What `openspec validate` does not report.** Each row was verified with a probe change
+on 1.13.0 and again on 1.14.2.
 
-| Probe content | What validate did |
-|---|---|
-| A 924-character requirement with five `MUST`s | Nothing on the change path. The same text as a main spec produced one INFO. The length check exists on the main-spec path only |
-| `#### Notes` as a requirement's only level-4 header | Counted it as a scenario — any level-4 header satisfies "at least one scenario" |
-| A `#### Scenario:` with no steps at all | Nothing. No check reads scenario content |
-| 12 deltas (OpenSpec's advisory ceiling is 10) | Nothing. Only archive reports it, as a non-blocking proposal warning |
-| A `proposal.md` without `## Why` | "valid". `openspec show` errors on the same change |
-| An ADDED requirement whose header already exists in the main spec | "valid", with an INFO: "Archive would refuse this delta". Archive then aborted |
+| Probe content | 1.13.0 | 1.14.2 |
+|---|---|---|
+| A requirement over 500 characters with five `MUST`s | Nothing on the change path; one INFO on the main-spec path | ADDED: a WARNING, so `--strict` reports `"valid": false`. MODIFIED: still nothing — deliberate, per the specs instruction |
+| `#### Notes` as a requirement's only level-4 header | Counted as a scenario | Unchanged — any level-4 header satisfies "at least one scenario" |
+| A `#### Scenario:` with no body | Nothing | An ERROR — closed upstream, no longer a gap |
+| A scenario with a body but no WHEN or THEN step | Nothing | Nothing. No check reads step content |
+| 12 deltas (OpenSpec's advisory ceiling is 10) | Only archive reports it, as a non-blocking proposal warning | Unchanged |
+| A `proposal.md` without `## Why` | "valid"; `openspec show` errors on the same change | Unchanged |
+| An ADDED requirement whose header already exists in the main spec | "valid", with an INFO: "Archive would refuse this delta". Archive then aborted | Unchanged, same message text |
+| Two unarchived changes modifying the same requirement | Both valid; whichever archived second silently overwrote the first's wording | Unchanged |
 
 `openspec validate <change>` reads the delta specs only. OpenSpec does compute most of
 the missing facts, just elsewhere — which is what Decision 3 relies on.
@@ -64,13 +69,38 @@ both were merged — found five more classes of defect, again all past
   change folder is archived, and which collide across changes: two designs each had a
   `D9`. Rewriting them was the largest part of the cleanup.
 
+**Where human review happens.** The first two revisions of this design made every
+spec-review finding block verify until the human fixed or dropped it. That put the
+heaviest review load on the delta specs. Some adopters steer from one level up: they
+keep their intent, decisions, contracts and non-goals in governing documents outside
+the repository — a knowledge base, an architecture-decision log — and those documents,
+not the repository's specs, are the surface they review thoroughly. For them, delta
+specs are a secondary reading layer, consulted when the governing document is too vague,
+and implementation detail is delegated to the agent as long as it follows good practice
+and the adopter's safety rules. Specs may drift from their first draft while the work
+runs; what such an adopter needs to see is a deviation that the governing documents do
+not yet reflect, together with its reason.
+
+Two lessons from outside this repository point the same way. Generated plans and specs
+are hard to review: readers skim long AI-written text, so a review gate built on reading
+it gives a false sense of control. And autonomous work goes best when the agent may
+explore and revise its approach, with the human attending to the few points where their
+attention changes the outcome.
+
 ## Goals
 
 - Before archive, catch what `openspec validate` cannot: departures from OpenSpec's
-  authoring guidance, and text that will not read correctly once merged into the main
-  spec.
-- Use OpenSpec's shipped commands and instruction text first, and keep the rules this
-  repository maintains to the ones OpenSpec does not carry.
+  authoring guidance, text that will not read correctly once merged into the main spec,
+  and deltas that would corrupt the main spec at archive.
+- Clear those findings without spending human review on them: the agent fixes each one,
+  or dismisses it with a recorded reason.
+- Spend human attention on one artifact: a report of every way the change deviates from
+  the adopter's governing sources, each with its reason and a proposed edit to the
+  source.
+- Let each adopter keep its governing sources, its deviation threshold and its safety
+  rules outside this bundle, so they can evolve without a bundle release.
+- Use OpenSpec's shipped commands, configuration and instruction text first, and keep
+  the rules this repository maintains to the ones OpenSpec does not carry.
 - Add no code, no new dependency, no new PRECHECK, and no lines to the four
   instructions inherited from upstream (proposal, specs, design, tasks).
 
@@ -81,16 +111,20 @@ both were merged — found five more classes of defect, again all past
   shipped.
 - Style: line width, heading wording, spelling variants, prose taste. A rule two
   reviewers would apply differently does not belong in a review that blocks.
-- A waiver mechanism for findings.
+- A human waiver mechanism for spec-review findings. The agent clears them; its
+  dismissals are recorded in `verify.md` for anyone who wants to read them.
 - Reviewing the content of `proposal.md`, `design.md` or `tasks.md`. The one proposal
   check included — that it parses — is there because archive depends on it.
+- Defining what an adopter's governing sources, deviation threshold or safety rules
+  say. The bundle defines how they are read and where their results go; the content is
+  the adopter's.
 
 ## Decisions
 
 ### Decision 1: Two review points, one rule file
 
-**Decision**: The review runs twice against the same rule file: a self-check while the
-delta spec is being drafted, and a pass in a fresh context inside verify, before
+**Decision**: The spec review runs twice against the same rule file: a self-check while
+the delta spec is being drafted, and a pass in a fresh context inside verify, before
 archive.
 
 **Why**: The draft-time pass is cheap, and it fixes requirement shape before tasks and
@@ -115,8 +149,14 @@ One file keeps both passes judging by the same rules.
 together with the rest of the bundle. It is installed with the bundle, and
 `openspec schema which superpowers-bridge --json` reports the installed bundle's
 directory in `path` — for a project, user or package install alike — so the file is
-always at `<path>/spec-review.md`. A local wrapper outside this repository can point an
-agent at that copy for review on demand. The schema neither references nor requires such a wrapper.
+always at `<path>/spec-review.md` (verified on 1.13.0 and 1.14.2; `openspec schema
+validate` passes with the extra file in the bundle on both). A local wrapper outside
+this repository can point an agent at that copy for review on demand. The schema
+neither references nor requires such a wrapper.
+
+The rule file carries only rules that hold for every OpenSpec user. Adopter-specific
+rules — governing sources, deviation threshold, safety — stay outside it
+([Decision 13](#decision-13-adopter-rulesets-come-from-openspecconfigyaml)).
 
 **Alternatives considered**:
 - A Claude Code skill — can carry scripts and evals, but becomes a PRECHECKed
@@ -128,15 +168,16 @@ agent at that copy for review on demand. The schema neither references nor requi
 ### Decision 3: OpenSpec's commands first
 
 **Decision**: The rule file opens with a section that maps each mechanical check to the
-OpenSpec command that already computes it, and says how to read the output:
+OpenSpec command that already computes it, and says how to read the output. Rows are
+stated for 1.14.2:
 
 | Check | Command | How to read it |
 |---|---|---|
-| Structure, duplicate requirements, cross-section contradictions, a MODIFIED block dropping a main-spec scenario | `openspec validate <change> --strict --json` | `"valid": false` is a finding |
+| Structure, duplicate requirements, cross-section contradictions, a MODIFIED block dropping a main-spec scenario, an empty scenario, an ADDED requirement over 500 characters | `openspec validate <change> --strict --json` | `"valid": false` is a finding |
 | Archive will refuse the delta | same output | An INFO issue whose message begins `Archive would refuse this delta` is a finding |
-| `proposal.md` parses | `openspec show <change> --json` | An entry with `"severity": "error"` in `status` is a finding |
-| Requirement length, scenario content, delta count | `openspec show <change> --json --deltas-only` | Read each `requirement.text`, each `scenarios[].rawText`, and `deltaCount`. A scenario whose `rawText` has no WHEN or THEN step is a finding. Length and delta count follow [Decision 7](#decision-7-length-and-delta-count-thresholds-prompt-a-rule) |
-| A main spec the change touches still has the `TBD` Purpose placeholder | `openspec validate <capability> --type spec --strict` for each capability with a delta | The placeholder warning is a finding. A delta's `## Purpose` only seeds a spec that does not exist yet, so the fix is an edit to the main spec itself |
+| `proposal.md` parses | `openspec show <change> --json` | An entry with `"severity": "error"` in `status` is a finding. Fix it first: while the proposal does not parse, `--deltas-only` returns no deltas, so the next row has nothing to read |
+| Scenario content, MODIFIED requirement length, delta count | `openspec show <change> --json --deltas-only` | Read each `requirement.text`, each `scenarios[].rawText`, and `deltaCount`. A scenario whose `rawText` has no WHEN or THEN step is a finding. A level-4 header that is not `#### Scenario:` is a finding; find it in the markdown, because the JSON `name` drops the `Scenario:` prefix. Length and delta count follow [Decision 7](#decision-7-thresholds-follow-upstream-where-upstream-has-one) |
+| A main spec the change touches still has the `TBD` Purpose placeholder | `openspec validate <capability> --type spec --strict` for each capability with a delta | A warning whose message begins `Purpose section is still a placeholder` is a finding. Match the message, not `valid`: on 1.14.x the same command also fails on any long requirement in the main spec, including ones this change never touched. A delta's `## Purpose` only seeds a spec that does not exist yet, so the fix is an edit to the main spec itself |
 
 When the first row reports a MODIFIED block dropping a main-spec scenario because the
 block rewrote it under a new title, the fix is to carry the scenario under its old
@@ -147,25 +188,28 @@ the old text back unchanged is right only if the old wording is still true.
 archive refusals are reported at INFO, `show` parses the proposal, and `--deltas-only`
 exposes every requirement's text and scenarios as JSON. Reading those is cheaper to
 maintain than restating each check as a prose rule, and each row retires when the
-matching upstream change lands.
+matching upstream change lands — the empty-scenario and ADDED-length checks already
+moved into the first row this way between 1.13.0 and 1.14.1.
 
 **Alternatives considered**: restating every check as a prose rule — roughly fifteen
 rules to keep current instead of the seven groups in Decision 5.
 
 ### Decision 4: OpenSpec's authoring rules, by pointer
 
-**Decision**: For behavior versus implementation, observability, error conditions, and
-the choice between ADDED and MODIFIED, the rule file points the reviewer to the specs
-artifact instruction — `openspec instructions specs --change <name> --json`, field
-`instruction` — and to its "Good spec content" list, its "Avoid in specs" list and its
-"Quick test". It does not restate them.
+**Decision**: For behavior versus implementation, observability, error conditions, the
+choice between ADDED and MODIFIED, and one behavior per ADDED requirement, the rule file
+points the reviewer to the specs artifact instruction —
+`openspec instructions specs --change <name> --json`, field `instruction` — and to its
+"Good spec content" list, its "Avoid in specs" list and its "Quick test". It does not
+restate them.
 
 **Why**: That text is already maintained here: it is one of the four instructions
-refreshed from upstream at each bundle release. The Quick test — "if the implementation
-can change without changing externally visible behavior, it likely does not belong in
-the spec" — is also the right test for a review that blocks. It asks whether a detail
-is visible outside, not whether it names a mechanism, so a detail that other systems
-rely on passes. Under this test the rejected finding in Context would not be raised.
+refreshed from upstream at each bundle release, and 1.14.x added the one-behavior rule
+for new requirements to it. The Quick test — "if the implementation can change without
+changing externally visible behavior, it likely does not belong in the spec" — is also
+the right test for a review that blocks. It asks whether a detail is visible outside,
+not whether it names a mechanism, so a detail that other systems rely on passes. Under
+this test the rejected finding in Context would not be raised.
 
 **Alternatives considered**: copying the rules into the rule file — a second copy of
 text the bundle already refreshes.
@@ -175,16 +219,20 @@ text the bundle already refreshes.
 **Decision**: Seven rule groups that OpenSpec carries in no instruction. Each is written
 in the rule file as the rule, the test a reviewer applies, and one before/after example.
 
-1. **One behavior per requirement.**
+1. **One behavior per requirement, in MODIFIED blocks too.**
    Source: OpenSpec `docs/writing-specs.md` — "One statement, one SHALL/MUST. If a
-   requirement has three 'and also' clauses, it's really three requirements."
-   Test: can the text be split into two requirements, each with its own SHALL or MUST
-   and its own scenario, without either losing meaning? If yes, it is a finding.
-   Before: "The service SHALL store each order as an immutable document carrying `id`,
-   `customer`, `lines` and `total`. A stored order MUST NOT be modified or deleted.
-   Every order MUST carry a checksum of its lines."
-   After: three requirements — the order document's fields; stored orders are
-   immutable; orders carry a line checksum.
+   requirement has three 'and also' clauses, it's really three requirements." The
+   1.14.x specs instruction applies this to new requirements and asks MODIFIED blocks
+   to keep the existing requirement whole; this group covers the case between them.
+   Test: for an ADDED requirement, Decision 4's pointer applies. For a MODIFIED block,
+   does the modification add a behavior the requirement did not have, which could stand
+   as its own requirement with its own SHALL or MUST and its own scenario? If yes, it is
+   a finding: the new behavior belongs in an ADDED requirement, and the MODIFIED block
+   keeps the existing requirement whole.
+   Before: a MODIFIED "Orders are stored" that now also says "Every order MUST carry a
+   checksum of its lines."
+   After: "Orders are stored" unchanged apart from its own behavior; an ADDED
+   requirement "Orders carry a line checksum".
 
 2. **A scenario exercises its requirement, and its title names the case.**
    Source: `docs/writing-specs.md` — "A scenario that just restates the requirement in
@@ -260,61 +308,77 @@ in the rule file as the rule, the test a reviewer applies, and one before/after 
    replacement.
 
 **Why**: These are the gaps left after Decisions 3 and 4. Groups 1 and 2 are OpenSpec's
-own guidance, published in its docs but missing from the specs instruction; the
-upstream change that moves them there would retire both groups here. Groups 3 and 4
-follow from how archive works and are not written down upstream; group 5 follows
-from how archive matches requirements, and upstream states the matching rule but not
-this consequence of it. Groups 6 and 7 are the review-time form of a check the
-verification step already intends — that spec, code and tests agree — narrowed to the
-two ways the second round in Context showed it failing.
+own guidance, published in its docs; 1.14.x moved the ADDED half of group 1 into the
+specs instruction, and the upstream change that moves the rest there would retire both
+groups here. Groups 3 and 4 follow from how archive works and are not written down
+upstream; group 5 follows from how archive matches requirements, and upstream states the
+matching rule but not this consequence of it. Groups 6 and 7 are the review-time form of
+a check the verification step already intends — that spec, code and tests agree —
+narrowed to the two ways the second round in Context showed it failing.
 
-**Alternatives considered**: a larger rule set that includes style — excluded by
-Decision 6.
+**Alternatives considered**: a larger rule set that includes style — excluded because a
+style rule has no test two reviewers would apply the same way.
 
-### Decision 6: Every spec-review finding blocks verify's PASS
+### Decision 6: Spec-review findings block verify, and the agent clears them
 
-**Decision**: Any finding that is neither fixed nor dropped by the human makes verify's
-Overall Decision ❌ FAIL. Spec-review findings have no warning-only class.
+**Decision**: Every spec-review finding blocks verify's PASS until it is cleared, and
+clearing is the agent's job. For each finding the agent either fixes the text or code,
+or dismisses the finding with a one-line reason recorded in `verify.md`. A finding is
+escalated to the human only when its fix would change behavior that a governing source
+states; it then becomes a deviation and goes into the deviation report
+([Decision 11](#decision-11-the-deviation-report-is-the-human-gate)). Spec-review
+findings have no warning-only class.
 
 **Why**: The delta spec becomes the source of truth at archive and is read most after
-that. Non-blocking hints are what OpenSpec already offers — the INFO lines above — and
-they did not stop the defects in Context. The cost of blocking is that precision
-matters more than recall: every rule needs a test a second reviewer would apply the
-same way, which is why style is a Non-Goal and why thresholds do not block
-(Decision 7). A false positive has two exits: fix the text, or the human drops the
-finding.
+that, so its defects must not reach archive — non-blocking hints are what OpenSpec
+already offers, and they did not stop the defects in Context. But the human's review
+belongs on the governing sources and on deviations from them, not on sentence-level
+findings in a secondary layer; a gate that makes the human triage "this sentence refers
+to the change" spends attention where it changes nothing. Every rule here has a test the
+agent can apply and a fix it can make. The dismissal reason keeps a false positive from
+blocking for good, and keeps the record honest: the dismissals are in `verify.md` for
+anyone who wants to audit them.
 
 **Alternatives considered**:
-- All findings advisory — matches upstream `/opsx:verify`, which does not block
-  archive, but depends on someone reading the section.
+- Every finding blocks until the human fixes or drops it — the previous revision. It
+  makes the human the triage step for the layer they read least.
+- All findings advisory — matches upstream `/opsx:verify`, whose 1.14.2 template says
+  "Verification is advisory", but depends on someone reading the section.
 - Only the command-based checks of Decision 3 block — blocks definite harm, leaves
-  judgement advisory.
-- Blocking, with waivers recorded in `verify.md` — the most rigorous, and a new format
-  every adopter has to learn.
+  judgement unattended.
 
-### Decision 7: Length and delta-count thresholds prompt a rule
+### Decision 7: Thresholds follow upstream where upstream has one
 
-**Decision**: A requirement longer than 500 characters prompts the reviewer to apply
-rule 1 to it. Crossing a threshold is never a finding by itself. The delta count is
-read only by the draft-time pass: more than 10 deltas prompts the drafting agent to
-confirm the change still has one intent, and to raise it with the human before tasks
-are written if it does not. The verify pass does not read the delta count.
+**Decision**:
+- **ADDED requirement length**: an ADDED requirement over 500 characters fails
+  `openspec validate --strict` on 1.14.1 and later, so it is a finding through
+  Decision 3's first row, cleared like any other (Decision 6). The usual fix is
+  upstream's own advice: move examples and edge cases into scenarios, or split the
+  requirement.
+- **MODIFIED requirement length**: upstream deliberately does not check it. A MODIFIED
+  requirement over 500 characters prompts the reviewer to apply rule 1; the length alone
+  is never a finding.
+- **Delta count**: read only by the draft-time pass. More than 10 deltas prompts the
+  drafting agent to confirm the change still has one intent. If it does not, the agent
+  splits the change before tasks are written; if it does, it records the one intent in a
+  sentence in the proposal. The verify pass does not read the delta count.
 
-**Why**: OpenSpec states both thresholds as non-blocking hints — "Requirement text is
-very long (>500 characters). Consider breaking it down." and "Consider splitting
-changes with more than 10 deltas" — and does not tie either to its rules. A long
-requirement can still be one statement: a single rule with a long list of fields
-passes rule 1. Under Decision 6, a delta-count finding would block a change for good,
-because splitting compound requirements, which rule 1 asks for, raises the count.
-Re-scoping an implemented change is not a spec-review outcome, so the one-intent
-question belongs at draft time, while the change can still be split cheaply.
-`docs/writing-specs.md` states that question: "A good change has one intent you can say
-in a sentence."
+**Why**: Following upstream keeps this bundle's verdict and `validate --strict` in
+agreement: a check that blocks where strict validation passes, or passes where it fails,
+is a second standard to learn. The MODIFIED exemption is upstream's choice, made so that
+a small edit to a long existing requirement is not forced into a rewrite; rule 1 still
+catches a MODIFIED block that grows a new behavior. A delta-count finding at verify
+would block a change for good — splitting compound requirements, which rule 1 asks for,
+raises the count — and re-scoping an implemented change is not a spec-review outcome,
+so the one-intent question belongs at draft time, while the change can still be split
+cheaply. `docs/writing-specs.md` states that question: "A good change has one intent
+you can say in a sentence."
 
 **Alternatives considered**:
-- Thresholds as findings — contradicts OpenSpec's own framing and blocks well-formed
-  changes.
-- Ignoring the thresholds — loses a cheap signal for where to look.
+- The previous revision: length only prompts rule 1 everywhere — contradicts
+  `validate --strict` from 1.14.1 on.
+- Raising the one-intent question with the human — interrupts autonomous work for a
+  decision the agent can make and record.
 
 ### Decision 8: The draft-time pass is a note in the spec template
 
@@ -324,12 +388,13 @@ finishing the delta spec, run the draft-time self-check in `spec-review.md` — 
 --json` — and fix what it finds. No line is added to the inherited specs instruction.
 
 **Why**: `openspec instructions specs --json` delivers the template's full content in
-the same payload as the instruction (verified on 1.4.0: 3,021 characters of template
-beside the instruction), so the note reaches the drafting agent at the same moment. The
-template is authored in this repository. The specs instruction is refreshed from
-upstream at each release, and every line added there has to be carried through each
-refresh. A note in a template is a softer channel than an instruction; the verify pass
-is the one that blocks.
+the same payload as the instruction (verified on 1.13.0 and 1.14.2: 3,021 characters of
+template beside the instruction), so the note reaches the drafting agent at the same
+moment. The note stays inside the header's HTML comment: 1.14.2 warns on prose before a
+spec's first section, and a probe showed HTML comments do not trigger it. The template
+is authored in this repository; the specs instruction is refreshed from upstream at each
+release, and every line added there has to be carried through each refresh. A note in a
+template is a softer channel than an instruction; the verify pass is the one that blocks.
 
 **Alternatives considered**:
 - A paragraph in the specs instruction — the strongest channel, at the cost of one more
@@ -342,10 +407,11 @@ is the one that blocks.
 **Decision**: The verify instruction gains check 8, **Spec review**, after the existing
 seven, and `templates/verify.md` gains a matching `## 8.` section. Check 8 dispatches a
 subagent with no prior context, giving it only the change name and the rule file's
-path, resolved as in Decision 2. The subagent runs the commands of Decision 3, applies Decisions 4,
-5 and 7 to every delta spec of the change, and reports each finding with file, line,
-rule, the quoted text and a suggested fix — or reports "No findings." Any finding makes
-the Overall Decision ❌ FAIL (Decision 6).
+path, resolved as in Decision 2. The subagent runs the commands of Decision 3, applies
+Decisions 4, 5 and 7 to every delta spec of the change, and reports each finding with
+file, line, rule, the quoted text and a suggested fix — or reports "No findings." The
+apply controller then clears each finding (Decision 6) and re-runs check 8 until it
+reports no uncleared finding.
 
 Check 8 also runs two checks that look beyond the change's own delta specs:
 
@@ -354,7 +420,8 @@ Check 8 also runs two checks that look beyond the change's own delta specs:
   RENAMES or REMOVES a requirement this change also MODIFIES, RENAMES or REMOVES is a
   finding: both were written against the same main-spec text, and `openspec validate`
   checks each change against the current main spec only, so it cannot see the
-  collision. The fix is an archive order — the earlier change first — and a rewrite of
+  collision (verified on 1.14.2: the second archive silently overwrote the first's
+  wording). The fix is an archive order — the earlier change first — and a rewrite of
   the later change's block against the archived text. A sibling that only ADDs
   requirements does not collide.
 - **Planning labels in code**, per [Decision 10](#decision-10-code-comments-carry-reasons-commits-carry-the-trace).
@@ -363,8 +430,10 @@ Check 8 also runs two checks that look beyond the change's own delta specs:
 OpenSpec's `/opsx:archive`, which this repository does not own. Verify is authored
 here, runs after apply and before archive, and already decides whether a change is
 ready to archive. The schema already requires a subagent-capable platform, so the fresh
-context adds no dependency. Check 1 runs `openspec validate --all --json` without
-`--strict`; check 8 runs its own strict validation of the change.
+context adds no dependency. The dispatch follows the pattern Superpowers'
+`requesting-code-review` uses for its final review: a general-purpose subagent, a
+template file, and no session history. Check 1 runs `openspec validate --all --json`
+without `--strict`; check 8 runs its own strict validation of the change.
 
 **Alternatives considered**:
 - A new artifact after verify — a second document at the same point in the flow, and a
@@ -382,41 +451,164 @@ decision and task lives in the commit message, which names both.
 
 Three parts:
 
-1. **Prevention.** The apply instruction — authored in this repository, not inherited —
-   tells the controller to include this rule in every task brief it hands an
-   implementing subagent, and to name the decision and task in the commit message
-   instead.
+1. **Prevention, through the plan.** The plan instruction — authored in this
+   repository — puts this rule into `plan.md`'s `## Global Constraints` section, and
+   writes each task's commit step so that its message names the decision and the task.
+   The apply instruction repeats the rule for the controller, as a backup.
 2. **Detection.** Check 8 searches the lines the change adds outside `openspec/` —
    `git diff <base>...HEAD` against the branch the change merges into — for
    `\bD[0-9]+\b`, `\bTasks? [0-9]`, `\bStep [0-9]`, `\bFIX-[0-9]`, `design\.md` and
-   `plan\.md`. Each hit that is not scoped by the change's name is a finding. `git` is
-   already required, so this adds no dependency.
+   `plan\.md`. Each hit that is not scoped by the change's name is a finding, cleared
+   like any other (Decision 6). `git` is already required, so this adds no dependency.
 3. **Repair guidance.** In the rule file: state the reason; if the source still
    matters, scope it with the change's name.
 
-**Why**: Implementing subagents work from task briefs that name decisions and tasks,
-and they copy those labels into comments as traceability. A label is local to the
-document that defines it. Once the change folder is archived it no longer says which
-document it means, task lists are renumbered as work moves, and two changes each have
-a `D9`, so the same label in one codebase means two different things (Context, second
-round). The traceability is real and worth keeping; a commit message keeps it without
-leaving it in the code, and stays resolvable as long as the history is kept.
+**Why**: Implementing subagents copy decision and task labels into comments as
+traceability. A label is local to the document that defines it. Once the change folder
+is archived it no longer says which document it means, task lists are renumbered as
+work moves, and two changes each have a `D9`, so the same label in one codebase means
+two different things (Context, second round). The traceability is real and worth
+keeping; a commit message keeps it without leaving it in the code, and stays resolvable
+as long as the history is kept.
+
+The plan is the channel that reaches the implementing subagent. Superpowers'
+subagent-driven development builds each implementer's brief by copying that task's
+section of `plan.md` verbatim (`skills/subagent-driven-development/scripts/task-brief`,
+present at v6.3.0 and v7.0.0). The controller wraps the brief in a fixed dispatch, and
+the skill limits what it adds: "A fresh subagent needs its task, the interfaces it
+touches, and the global constraints. Nothing else." The task reviewer's prompt has a
+fixed `[GLOBAL_CONSTRAINTS]` slot, filled from the plan's Global Constraints section,
+and commit messages are written in the plan's commit steps. An instruction to the
+controller alone reaches the brief only if the controller follows it, and not at all
+when the whole loop runs as one nested orchestrator subagent. Prevention is still
+partial — writing instructions is a known weak control for comment content — which is
+why detection does the enforcing.
 
 **Alternatives considered**:
-- A line in the plan instruction only — the plan is read by the controller, not by the
-  subagent that writes the comment, so it does not reach the point where labels are
-  written.
+- A line in the apply instruction only — the previous revision. It rests on the
+  controller composing the brief freely, which the latest Superpowers does not do.
 - Banning labels without a replacement — loses the traceability, which then comes
   back as labels.
 - A per-repository convention only — each adopter would rediscover it, and the
   bundle's own task briefs would keep producing the labels.
+
+### Decision 11: The deviation report is the human gate
+
+**Decision**: The verify instruction gains check 9, **Deviation report**, and
+`templates/verify.md` a matching `## 9.` section. Check 9 dispatches a subagent with no
+prior context. It reads:
+
+- the governing sources the adopter names ([Decision 13](#decision-13-adopter-rulesets-come-from-openspecconfigyaml));
+- the change's proposal, design and delta specs as they will be archived;
+- the diff of the change against the branch it merges into;
+- the executor's "Rulings I made" list, which the apply controller already hands to
+  verify (check 4).
+
+It reports every **deviation**: a point where the change contradicts, drops, or goes
+beyond what a governing source states — including a stated non-goal — so that the
+governing source would need an edit to stay true. For each deviation: the source and
+the place in it, what it says, what the change does instead, why, what it costs if the
+reasoning is wrong, and the proposed edit to the source. Or it reports "No deviations
+from the governing sources."
+
+The adopter's rules can narrow or widen what counts as a deviation; the default is the
+definition above. Drift between the delta specs and their own first draft is not a
+deviation: the specs are rewritten to match what was built before archive, and only a
+drift that also moves away from a governing source is reported.
+
+The report is the artifact the human reads. Apply step 6 carries it into the pull
+request description, and the adopter's rules say how each proposed edit reaches its
+source — for example, as a change request to the knowledge base that holds it. A
+deviation does not fail verify: whether to accept it, amend the source, or reverse the
+code is the human's decision at merge time. What fails verify is a missing report, a
+deviation without a reason, or a governing source named in the configuration that the
+subagent could not read.
+
+If the adopter names no governing sources, check 9 records "No governing sources
+configured" and passes: stock behavior is unchanged.
+
+**Why**: Human attention goes to the few places where it changes the outcome. For an
+adopter who steers from governing sources, those places are the points where the work
+moved away from what the sources say — the rest is implementation detail delegated to
+the agent. A fresh-context reviewer writes the report because the implementing agent
+leaves out what it did not think counted as a deviation; this is the same reason check
+8 runs fresh. The proposed edit is what keeps the governing sources current: each
+deviation either amends its source or is reversed in code, so the sources do not drift
+from the system they govern. The executor's rulings already record decisions made
+during apply; the report is where a ruling that crosses a governing source reaches the
+human instead of dying with the ledger.
+
+**Alternatives considered**:
+- Deviations recorded in the retrospective — written for the next cycle, read after the
+  merge, too late to change the outcome.
+- The human reviews the delta specs and the plan before apply — the plan-review gate
+  that the Context lessons describe failing: long generated text, skimmed.
+- Deviations block verify — makes the agent wait for a decision that belongs at merge
+  time, where the human already looks.
+
+### Decision 12: Safety rules bind every task
+
+**Decision**: The plan instruction copies the adopter's safety rules
+([Decision 13](#decision-13-adopter-rulesets-come-from-openspecconfigyaml)) into
+`plan.md`'s `## Global Constraints` section, beside the rule of Decision 10, so that
+they reach every implementer brief and the task reviewer's constraint slot. The apply
+instruction tells the controller to stop and ask the human before any action a safety
+rule reserves for them. The bundle defines no safety content of its own.
+
+**Why**: Autonomy is only safe where the boundaries are explicit and enforced. Many of
+them are enforced outside the agent — permissions, credentials, protected branches, CI
+— and those stay the primary control; an instruction not to do something is a weak
+control on its own. The safety rules cover what such mechanisms cannot express, and they
+must reach the subagent that acts, which is the same channel problem as Decision 10.
+Superpowers' subagent-driven development already stops for four classes — irreversible
+or destructive operations, security-sensitive actions, side effects outside the
+worktree, and a plan where every path is a guess. An adopter's rules add the classes it
+cares about beyond those (for example, cost) and name the concrete cases (which data,
+which systems).
+
+**Alternatives considered**:
+- Safety rules written into the bundle — they differ per adopter and evolve faster than
+  the bundle is released.
+- Relying on Superpowers' stop classes alone — they are generic, and they do not name
+  the adopter's systems.
+
+### Decision 13: Adopter rulesets come from `openspec/config.yaml`
+
+**Decision**: The bundle reads the adopter's governing sources, deviation threshold and
+safety rules from OpenSpec's project configuration, `openspec/config.yaml`:
+
+- `context` — delivered with every artifact's instructions. The adopter names its
+  governing sources here and how to read them (a file path, a URL, or a command).
+- `rules.verify` — delivered with the verify artifact's instructions. Narrows or widens
+  what check 9 counts as a deviation, and says how a proposed edit reaches its source.
+- `rules.plan` — delivered with the plan artifact's instructions. The safety rules, or a
+  pointer to where they live.
+- `operations.apply.guidance` — delivered with the apply instructions. Anything the
+  controller must hold to during apply, such as which actions to stop for.
+
+The configuration carries pointers, not copies: it names where a ruleset lives and how
+to load it, and the ruleset itself stays in the adopter's source, so a rule changes in
+one place. `README.md` documents the keys the bundle reads and what each one is for.
+
+**Why**: OpenSpec already ships this channel. All four fields are part of its project
+configuration schema on 1.13.0 and 1.14.2 (`dist/core/project-config.d.ts`), and
+`openspec instructions` returns `context` and the artifact's `rules` as separate fields
+beside the instruction and template (`dist/core/artifact-graph/instruction-loader.js`).
+The bundle stays free of adopter content and needs no release when a ruleset changes,
+and an adopter without the configuration gets stock behavior.
+
+**Alternatives considered**:
+- Rulesets as files inside the bundle — adopter content in a public bundle, and a bundle
+  release for every rule change.
+- A bundle-specific configuration file — a second configuration format for what
+  OpenSpec's own already carries.
 
 ## The rule file
 
 Outline of `superpowers-bridge/spec-review.md`:
 
 1. **When this file is used** — the draft-time self-check (Decision 8) and verify check
-   8 (Decision 9); what counts as a finding (Decision 6).
+   8 (Decision 9); what counts as a finding and how it is cleared (Decision 6).
 2. **What OpenSpec already checks** — the table of Decision 3.
 3. **OpenSpec's authoring rules** — the pointer of Decision 4.
 4. **Rules this bundle adds** — the seven groups of Decision 5, each with source, test and
@@ -427,46 +619,69 @@ Outline of `superpowers-bridge/spec-review.md`:
 7. **Report format** — one line per finding:
    `<file>:<line> — rule <n> — "<quoted text>" — <suggested fix>`, or `No findings.`
 
+The deviation report of Decision 11 has its own section in `templates/verify.md`, not in
+this file: its rules come from the adopter.
+
 ## Upstream changes
 
 Proposed to Fission-AI/OpenSpec separately. Its contribution guide asks for an issue or
 discussion before a PR, so each item is its own issue first. The last column names what
-each change retires from `spec-review.md` once it reaches a bundle refresh.
+each change retires from `spec-review.md` once it reaches a bundle refresh. State as of
+2026-10-15.
 
-| # | Change | Evidence | Retires |
+| # | Change | State | Retires |
 |---|---|---|---|
-| 1 | Make the sample `validate` output in `docs/cli.md` match the tool: it shows `proposal.md` and `design.md` checks that do not exist | Probe; no code path reads either file | — |
-| 2 | Align the proposal example in `docs/concepts.md` (Intent / Scope / Approach) with the proposal template | `openspec show` errors on that shape | — |
-| 3 | Add the two authoring rules from `docs/writing-specs.md` to the `spec-driven` specs instruction | Published in the docs, absent from the instruction | Rule groups 1 and 2 |
-| 4 | Run the proposal parse (Why, What Changes, delta count) in `openspec validate <change>` | The schema and messages exist; validate calls a different function | The `openspec show` row |
-| 5 | Run the requirement-length check on delta specs as well as main specs | Same constant and message, main-spec path only | The length reading |
-| 6 | Report archive refusals that are definite, such as an ADDED header that already exists, as errors; keep contingent ones as info | A MODIFIED block that drops a scenario is already an error, so that "the change fails at authoring time instead of days later at archive time". Needs a discussion: INFO was chosen deliberately | The INFO reading |
-| 7 | Count only `#### Scenario:` headers toward "at least one scenario", and report other level-4 headers the way stray `###` headers already are | The any-level-4 match is deliberate, for parity between the two paths — discussion first | Part of the scenario-content reading |
-| 8 | Warn on a scenario without a WHEN or THEN step, accepting both `- **WHEN**` and `- WHEN` | `docs/concepts.md` uses the plain form, so a bold-only check would flag upstream's own docs | The rest of the scenario-content reading |
-| 9 | Run the task-numbering check for custom schemas, not only the built-in `spec-driven` | Source-read: the check returns early for any other schema | — |
+| 1 | Make the sample `validate` output in `docs/cli.md` match the tool: it shows `proposal.md` and `design.md` checks that do not exist | Not landed; no issue found | — |
+| 2 | Align the proposal example in `docs/concepts.md` (Intent / Scope / Approach) with the proposal template | Not landed; no issue found | — |
+| 3 | Add the scenario rule from `docs/writing-specs.md` to the `spec-driven` specs instruction | The one-behavior rule landed for new requirements in 1.14.x; the scenario rule has not | Rule group 2 |
+| 4 | Run the proposal parse (Why, What Changes, delta count) in `openspec validate <change>` | Not landed | The `openspec show` row |
+| 5 | Check requirement length on MODIFIED blocks | Landed for ADDED requirements and main specs in 1.14.1 (#2020); MODIFIED is exempt by design; a configurable limit is proposed in #2069 | The MODIFIED length prompt |
+| 6 | Report definite archive refusals as errors | Unlikely: #1918 was closed as a duplicate of #1112, with the INFO level described as deliberate so that a valid stack of changes is not blocked. #1112 is open | The INFO reading |
+| 7 | Count only `#### Scenario:` headers toward "at least one scenario" | Not landed; the any-level-4 match is restated as deliberate in PR #2079 | The non-scenario header reading |
+| 8 | Warn on a scenario without a WHEN or THEN step | Open PR #2079, at WARNING level | The step reading |
+| 9 | Detect two active changes claiming the same requirement | Open PR #1698 (with change proposal #1963), awaiting a design call. Support it rather than file a new issue | The sibling-change check |
+
+The earlier row on task numbering for custom schemas is withdrawn: 1.14.2 comments the
+`spec-driven`-only scope as deliberate, and this bundle numbers no tasks.
 
 ## Risks / Trade-offs
 
 - [Risk] A false positive blocks an otherwise finished change → Mitigation: every rule
-  carries a test; style is excluded; thresholds prompt but never block; the human can
-  drop a finding.
+  carries a test; style is excluded; the agent dismisses a false positive with a
+  recorded reason.
+- [Risk] The agent dismisses a real finding to get past verify → Mitigation: each
+  dismissal is recorded with its reason in `verify.md`; a dismissal that changes
+  behavior a governing source states is a deviation and reaches the human through
+  check 9.
 - [Risk] The INFO reading in Decision 3 matches on message text. If upstream rewords
   "Archive would refuse this delta", the reading matches nothing and reports clean —
   OpenSpec's own source names this failure: "a check that matches nothing looks exactly
   like a check that found nothing" → Mitigation: the per-release re-attestation checks
-  that this message and the `--deltas-only` JSON fields still exist.
+  that this message, the Purpose placeholder message and the `--deltas-only` JSON fields
+  still exist.
+- [Risk] Upstream is questioning header-based archive matching (#2033) and how a renamed
+  scenario is treated (#1697). If archive stops matching by title, rule group 5's
+  reasoning and the INFO reading change → Mitigation: re-attestation reads both issues;
+  rule group 5 still holds as a readability rule.
 - [Risk] OpenSpec marks its `schema` commands experimental, and both touchpoints locate
   the rule file through `openspec schema which` → Mitigation: re-attestation checks that
   it still reports `path`.
 - [Risk] The drafting agent skips the template note → Mitigation: check 8 blocks
   regardless.
+- [Risk] The deviation report omits a deviation → Mitigation: a fresh-context subagent
+  writes it, from the governing sources and the diff rather than from the implementer's
+  account; verify fails on a governing source it could not read.
+- [Risk] Governing sources are vague, so nearly nothing counts as a deviation →
+  Accepted: the report is only as sharp as the sources it compares against. A vague
+  source is the adopter's signal to sharpen it, or to read the delta specs instead.
 - [Risk] The rule file drifts from the upstream docs it cites → Mitigation: every rule
   names its source, and re-attestation re-reads the sources.
 - [Trade-off] Every adopter's verify gains a blocking check → Accepted: it runs once per
-  verify, and the only part that reads code is a search of the change's added lines.
+  verify, the agent clears its findings, and the only part that reads code is a search
+  of the change's added lines.
 - [Risk] The code-label search flags a token that is not a planning label — a variable
-  `D2`, a domain code → Mitigation: the hit is shown with its line, and the human can
-  drop it (Decision 6); the patterns are anchored to word boundaries.
+  `D2`, a domain code → Mitigation: the hit is shown with its line, and the agent
+  dismisses it with a reason; the patterns are anchored to word boundaries.
 - [Risk] A change is merged before it is archived, as both changes in the second round
   were, although the apply instruction already archives before the pull request →
   Not mitigated by this design: verify runs before archive and cannot see a merge. See
@@ -474,20 +689,32 @@ each change retires from `spec-review.md` once it reaches a bundle refresh.
 
 ## Migration Plan
 
-- Bundle 1.5.0: `spec-review.md`, the note in `templates/spec.md`, verify check 8 (with
-  the sibling-change and code-label checks), the `## 8.` section in
-  `templates/verify.md`, the task-brief rule and commit-message trace in the apply
-  instruction (Decision 10), `README.md` and `README.zh-TW.md` (lifecycle and verify
-  description), `VERSION`.
+- Bundle 1.5.0: `spec-review.md`; the note in `templates/spec.md`; verify checks 8 and 9
+  with the `## 8.` and `## 9.` sections in `templates/verify.md`; the Global Constraints
+  and commit-step rules in the plan instruction (Decisions 10 and 12); the controller
+  backup, the stop rule and the deviation report in the pull request description in the
+  apply instruction; `README.md` and `README.zh-TW.md` (lifecycle, verify description,
+  and the configuration keys of Decision 13); `VERSION`.
+- Re-attestation against Superpowers 7.0.0 in the same release: the bundle's
+  brainstorming, writing-plans and executing-plans claims moved (brainstorming sizing and
+  its skip-the-questions exit, plan steps as "one action with a checkable result", and
+  executing-plans now loading test-driven development).
+- The specs instruction is refreshed from the OpenSpec 1.14.2 `spec-driven` schema in
+  the same release, which brings in the one-behavior rule Decision 4 points to.
 - CI: `openspec schema validate superpowers-bridge` must still pass with the extra file
-  in the bundle.
-- Acceptance before release: run check 8 against a delta spec with no defects —
-  expect `No findings.` — and against a delta spec seeded with one defect per rule group
-  and per row of Decision 3's table, plus a sibling change modifying the same
-  requirement and one labelled code comment — expect each seeded defect found exactly
-  once, and nothing else.
-- Adopters refresh their installed bundle. A change already past verify is unaffected;
-  a change that re-runs verify gets check 8.
+  in the bundle, on the CLI version the workflow pins.
+- Acceptance before release, on 1.14.2:
+  - check 8 against a delta spec with no defects — expect `No findings.`;
+  - check 8 against a delta spec seeded with one defect per rule group and per row of
+    Decision 3's table that 1.14.2 does not already fail, plus a sibling change modifying
+    the same requirement and one labelled code comment — expect each seeded defect found
+    exactly once, and nothing else;
+  - check 9 against a probe governing source with one stated behavior and one non-goal,
+    and a change that contradicts each — expect two deviations, each with a proposed
+    edit; and with no governing sources configured — expect the pass-through line.
+- Adopters refresh their installed bundle and set the configuration keys of Decision 13
+  if they want checks 9 and the safety rules to read their sources. A change already past
+  verify is unaffected; a change that re-runs verify gets checks 8 and 9.
 - Rollback: reinstall 1.4.0.
 
 ## Open Questions
@@ -499,4 +726,9 @@ each change retires from `spec-review.md` once it reaches a bundle refresh.
   already orders archive before the pull request; the second round shows it is
   skipped. A guard would sit outside the bundle (a local check that an adopter repo's
   default branch carries no change whose implementation is merged but whose folder is
-  not archived), so it is not part of 1.5.0.
+  not archived), so it is not part of 1.5.0. Upstream #1683 proposes a lifecycle status
+  that CI could enforce.
+- How the deviation report reaches the pull request description. Superpowers'
+  `finishing-a-development-branch` creates the pull request itself and has no hook point;
+  the apply controller must pass the report into it, or edit the description after
+  creation. To be settled in the implementation plan with a probe.
