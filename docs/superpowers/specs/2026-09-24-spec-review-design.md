@@ -518,8 +518,12 @@ deviation: the specs are rewritten to match what was built before archive, and o
 drift that also moves away from a governing source is reported.
 
 The report is the artifact the human reads. Apply step 6 carries it into the pull
-request description, and the adopter's rules say how each proposed edit reaches its
-source — for example, as a change request to the knowledge base that holds it. A
+request description: Superpowers' `finishing-a-development-branch` creates the pull
+request with the forge's tooling but prescribes no body, so the apply instruction tells
+the controller to put `verify.md` § 9 into the description it writes, and to edit the
+description afterwards if the request was created without it. `verify.md` itself stays
+the record — it travels in the pull request diff as part of the archived change. The
+adopter's rules say how each proposed edit reaches its source — for example, as a change request to the knowledge base that holds it. A
 deviation does not fail verify: whether to accept it, amend the source, or reverse the
 code is the human's decision at merge time. What fails verify is a missing report, a
 deviation without a reason, or a governing source named in the configuration that the
@@ -749,7 +753,3 @@ acceptance runs start from instruction text that is already current.
   default branch carries no change whose implementation is merged but whose folder is
   not archived), so it is not part of 1.5.0. Upstream #1683 proposes a lifecycle status
   that CI could enforce.
-- How the deviation report reaches the pull request description. Superpowers'
-  `finishing-a-development-branch` creates the pull request itself and has no hook point;
-  the apply controller must pass the report into it, or edit the description after
-  creation. To be settled in the implementation plan with a probe.
