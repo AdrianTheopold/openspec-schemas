@@ -17,17 +17,19 @@ openspec-schemas/                     ← 本 repo
 ├── LICENSE                           ← MIT
 ├── .gitignore
 ├── .github/workflows/
-│   ├── validate-schemas.yml          ← CI 對每個 bridge 跑 openspec schema validate
-│   └── version-check.yml             ← 每週驗證 upstream OpenSpec / Superpowers,落後就開 issue
+│   └── validate-schemas.yml          ← CI 對每個 bridge 跑 openspec schema validate
 ├── docs/
 │   ├── roadmap.md / .zh-TW.md        ← 公開 roadmap
 │   └── superpowers/
 │       ├── specs/                    ← 設計 spec(brainstorming 產出)
-│       └── plans/                    ← 實作 plan(writing-plans 產出)
+│       ├── plans/                    ← 實作 plan(writing-plans 產出)
+│       └── retrospectives/           ← 回顧
 └── superpowers-bridge/                ← 第一個 bridge,自包式 schema bundle
     ├── README.md / .zh-TW.md         ← 完整 bridge 文件(含 install + integration runbook)
+    ├── VERSION                       ← bundle release(SemVer,見 README §Versioning)
     ├── schema.yaml                   ← OpenSpec 讀的 schema 定義
     └── templates/                    ← artifact 模板
+        ├── adopters/                 ← adopter repo 的 CLAUDE.md routing fragment(en + zh-TW)
         ├── brainstorm.md
         ├── proposal.md
         ├── design.md
@@ -74,8 +76,9 @@ openspec-schemas/                     ← 本 repo
    openspec schemas
    ```
 3. 若有時序錯位 / 錯誤行為更動,**也要同步更新 `superpowers-bridge/README.md` 的「六個值得記住的設計觸點」段**(尤其是 verify/retrospective 時序錯位那段),並同步繁中版。
-4. Commit message 用英文,符合 conventional commits(`feat:`、`fix:`、`refactor:`、`chore:`、`docs:`、`ci:`)
-5. push 觸發 CI
+4. Bump `superpowers-bridge/VERSION`(SemVer)並同步 `superpowers-bridge/README.md` 的「Current bundle release」行;schema major 與 bundle release 的差別見 README §Versioning
+5. Commit message 用英文,符合 conventional commits(`feat:`、`fix:`、`refactor:`、`chore:`、`docs:`、`ci:`)
+6. push 觸發 CI
 
 ## 三個 alfred-openspec 顧慮的應對(內化記憶)
 
