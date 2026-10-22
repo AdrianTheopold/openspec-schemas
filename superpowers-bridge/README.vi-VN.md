@@ -2,6 +2,9 @@
 
 [English](./README.md) · [繁體中文](./README.zh-TW.md) · [Tiếng Việt](./README.vi-VN.md)
 
+> **Bản dịch do cộng đồng duy trì**: trang này do cộng đồng đóng góp và cập nhật, nên có thể chậm hơn [`README.md`](./README.md). Khi hai bản không thống nhất, bản tiếng Anh được ưu tiên.
+> *Community-maintained translation — it may lag behind [`README.md`](./README.md). Where the two disagree, the English version is authoritative.*
+
 [![Schema Structure](https://github.com/AdrianTheopold/openspec-schemas/actions/workflows/validate-schemas.yml/badge.svg?branch=main)](https://github.com/AdrianTheopold/openspec-schemas/actions/workflows/validate-schemas.yml)
 [![OpenSpec baseline](https://img.shields.io/badge/OpenSpec_baseline-1.13.0-0277bd)](#compatibility)
 [![Superpowers baseline](https://img.shields.io/badge/Superpowers_baseline-6.3.0-0277bd)](#compatibility)
