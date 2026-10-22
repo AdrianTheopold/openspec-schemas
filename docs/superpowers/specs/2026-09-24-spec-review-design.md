@@ -6,6 +6,10 @@
 > Superpowers 7.0.0, and re-scoped around where human review happens. Spec-review
 > findings are now cleared by the agent, not triaged by the human; the human gate is a
 > deviation report against the adopter's governing sources (Decisions 6, 11–13).
+> Revised 2026-10-22 (fourth revision), after comparing the design with Anthropic's
+> published code-review practice and the Claude Code security documentation: the
+> merge request carries a one-screen review card (Decision 15), verify gains a
+> security pass (Decision 14), and review loops are capped (Decision 6).
 > Target: superpowers-bridge 1.5.0, against OpenSpec CLI 1.14.3, built on bundle 1.4.1
 > (see [Migration Plan](#migration-plan)).
 > Companion work: changes proposed to Fission-AI/OpenSpec itself are listed under
@@ -95,9 +99,12 @@ attention changes the outcome.
   and deltas that would corrupt the main spec at archive.
 - Clear those findings without spending human review on them: the agent fixes each one,
   or dismisses it with a recorded reason.
-- Spend human attention on one artifact: a report of every way the change deviates from
-  the adopter's governing sources, each with its reason and a proposed edit to the
-  source.
+- Spend human attention on one artifact: a review card on the pull request whose two
+  read-first parts are every way the change deviates from the adopter's governing
+  sources — each with its reason and a proposed edit to the source — and what the
+  automated checks did not cover.
+- Review the change's code for security defects before the pull request exists, with
+  the agent clearing the findings.
 - Let each adopter keep its governing sources, its deviation threshold and its safety
   rules outside this bundle, so they can evolve without a bundle release.
 - Use OpenSpec's shipped commands, configuration and instruction text first, and keep
@@ -330,6 +337,22 @@ states; it then becomes a deviation and goes into the deviation report
 ([Decision 11](#decision-11-the-deviation-report-is-the-human-gate)). Spec-review
 findings have no warning-only class.
 
+Three rules keep the loop converging:
+
+- **A round cap.** After three runs of check 8 with uncleared findings, the next run
+  reviews only what changed since the previous run, and a finding still open after that
+  goes to the human as an item of the review card
+  ([Decision 15](#decision-15-the-merge-request-carries-a-review-card)). A reviewer that
+  keeps finding new things in text the agent keeps rewriting is noise, not rigor.
+- **No repeats.** A finding the agent dismissed with a reason is not raised again unless
+  the text it quoted has changed.
+- **Pre-existing findings are tagged.** A finding about text this change did not add —
+  a sibling change, a main-spec sentence — is marked `pre-existing`. It is still cleared,
+  but it is not counted against the change.
+
+The retrospective tallies the dismissal reasons. A rule whose findings are mostly
+dismissed is the signal to sharpen or drop it.
+
 **Why**: The delta spec becomes the source of truth at archive and is read most after
 that, so its defects must not reach archive — non-blocking hints are what OpenSpec
 already offers, and they did not stop the defects in Context. But the human's review
@@ -499,7 +522,10 @@ why detection does the enforcing.
 `templates/verify.md` a matching `## 9.` section. Check 9 dispatches a subagent with no
 prior context. It reads:
 
-- the governing sources the adopter names ([Decision 13](#decision-13-adopter-rulesets-come-from-openspecconfigyaml));
+- the governing sources the adopter names ([Decision 13](#decision-13-adopter-rulesets-come-from-openspecconfigyaml)),
+  at the version the adopter has accepted — its trunk — never from a branch that the
+  same work is using to amend them, so a change cannot rewrite the rules it is judged
+  by. The report records each source's review status as read;
 - the change's proposal, design and delta specs as they will be archived;
 - the diff of the change against the branch it merges into;
 - the executor's "Rulings I made" list, which the apply controller already hands to
@@ -517,11 +543,13 @@ definition above. Drift between the delta specs and their own first draft is not
 deviation: the specs are rewritten to match what was built before archive, and only a
 drift that also moves away from a governing source is reported.
 
-The report is the artifact the human reads. Apply step 6 carries it into the pull
-request description: Superpowers' `finishing-a-development-branch` creates the pull
-request with the forge's tooling but prescribes no body, so the apply instruction tells
-the controller to put `verify.md` § 9 into the description it writes, and to edit the
-description afterwards if the request was created without it. `verify.md` itself stays
+The report is the part of the review card
+([Decision 15](#decision-15-the-merge-request-carries-a-review-card)) that asks the
+human for decisions. Apply step 6 carries the card into the pull request description:
+Superpowers' `finishing-a-development-branch` creates the pull request with the forge's
+tooling but prescribes no body, so the apply instruction tells the controller to write
+the card into the description, and to edit the description afterwards if the request
+was created without it. `verify.md` itself stays
 the record — it travels in the pull request diff as part of the archived change. The
 adopter's rules say how each proposed edit reaches its source — for example, as a change request to the knowledge base that holds it. A
 deviation does not fail verify: whether to accept it, amend the source, or reverse the
@@ -561,7 +589,15 @@ the form the configuration gives them: the rules themselves, or a pointer with t
 command that loads them — in which case the constraint tells every implementer to load
 the rules before its first action. An adopter whose rules live in a governed source
 gives the pointer, so `plan.md`, which is tracked in the repository, does not become a
-second copy that ages. The apply
+second copy that ages.
+
+Rules about the content of code — no secret values, no disabled certificate check, no
+edit to CI configuration without saying so — are better carried by a deterministic
+per-edit check where the runtime offers one (for example a pattern hook that warns on
+every matching edit, in the main session and in subagents alike), because such a check
+does not depend on any brief reaching the subagent. The Global Constraints keep the
+rules no such check expresses. The bundle names the option; which check an adopter
+uses is the adopter's configuration. The apply
 instruction tells the controller to stop and ask the human before any action a safety
 rule reserves for them. The bundle defines no safety content of its own.
 
@@ -590,7 +626,8 @@ safety rules from OpenSpec's project configuration, `openspec/config.yaml`:
 - `context` — delivered with every artifact's instructions. The adopter names its
   governing sources here and how to read them (a file path, a URL, or a command).
 - `rules.verify` — delivered with the verify artifact's instructions. Narrows or widens
-  what check 9 counts as a deviation, and says how a proposed edit reaches its source.
+  what check 9 counts as a deviation, says how a proposed edit reaches its source, and
+  names the sensitive areas the review card lists when a change touches them.
 - `rules.plan` — delivered with the plan artifact's instructions. The safety rules, or a
   pointer to where they live.
 - `operations.apply.guidance` — delivered with the apply instructions. Anything the
@@ -613,6 +650,73 @@ and an adopter without the configuration gets stock behavior.
 - A bundle-specific configuration file — a second configuration format for what
   OpenSpec's own already carries.
 
+### Decision 14: Verify runs a security pass
+
+**Decision**: The verify instruction gains check 10, **Security pass**, and
+`templates/verify.md` a matching `## 10.` section. It reviews the change's diff against
+the branch it merges into for security defects, in a fresh context. Where the runtime
+ships a security review — in Claude Code, the built-in `/security-review` — check 10
+invokes it on the branch; otherwise it dispatches a subagent with no prior context and
+the diff. Findings are cleared under the rules of Decision 6: the agent fixes each one
+or dismisses it with a reason, and only a finding whose fix would change behavior a
+governing source states reaches the human, as a deviation. `verify.md` § 10 records the
+count first, then each finding with its outcome.
+
+**Why**: Nothing in the flow so far looks for security defects specifically: the
+Superpowers task and final reviewers each carry one generic question about security,
+and check 8 reviews specs, not code. Security review is a different reading of the same
+diff — data flow, trust boundaries, secrets, injection — and gets its own pass and its
+own report so that its findings are neither diluted among spec findings nor lost in a
+general code review. Running it before the pull request, with the agent clearing its
+findings, keeps its cost in the agent's loop: the human sees a count and the outcomes on
+the review card, not a stream of comments.
+
+**Alternatives considered**:
+- Security folded into check 8 — one reviewer reading specs and code for two different
+  defect classes; check 8 is deliberately scoped to what will become the source of truth.
+- Security review only in CI or on the pull request — later than necessary, and its
+  findings would arrive as comments the human has to route back to the agent.
+- A deep, repository-wide security scan per change — thorough, but slow and costly per
+  change; it belongs on a periodic schedule outside this flow.
+
+### Decision 15: The merge request carries a review card
+
+**Decision**: Apply step 6 writes a fixed, one-screen **review card** at the top of the
+pull request description. Two parts ask the human to read; four are for a glance:
+
+1. **Deviations** — the deviation report of check 9 (Decision 11). The only part that
+   asks for decisions.
+2. **What the checks did not cover** — the risks the automated checks and reviews of
+   this change would not catch, stated by the controller from what verify ran, and the
+   sensitive areas the change touches as the adopter's rules define them (for example
+   CI or deployment configuration, authentication, migrations). This tells the human
+   when to read the code itself.
+3. **Evidence** — the commands verify ran and their results.
+4. **Security pass** — check 10's count and outcomes.
+5. **How to revert** — what undoing the change takes.
+6. **Rulings** — the number of rulings the executor made, with a pointer to the list in
+   `verify.md`.
+
+The card is a view of `verify.md`, which stays the record. It carries no style or
+nit-level content, and the bundle posts no inline review comments of its own.
+
+**Why**: Review effort is the scarce resource, and it should go where it changes the
+outcome. A reviewer of agent-written work needs to know two things: where the work moved
+away from what was agreed, and what nothing has checked. Everything else is evidence to
+glance at. A fixed card makes the two questions impossible to skip and keeps the rest
+from competing for attention. Inline comments from automated reviewers on a change an
+agent will rework produce rounds of fixes that each invite another review; feeding
+findings back to the agent before the pull request exists avoids that.
+
+**Alternatives considered**:
+- The deviation report alone in the description — leaves "what was not checked"
+  implicit, which is the question that tells a human when automated review is not
+  enough.
+- The full `verify.md` in the description — the record, not a view; too long to read
+  at merge time.
+- Inline review comments posted by an agent — noise that the next agent round reacts
+  to; the forge's own review tooling remains available to the human.
+
 ## The rule file
 
 Outline of `superpowers-bridge/spec-review.md`:
@@ -626,8 +730,14 @@ Outline of `superpowers-bridge/spec-review.md`:
 5. **Beyond the delta specs** — the sibling-change check of Decision 9 and the code-label
    check of Decision 10, with its search patterns and repair guidance.
 6. **Thresholds** — Decision 7, including which pass reads the delta count.
-7. **Report format** — one line per finding:
-   `<file>:<line> — rule <n> — "<quoted text>" — <suggested fix>`, or `No findings.`
+7. **Report format** — a count first (`3 findings, 1 pre-existing`), then one line per
+   finding: `<file>:<line> — rule <n> — "<quoted text>" — <suggested fix>`, or
+   `No findings.` Where one defect recurs, the finding names the class and lists every
+   place, rather than one line per place.
+
+The file follows the shape that makes a review instruction file work: short, a test per
+rule that says what failure looks like, evidence (`file:line`, quoted text) required for
+every finding, and style excluded outright.
 
 The deviation report of Decision 11 has its own section in `templates/verify.md`, not in
 this file: its rules come from the adopter.
@@ -684,6 +794,12 @@ The earlier row on task numbering for custom schemas is withdrawn: 1.14.2 commen
 - [Risk] Governing sources are vague, so nearly nothing counts as a deviation →
   Accepted: the report is only as sharp as the sources it compares against. A vague
   source is the adopter's signal to sharpen it, or to read the delta specs instead.
+- [Risk] The security pass costs a model review per verify run and can raise false
+  positives → Mitigation: it runs once per verify, its findings go to the agent rather
+  than the human, and dismissals with reasons are tallied like any other finding.
+- [Risk] "What the checks did not cover" is only as honest as the controller that writes
+  it → Mitigation: it is derived from what verify actually ran and the sensitive areas
+  the adopter names, and an empty section is itself a signal to read the change.
 - [Risk] The rule file drifts from the upstream docs it cites → Mitigation: every rule
   names its source, and re-attestation re-reads the sources.
 - [Trade-off] Every adopter's verify gains a blocking check → Accepted: it runs once per
@@ -725,33 +841,43 @@ acceptance runs start from instruction text that is already current.
 
 **Bundle 1.5.0 — this design.**
 
-- `spec-review.md`; the note in `templates/spec.md`; verify checks 8 and 9
-  with the `## 8.` and `## 9.` sections in `templates/verify.md`; the Global Constraints
-  and commit-step rules in the plan instruction (Decisions 10 and 12); the controller
-  backup, the stop rule and the deviation report in the pull request description in the
-  apply instruction; `README.md` and `README.zh-TW.md` (lifecycle, verify description,
+- `spec-review.md`; the note in `templates/spec.md`; verify checks 8, 9 and 10
+  with the `## 8.`, `## 9.` and `## 10.` sections in `templates/verify.md`; the Global
+  Constraints and commit-step rules in the plan instruction (Decisions 10 and 12); the
+  controller backup, the stop rule and the review card in the pull request description
+  in the apply instruction (Decision 15); the retrospective's tally of dismissal reasons
+  (Decision 6); `README.md` and `README.zh-TW.md` (lifecycle, verify description,
   and the configuration keys of Decision 13); `VERSION`.
 - CI: `openspec schema validate superpowers-bridge` must still pass with the extra file
   in the bundle, on the CLI version the workflow pins.
 - Acceptance before release, on 1.14.3:
   - check 8 against a delta spec with no defects — expect `No findings.`;
   - check 8 against a delta spec seeded with one defect per rule group and per row of
-    Decision 3's table that 1.14.2 does not already fail, plus a sibling change modifying
+    Decision 3's table that 1.14.3 does not already fail, plus a sibling change modifying
     the same requirement and one labelled code comment — expect each seeded defect found
     exactly once, and nothing else;
   - check 9 against a probe governing source with one stated behavior and one non-goal,
     and a change that contradicts each — expect two deviations, each with a proposed
-    edit; and with no governing sources configured — expect the pass-through line.
+    edit; and with no governing sources configured — expect the pass-through line;
+  - check 10 against a change seeded with one hard-coded secret and one disabled
+    certificate check — expect both found, and each fixed or dismissed with a reason;
+  - the review card of one end-to-end probe change — expect all six parts, deviations
+    first.
+- The acceptance fixtures are committed to this repository, as documentation of what
+  each check catches and as the reviewer's regression suite. A defect a check missed in
+  real use becomes a new fixture, so the suite grows from real misses.
 - Adopters refresh their installed bundle and set the configuration keys of Decision 13
-  if they want checks 9 and the safety rules to read their sources. A change already past
-  verify is unaffected; a change that re-runs verify gets checks 8 and 9.
+  if they want check 9, the sensitive areas of the review card and the safety rules to
+  read their sources. A change already past verify is unaffected; a change that re-runs
+  verify gets checks 8, 9 and 10.
 - Rollback: reinstall 1.4.1.
 
 ## Open Questions
 
-- Whether the acceptance fixtures are committed to this repository, as documentation of
-  what each rule catches, or stay in a scratch project. Deferrable: it changes neither
-  the rules nor the touchpoints.
+- Whether to cap the size of a change's pull request, not only its delta count. Small
+  changes are cheap to review and to revert, and a change that bundles many tasks
+  produces the opposite. A cap would sit at draft time with the one-intent question of
+  Decision 7; the threshold is open.
 - How to keep a change from being merged before it is archived. The apply instruction
   already orders archive before the pull request; the second round shows it is
   skipped. A guard would sit outside the bundle (a local check that an adopter repo's
