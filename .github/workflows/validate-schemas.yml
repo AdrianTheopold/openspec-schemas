@@ -27,7 +27,7 @@ jobs:
           node-version: "24"
 
       - name: Install OpenSpec CLI
-        run: npm install -g @fission-ai/openspec
+        run: npm install -g @fission-ai/openspec@1.14.3
 
       - name: Set up temp project + install bridge
         run: |

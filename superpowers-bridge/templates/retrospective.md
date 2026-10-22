@@ -16,7 +16,7 @@
 
 - **Commit range**: `<base-sha>..<head-sha>` (<n> commits)
 - **Diff size**: <+X / -Y lines across N files>
-- **Tasks done**: <x>/<y> (`grep -cE '^\s*- \[x\]' tasks.md` → x; the regex allows sub-task indentation)
+- **Tasks done**: <x>/<y> (`grep -cE '^\s*([-*+]|[0-9]{1,9}[.)])\s*\[\s*[xX]\s*\]([^([]|$)' tasks.md` → x; the regex allows sub-task indentation and matches every box OpenSpec counts as done)
 - **Active hours**: <estimate>
 - **Subagent dispatches**: <count or "n/a">
 - **New external dependencies**: <list, with license + version, or "none">
@@ -56,16 +56,16 @@ Commit chain (chronological):
 
 ## 4. Skill / workflow compliance
 
-| Skill                                            | Used |
-|--------------------------------------------------|------|
-| superpowers:brainstorming                        |      |
-| superpowers:writing-plans                        |      |
-| superpowers:using-git-worktrees                  |      |
-| superpowers:subagent-driven-development          |      |
-| (transitive) superpowers:test-driven-development |      |
-| (transitive) superpowers:requesting-code-review  |      |
-| openspec-verify-change                           |      |
-| superpowers:finishing-a-development-branch       |      |
+| Skill                                                | Used |
+|------------------------------------------------------|------|
+| superpowers:brainstorming                            |      |
+| superpowers:writing-plans                            |      |
+| superpowers:using-git-worktrees                      |      |
+| superpowers:subagent-driven-development              |      |
+| (via plan steps) superpowers:test-driven-development |      |
+| (final review) superpowers:requesting-code-review    |      |
+| openspec-verify-change                               |      |
+| superpowers:finishing-a-development-branch           |      |
 
 > **Default expectation**: all ✓. Every skill is part of the schema's design;
 > skipping one is an exceptional situation. Any ✗ must be justified in the

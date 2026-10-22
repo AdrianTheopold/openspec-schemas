@@ -3,8 +3,8 @@
 [English](./README.md) · [繁體中文](./README.zh-TW.md) · [Tiếng Việt](./README.vi-VN.md)
 
 [![Schema Structure](https://github.com/AdrianTheopold/openspec-schemas/actions/workflows/validate-schemas.yml/badge.svg?branch=main)](https://github.com/AdrianTheopold/openspec-schemas/actions/workflows/validate-schemas.yml)
-[![OpenSpec baseline](https://img.shields.io/badge/OpenSpec_baseline-1.13.0-0277bd)](#compatibility)
-[![Superpowers baseline](https://img.shields.io/badge/Superpowers_baseline-6.3.0-0277bd)](#compatibility)
+[![OpenSpec baseline](https://img.shields.io/badge/OpenSpec_baseline-1.14.3-0277bd)](#compatibility)
+[![Superpowers baseline](https://img.shields.io/badge/Superpowers_baseline-7.0.0-0277bd)](#compatibility)
 
 > Bridges [OpenSpec](https://github.com/Fission-AI/OpenSpec)'s artifact governance (the **what**) with [obra/superpowers](https://github.com/obra/superpowers) execution skills (the **how**) into a single workflow. Adds an evidence-first `retrospective` artifact filling a gap Superpowers does not natively cover.
 >
@@ -211,7 +211,7 @@ Differences from `spec-driven`:
 | Entry | proposal (manual) | **brainstorm** (invokes brainstorming skill) |
 | Plan layer | tasks (coarse) | tasks + **plan** (TDD micro-steps) |
 | apply requires | tasks | **plan** |
-| apply method | standard task-by-task | **worktree + subagent-driven-development** (with TDD + code-review transitive) |
+| apply method | standard task-by-task | **worktree + subagent-driven-development** (per-task review; TDD via the plan's test-first steps) |
 | Post-apply | (none) | **verify** + **retrospective** artifacts |
 | New artifacts | — | brainstorm, plan, verify, retrospective |
 
@@ -245,7 +245,7 @@ flowchart TD
         direction TB
         A0["<b>0. Pre-flight skill check</b>"]
         A1["<b>1. Workspace</b><br/><i>using-git-worktrees</i>"]
-        A2["<b>2. Executor</b><br/><i>subagent-driven-development</i><br/>↳ TDD + code-review (transitive)"]
+        A2["<b>2. Executor</b><br/><i>subagent-driven-development</i><br/>↳ per-task review · TDD via plan steps"]
         A3["<b>3. Verification</b><br/><i>openspec-verify-change</i> → verify.md"]
         A4["<b>4. Retrospective</b> → retrospective.md<br/>(BEFORE finish; hot context)"]
         A5["<b>5. Archive</b><br/><i>openspec archive -y</i><br/>(sync delta + move folder)"]
@@ -280,7 +280,7 @@ PLANNING ━━━━━━━━━━━━━━━━━━━━━━━�
 APPLY ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   0. Pre-flight skill check
   1. superpowers:using-git-worktrees
-  2. superpowers:subagent-driven-development (+ TDD + code-review transitive)
+  2. superpowers:subagent-driven-development (+ per-task review; TDD via plan steps)
   3. openspec-verify-change → verify.md ◄┐
                               │           │ blocking → fix
                               ▼           │
@@ -302,13 +302,13 @@ APPLY ━━━━━━━━━━━━━━━━━━━━━━━━�
 | 2 | `superpowers:writing-plans` | `plan` artifact instruction | Direct (with PRECHECK) |
 | 3 | `superpowers:using-git-worktrees` | apply step 1 | Direct |
 | 4 | `superpowers:subagent-driven-development` | apply step 2 | Direct |
-| 5 | `superpowers:test-driven-development` | (activated inside #4) | **Transitive** |
-| 6 | `superpowers:requesting-code-review` | (activated inside #4) | **Transitive** |
+| 5 | `superpowers:test-driven-development` | (followed inside #4 through the plan's test-first steps) | **Via plan** |
+| 6 | `superpowers:requesting-code-review` | (its reviewer prompt runs #4's final review) | **Transitive** |
 | 7 | `superpowers:finishing-a-development-branch` | apply step 6 | Direct |
 
 Plus one OpenSpec built-in: `openspec-verify-change` (apply step 3, produces `verify.md`).
 
-> **No `executing-plans` fallback.** This schema is opinionated: it requires a subagent-capable platform (Claude Code, Codex, etc.). The alternative executor `superpowers:executing-plans` does not transitively activate TDD or code-review (verified against its [SKILL.md](https://github.com/obra/superpowers/blob/v6.3.0/skills/executing-plans/SKILL.md)) — falling back would silently degrade Superpowers' core value. If your platform lacks subagent support, use the built-in `spec-driven` schema instead.
+> **No `executing-plans` fallback.** This schema is opinionated: it requires a subagent-capable platform (Claude Code, Codex, etc.). The alternative executor `superpowers:executing-plans` implements every task itself in one context, with no reviewer per task (verified against its [SKILL.md](https://github.com/obra/superpowers/blob/v7.0.0/skills/executing-plans/SKILL.md)). Since Superpowers 6.4.1 it does load TDD and verification-before-completion and ends with one fresh whole-branch review, but it gives up the fresh context per task and the per-task review gate this schema's apply phase is built on — falling back would silently drop them. If your platform lacks subagent support, use the built-in `spec-driven` schema instead.
 
 ### Output redirection
 
@@ -326,7 +326,7 @@ Implemented purely via context injection at invocation time, not by modifying sk
 ### Quick flow (recommended)
 ```bash
 /opsx:ff my-feature    # one-shot: scaffold + brainstorm + proposal + design + specs + tasks + plan
-/opsx:apply            # worktree + subagent-driven-development (with TDD + code-review)
+/opsx:apply            # worktree + subagent-driven-development (per-task review; TDD via plan steps)
 /opsx:verify           # produces verify.md (7 checks)
 /opsx:continue         # → retrospective (produces retrospective.md, §0 + 6 sections)
 /opsx:archive          # archive
@@ -368,7 +368,9 @@ Implemented purely via context injection at invocation time, not by modifying sk
 Confirms these skills are installed before proceeding:
 
 - `superpowers:using-git-worktrees`
-- `superpowers:subagent-driven-development` (transitive: `test-driven-development`, `requesting-code-review`)
+- `superpowers:subagent-driven-development`
+- `superpowers:test-driven-development` (followed through the plan's test-first steps; SDD does not load it itself)
+- `superpowers:requesting-code-review` (its reviewer prompt runs SDD's final whole-branch review)
 - `superpowers:finishing-a-development-branch`
 
 Missing skill → STOP with explicit error. No silent fallback, no manual mode within this schema. The user should either install Superpowers or switch to the built-in `spec-driven` schema for that change.
@@ -383,7 +385,7 @@ Creates `.worktrees/<change-name>/`, switches to a new branch, runs setup, confi
 
 Main agent reads `plan.md`, dispatches a fresh subagent per micro-task:
 
-- **TDD** (`superpowers:test-driven-development`): each subagent transitively activates it — write failing test → watch it fail → minimal code → pass; production code without prior test gets deleted
+- **TDD** (`superpowers:test-driven-development`): reaches each task through the plan, not through SDD — the plan artifact requires every behavior task to open with "write the failing test" and "run it, expect it to fail", and SDD's implementer writes tests "following TDD if task says to", reporting RED and GREEN evidence that the task reviewer reads
 - **Per-task review**: after each task the controller dispatches subagent-driven-development's own merged task-reviewer (spec-compliance + code-quality) — not a separate skill invocation; critical issues block forward motion
 
 Both committed ledgers tick as tasks complete — the coarse `tasks.md` checkboxes and the cleared task's `plan.md` step boxes — in the same bookkeeping step as the SDD progress-ledger line. A step deferred rather than cleared is marked `[~]` in `plan.md` at that moment, because that is what verify §7 reads. After all tasks, a final whole-branch code review (`superpowers:requesting-code-review`) covers the implementation.
@@ -442,19 +444,19 @@ Each artifact / apply step that invokes a Superpowers skill runs a PRECHECK at t
 
 Integration lives entirely in `instruction:` fields (pure prompts). If Superpowers upgrades a skill's behavior, the schema doesn't change. We only touch `schema.yaml` if a skill is renamed or removed.
 
-### 3. Transitive dependencies made explicit
+### 3. Where TDD and code review come from, made explicit
 
-TDD and code-review are normally hidden inside `subagent-driven-development`'s SKILL.md. Our schema's apply step 2 instruction lists these two transitive activations explicitly, so a reader can see "what actually happens during apply" at a glance.
+Code review happens inside `subagent-driven-development`: its own merged task reviewer after every task, and `requesting-code-review`'s reviewer prompt for the final whole-branch review. TDD does not: SDD's SKILL.md has not named `test-driven-development` since Superpowers 6.2.0, and its implementer follows TDD only when the task says to. So the plan artifact requires test-first steps in every behavior task, and apply step 2 says where each discipline comes from, so a reader can see "what actually happens during apply" at a glance — and why `plan.md` must reach the executor with its test-first steps intact.
 
 ### 4. Opinionated: subagent platforms only, no manual fallback
 
-This schema requires a subagent-capable platform (Claude Code, Codex, etc.). The alternative executor `superpowers:executing-plans` does NOT transitively activate TDD or code-review (verified against its [SKILL.md](https://github.com/obra/superpowers/blob/v6.3.0/skills/executing-plans/SKILL.md) — its body has no mention of either, and its Integration section omits both `test-driven-development` and `requesting-code-review`). Falling back to it would silently lose what Superpowers brings to this integration. We prefer to fail loud at Step 0 and direct users to the built-in `spec-driven` schema instead.
+This schema requires a subagent-capable platform (Claude Code, Codex, etc.). The alternative executor `superpowers:executing-plans` was rebuilt in Superpowers 6.4.1: it now requires `test-driven-development` before Task 1 and `verification-before-completion` for each task's completion claim, and ends with one fresh-context review of the whole branch using `requesting-code-review`'s reviewer prompt (verified against its [SKILL.md](https://github.com/obra/superpowers/blob/v7.0.0/skills/executing-plans/SKILL.md)). What it still does not do is what this schema's apply phase is built on: it runs every task in the executor's own context — "no implementer subagent per task, no reviewer per task" — so there is no fresh context per task and no per-task review gate (spec compliance + code quality) before the next task starts. Falling back to it would silently lose that gate. We prefer to fail loud at Step 0 and direct users to the built-in `spec-driven` schema instead.
 
 ### 5. Evidence-based PRECHECK for verify and retrospective (Layer 2 capability detection)
 
 Each timing-sensitive artifact runs concrete shell evidence checks at the start of its instruction:
 
-- **verify**: `git log <base>..HEAD | wc -l > 0` AND `grep -cE '^\s*- \[x\]' tasks.md > 0` AND `grep -cE '^\s*- \[[x~]\]' plan.md > 0`
+- **verify**: `git log <base>..HEAD | wc -l > 0` AND `grep -cE '^\s*([-*+]|[0-9]{1,9}[.)])\s*\[\s*[xX]\s*\]([^([]|$)' tasks.md > 0` AND `grep -cE '^\s*([-*+]|[0-9]{1,9}[.)])\s*\[\s*[xX~]\s*\]([^([]|$)' plan.md > 0`
 - **retrospective**: `test -f verify.md` AND `! grep -q '^- \[x\] ❌ FAIL' verify.md`
 
 The LLM does not need to interpret timing prose — it runs commands and reads results. This is layer 2 of concern #1 / mitigation for concern #2.
@@ -482,14 +484,23 @@ A bundle release `1.x.y` is a published cut of schema major `v1`. A future schem
 
 Baseline versions this schema was authored against. This is a **historical snapshot, not an end-to-end compatibility guarantee** — CI cannot run the full prompt-layer workflow in headless mode, so behavioral compatibility relies on human review when drift fires.
 
-Current bundle release: **`1.4.0`** (see [VERSION](./VERSION)).
+Current bundle release: **`1.4.1`** (see [VERSION](./VERSION)).
 
 | superpowers-bridge | OpenSpec CLI | Superpowers plugin | Baseline as of |
 |---|---|---|---|
+| v1 | `1.14.3` | `7.0.0` | 2026-10-21 |
 | v1 | `1.13.0` | `6.3.0` | 2026-09-16 |
 | v1 | `1.5.0` | `6.2.0` | 2026-08-12 |
 | v1 | `1.5.0` | `6.1.0` | 2026-07-02 |
 
+> Re-attested against **OpenSpec 1.14.3** (2026-10-21, bundle 1.4.1) on the OpenSpec side. Structural: `openspec schema validate` passes, instructions render for every artifact and for apply, and a probe change written from the templates passes `openspec validate --strict`. Absorbed from the 1.14.3 `spec-driven` text into the four inherited instructions: **proposal** — name a new capability for a durable system behavior, not for the work in this change, with a cohesive boundary and no catch-all; **specs** — write the spec files one at a time, starting at the first listed capability with no file; keep a requirement's description to 500 characters, one behavior per requirement (`--strict` fails on a longer ADDED one), and never trim an existing requirement under MODIFIED just to meet the length; `## Purpose` is a new capability delta's first section; **tasks** — only a box holding `x` counts as done (every other marker, `[~]` included, reads as unfinished), work outside tracked progress goes as plain bullets in an optional `## Workflow follow-up` section, and each task group lands its own tests and documentation. **design** is unchanged upstream. Templates gain the upstream H1 titles and the capability-naming and length rules. Adapted to the bridge: the `[~]` deferral marker stays in `plan.md` only, and the workflow follow-up names apply steps 3–6 — tracked tasks never cover verify, retrospective, archive or finish, because verify's task-completion check needs every `tasks.md` box ticked before archive. Carried through unchanged: the brainstorm-first framing, the spec-inventory paragraph, the MODIFIED-completeness paragraph (no upstream counterpart), the `tasks.md` / `plan.md` ledger split. Left out on purpose, as in 1.4.0: the `--store` arguments (stores stay unused).
+>
+> Re-attested against **Superpowers 7.0.0** (2026-10-21, bundle 1.4.1) via a full v6.4.2→v7.0.0 skill diff, installed copy confirmed identical to the upstream tag. One behavioral change absorbed: **brainstorming** was rebuilt. It no longer classifies spike / bounded / architectural; it sizes the work as a quick task, a small change or a project with a written design. Its first message offers to skip the questions, and taking that offer ends the skill with no document. It shows a comparison of approaches only when that helps the user decide, plays the design back in chunks of about 200–300 words, and has a fresh builder-check subagent read the written design before handover. The brainstorm instruction now answers "a project with a written design", closes the skip exit for this flow (the manual `brainstorm.md` path remains), and stops the skill's writing-plans handoff, because the plan is a later artifact here. Still holding: the written design defaults to `docs/superpowers/specs/` and yields to the user's preference, so the output redirection stands. Not affecting the bridge: the spec-document-reviewer prompt was removed (the builder check replaces it); `sdd-workspace` no longer overwrites an existing `.superpowers/sdd/.gitignore` and still resolves the workspace under `.superpowers/sdd/`; `executing-plans`' `task-done` script and the `requesting-code-review` example changed in shell detail only. Also corrected here, though stale since **6.2.0**: the bundle claimed SDD transitively enforces TDD. SDD's SKILL.md has not named `test-driven-development` since v6.2.0 (it did at v6.1.0), and its implementer prompt says only "Write tests (following TDD if task says to)". TDD reaches each task through writing-plans' test-first steps ("Write the failing test" as a task's first step), so the plan instruction now requires those steps and apply step 2, the touchpoint table and design touch #3 state that mechanism. The no-fallback rationale no longer leans on TDD: `executing-plans` loads TDD itself; the decision rests on per-task review and fresh context per task.
+>
+> Re-attested against **Superpowers 6.4.2** (2026-10-21, bundle 1.4.1) via the v6.4.1→v6.4.2 skill diff — only `writing-plans` changed. Absorbed into the plan instruction: a step is "one action with a checkable result" instead of a 2–5-minute action; a code step gives the exact signature, file and spec-pinned values, and carries a body only for an algorithm the signature and tests do not determine; the Self-Review's placeholder scan became a step scan, and a fifth check, Proportion, compares the plan's length to the spec's. The plan instruction's reuse-check rationale still holds — all five checks compare the plan to the spec or to itself, none to the codebase — and its count was corrected.
+>
+> Re-attested against **Superpowers 6.4.1** (2026-10-21, bundle 1.4.1) via the v6.3.0→v6.4.1 skill diff. Two corrections absorbed: (1) **executing-plans** was rebuilt — it now requires `test-driven-development` and `verification-before-completion`, shares SDD's workspace and ledger, rules instead of asking, and ends with one fresh whole-branch review — so this README's earlier claim that it activates neither TDD nor code-review became false at this release. The no-fallback decision stands on the reason that is still true: no reviewer and no fresh context per task. (2) **writing-plans** added a Review Focus section and a fourth self-review check, and its handoff now asks the human to review the plan and choose Subagent-driven or Native unless a method was already supplied; the plan instruction supplies subagent-driven so the "already supplied" branch runs. Still holding from 6.4.1 through 7.0.0: every PRECHECK skill name; SDD's rulings, its four stop classes, its "Rulings I made" list, its merged task reviewer and its final whole-branch review; SDD still ends by invoking finishing with no flag to disable it (the apply suppression stays necessary); the default output paths `docs/superpowers/specs/` and `docs/superpowers/plans/`; `using-git-worktrees` and `finishing-a-development-branch` byte-identical to v6.3.0. Not affecting the bridge: brainstorming's shared-understanding write-back and per-path approval gates (superseded by the 7.0.0 rebuild); `test-driven-development` now says "other tests" means the project's whole suite; the code-reviewer prompt gained "the spec is a vision document" and a "Declined to judge" list; SDD's when-to-use routes to executing-plans only when the partner chose inline or no subagent tool exists; a new `diagnosing-superpowers` skill.
+>
 > Re-attested against **OpenSpec 1.13.0** (2026-09-16, bundle 1.4.0) on the OpenSpec side only. Structural: the schema-file grammar is unchanged since 1.4.1 (five top-level keys), `openspec schema validate` passes, instructions render, and every CLI command this schema names still exists. Absorbed: four artifact instructions the bridge had copied from the 1.4.1 `spec-driven` schema (proposal, specs, design, tasks) were refreshed from 1.13's text — spec inventory via `openspec list --specs` + `openspec show --type spec` before naming capabilities (the spec-level twin of the plan artifact's reuse check), `skip_specs: true` as the only way a zero-delta change passes `openspec validate`, `## Purpose` on a new capability's delta (else archive leaves a `TBD` placeholder), nested `<capability-path>` names, verification stated per task, and design open questions restricted to deferrable unknowns. Added without an upstream counterpart: a MODIFIED block must keep every scenario the main spec still has, which 1.13 enforces at validate and archive. Not affected: stores stay opt-in and unused; the bridge keeps repo-relative `openspec/specs/` paths on purpose. 
 >
 > Re-attested against **Superpowers 6.3.0** (2026-09-16, bundle 1.4.0) via a full v6.2.0→v6.3.0 skill diff, installed copy confirmed identical to the upstream tag. Unchanged and still holding: `executing-plans` activates neither TDD nor code-review (file identical); `using-git-worktrees` defaults to `.worktrees/` (identical); `test-driven-development` and `requesting-code-review/SKILL.md` identical; SDD still ends by invoking finishing + workspace deletion (the apply suppression stays necessary) and still reviews each task with its merged spec-compliance + code-quality reviewer; finishing still re-runs the suite, offers merge / push / keep with discard only on an explicit typed request, and creates the PR/MR on push. Three behavioral changes absorbed: (1) **brainstorming** now classifies spike / bounded / architectural and only the architectural path writes a spec and hands off to writing-plans — the brainstorm instruction fixes the classification as architectural, because a change inside this schema has already passed the entry gate; (2) **writing-plans** opens the plan with a `**Spec:**` header that SDD treats as the binding authority for rulings — the plan instruction and template fill it with the change's delta specs + design.md so no ruling is provisional; (3) **subagent-driven-development** rules on plan conflicts instead of asking ("rulings, not stalls"), stops only for four named classes, and emits its exhaustive "Rulings I made" list at workspace deletion — the step this bridge suppresses — so apply step 2 now requires the list in the executor's report, verify check 4 tests each ruling against the specs, and retrospective §3 records them. Two further 6.3.0 changes need nothing from the bridge: finishing asks before a refused worktree removal instead of forcing it, and the implementer / reviewer prompts gained a no-subagents contract.
@@ -543,7 +554,7 @@ Different purposes, but **both are committed ledgers the executor must maintain*
 If a Superpowers skill is unavailable:
 
 - **`brainstorm` / `plan` artifacts** — the user may explicitly opt in to writing the artifact manually (PRECHECK STOPs and informs the user; manual override requires deliberate user action, not silent degradation)
-- **`apply` phase** — no manual fallback within this schema. PRECHECK STOPs at Step 0 if any required skill is missing. The recommended path is to switch to the built-in `spec-driven` schema for that change. Rationale: see Design touch #4 above — `executing-plans` does not transitively activate TDD or code-review, and a degraded apply phase would defeat the schema's purpose.
+- **`apply` phase** — no manual fallback within this schema. PRECHECK STOPs at Step 0 if any required skill is missing. The recommended path is to switch to the built-in `spec-driven` schema for that change. Rationale: see Design touch #4 above — `executing-plans` has no per-task review and no fresh context per task, and a degraded apply phase would defeat the schema's purpose.
 
 ---
 

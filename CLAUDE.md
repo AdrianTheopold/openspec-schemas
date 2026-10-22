@@ -25,7 +25,7 @@ openspec-schemas/                     ← 本 repo
 │       ├── plans/                    ← 實作 plan(writing-plans 產出)
 │       └── retrospectives/           ← 回顧
 └── superpowers-bridge/                ← 第一個 bridge,自包式 schema bundle
-    ├── README.md / .zh-TW.md         ← 完整 bridge 文件(含 install + integration runbook)
+    ├── README.md / .zh-TW.md / .vi-VN.md ← 完整 bridge 文件(含 install + integration runbook)
     ├── VERSION                       ← bundle release(SemVer,見 README §Versioning)
     ├── schema.yaml                   ← OpenSpec 讀的 schema 定義
     └── templates/                    ← artifact 模板
@@ -48,7 +48,7 @@ openspec-schemas/                     ← 本 repo
   - repo:`openspec-schemas`(複數,可長多個 bridge)
   - bridge dir / schema name:`superpowers-bridge`(單數)
   - 不用 PascalCase(雖然 OpenSpec 自身 repo 用 `OpenSpec`,但他們的 CLI / npm package 都是 lowercase,我們對齊功能性命名)
-- **Locale 編碼**:用 `zh-TW`(繁中)、`zh-CN`(簡中);避免裸寫 `zh`
+- **Locale 編碼**:用 `zh-TW`(繁中)、`zh-CN`(簡中)、`vi-VN`(越南文);避免裸寫 `zh`
 
 ## 雙語策略
 
@@ -57,7 +57,7 @@ openspec-schemas/                     ← 本 repo
 | 入口 `README.md` | 英文 canonical + `README.zh-TW.md` 翻譯 + 頂端切換連結 |
 | `CLAUDE.md`(這份) | 繁中(給維護者 + Claude;國際讀者從 README 入口進來) |
 | `docs/roadmap.md` | 英文 canonical + `.zh-TW.md` 翻譯 + 切換連結 |
-| `superpowers-bridge/README.md` | 英文 canonical + `.zh-TW.md` 翻譯 + 切換連結 |
+| `superpowers-bridge/README.md` | 英文 canonical + `.zh-TW.md`、`.vi-VN.md` 翻譯(社群維護,頂端註明可能落後、以英文版為準)+ 切換連結 |
 | `schema.yaml`、`templates/*.md` | 英文(機器讀 + 國際讀者) |
 | Commit message | 英文(國際慣例) |
 | Code comment | 英文 |

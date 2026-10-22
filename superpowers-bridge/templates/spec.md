@@ -1,3 +1,5 @@
+# Spec Delta
+
 <!--
 Delta spec template for a change.
 
@@ -13,6 +15,9 @@ Hard format rules (validated by OpenSpec):
 - Every Requirement MUST have at least one `#### Scenario:`
 - Scenarios MUST use level-4 headings (`####`); level-3 or bullets fail silently
 - A MODIFIED block MUST keep every scenario the main spec still has
+- Keep each requirement's description to 500 characters or fewer, one behavior
+  per requirement (`openspec validate --strict` fails on a longer ADDED one;
+  never trim an existing requirement under MODIFIED just to meet the length)
 -->
 
 ## Purpose
