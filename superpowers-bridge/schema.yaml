@@ -886,7 +886,12 @@ artifacts:
              tasks-done ratio, active hours, subagent dispatch
              count, new external dependencies, post-merge bugs,
              OpenSpec validate state at archive, test coverage
-             signal, and a one-line commit chain.
+             signal, a one-line commit chain, and "Dismissals by
+             rule": from verify.md checks 8 and 10, per rule
+             (check 8) or defect kind (check 10), how many findings
+             were fixed and how many dismissed, with the dismissal
+             reasons grouped. "none" when neither check reported
+             findings.
 
          §1) **Wins** — what worked well, with evidence
 
@@ -916,6 +921,10 @@ artifacts:
              - Two body lines aligned with the feedback memory
                schema: `> **Why**: <reason>` and
                `> **How to apply**: <trigger condition>`
+
+             A rule whose findings were mostly dismissed (see the
+             "Dismissals by rule" row of §0) is a promote candidate:
+             sharpen or drop that rule, destination `schema`.
 
              Unchecked `- [ ]` items represent in-flight
              candidates that carry into the next cycle's retro

@@ -192,6 +192,8 @@ check_clean() {
   assert_json clean verify-has-check-9 "openspec instructions verify --change add-order-cancellation --json" '"9. **Deviation report**" in j["instruction"] and "No governing sources configured" in j["instruction"]'
   # The security pass must survive a later refresh of the instruction as well.
   assert_json clean verify-has-check-10 "openspec instructions verify --change add-order-cancellation --json" '"10. **Security pass**" in j["instruction"]'
+  # The retrospective must keep tallying dismissed findings, the signal that a rule needs sharpening.
+  assert_json clean retro-tally "openspec instructions retrospective --change add-order-cancellation --json" '"dismissal" in j["instruction"] and "Dismissals by rule" in j["template"]'
 }
 
 check_seeded() {

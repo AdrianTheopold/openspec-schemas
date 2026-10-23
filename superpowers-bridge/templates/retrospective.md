@@ -23,6 +23,7 @@
 - **Bugs encountered post-merge**: <count, one-line each, or "none">
 - **OpenSpec validate state at archive**: <pass / fail / not-run>
 - **Test coverage signal**: <e.g. jacoco %, pytest count, vitest count, or "n/a">
+- **Dismissals by rule**: <from verify.md checks 8 and 10: per rule (check 8) or defect kind (check 10), findings fixed vs dismissed, with the dismissal reasons grouped; or "none">
 
 Commit chain (chronological):
 
@@ -105,6 +106,9 @@ Each candidate uses a `- [ ]` checklist:
 - Two body lines (matching the superpowers feedback memory body schema):
   - `> **Why**: <reason; often a past incident or strong preference>`
   - `> **How to apply**: <when/where this guidance kicks in>`
+
+A rule whose findings were mostly dismissed (§0 "Dismissals by rule") is a
+candidate to sharpen or drop that rule — destination `schema`.
 
 An unchecked `- [ ]` means the candidate hasn't been promoted yet — it can be
 carried to the next cycle's retro for re-evaluation, or kept as a cross-cycle
