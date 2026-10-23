@@ -673,8 +673,10 @@ artifacts:
          n reaches 3 is the capped run, and its heading says so
          (`Run <k> — capped run`); it is past the cap, so it does not
          advance n and its line reads `3 of 3`. Then record the commit
-         the run reviewed (`git rev-parse HEAD`); the report's count
-         line; and one table row per finding with its file and line, its rule
+         the run reviewed (`git rev-parse HEAD`); the result of
+         `openspec validate <change-name> --strict --json` at that commit
+         (`valid`, or its issue count); the report's count line; and one
+         table row per finding with its file and line, its rule
          (`rule <n>` or the bold name the rule file gives), the quoted
          text, its outcome and whether it is `pre-existing`. Then clear
          every finding as the rule file's section 1 says: fix the text or
@@ -730,10 +732,12 @@ artifacts:
          - the change's proposal, design and delta specs as they will be
            archived;
          - the diff of the change against the branch it merges into
-           (`git diff <base>..HEAD`, with `<base>` the merge base the
-           PRECHECK's first command finds);
-         - the executor's "Rulings I made" list (check 4), and every §8
-           and §10 finding marked `deviation — check 9`.
+           (`git diff <base>...HEAD`, with `<base>` the branch the change
+           merges into — or, if that is not known, the merge base that
+           the PRECHECK computes in its first command);
+         - the executor's "Rulings I made" list, as recorded in verify.md
+           §4 (and in the executor's report the controller holds), and
+           every §8 and §10 finding marked `deviation — check 9`.
 
          A deviation is a point where the change contradicts, drops, or
          goes beyond what a governing source states — including a stated
@@ -771,10 +775,11 @@ artifacts:
 
       10. **Security pass**: Review the change's diff against the branch
          it merges into for security defects, in a fresh context. The
-         diff is `git diff <base>..HEAD`, with `<base>` the merge base
-         the PRECHECK's first command finds. Only what the diff adds or
-         changes is in scope; a repository-wide scan is not part of this
-         check.
+         diff is `git diff <base>...HEAD`, with `<base>` the branch the
+         change merges into — or, if that is not known, the merge base
+         that the PRECHECK computes in its first command. Only what the
+         diff adds or changes is in scope; a repository-wide scan is not
+         part of this check.
 
          Dispatch a general-purpose subagent with no prior context, as
          check 8 does: a skill loads into the turn that invokes it, so
@@ -789,7 +794,7 @@ artifacts:
          security review — in Claude Code, the built-in
          `/security-review` — it runs that on the branch first, then
          compares the files the review says it covered with
-         `git diff --name-only <base>..HEAD`. When they differ, or the
+         `git diff --name-only <base>...HEAD`. When they differ, or the
          review does not say what it covered, the subagent reviews the
          diff with the reading list itself. Otherwise it reviews the diff
          with the reading list from the start. It returns which path ran,

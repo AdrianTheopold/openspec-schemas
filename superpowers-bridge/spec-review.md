@@ -14,8 +14,9 @@ reviewers would apply differently does not belong in a review that blocks.
 - **Draft-time self-check.** Before finishing a delta spec, the drafting agent runs
   sections 2 to 6 against it and fixes what they find. The template's note points here.
 - **Verify check 8.** After apply and before archive, verify dispatches a subagent with
-  no prior context, giving it the change name and this file's path. It runs sections 2
-  to 6 and reports in the format of section 7.
+  no prior context, giving it the change name, the working directory (the root of the
+  repository the change lives in) and this file's path. It runs sections 2 to 6 and
+  reports in the format of section 7.
 
 A **finding** is a quoted piece of text that fails one of the tests here, with its
 `<file>:<line>`. Every finding blocks verify until it is cleared, and the agent clears

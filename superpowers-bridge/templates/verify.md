@@ -155,6 +155,8 @@ Runs with findings: <n> of 3
 
 **Reviewed commit**: `<git rev-parse HEAD at this run>`
 
+**Strict validation**: `openspec validate <change-name> --strict --json` → `valid` — or `<n> issues`
+
 **Count**: `<n> findings, <m> pre-existing` — or `No findings.`
 
 | File:line | Rule | Quoted text | Outcome | pre-existing? |
@@ -211,11 +213,11 @@ Then one block per deviation, or `No deviations from the governing sources.`
 ## 10. Security Pass
 
 A fresh-context review of the change's diff against the branch it merges into
-(`git diff <base>..HEAD`) for security defects: untrusted input flow, trust boundaries,
+(`git diff <base>...HEAD`) for security defects: untrusted input flow, trust boundaries,
 secrets, injection, verification turned off. A fresh-context subagent runs it: with the
 runtime's own security review where it can invoke one (in Claude Code, `/security-review`),
 falling back to the reading list when that review does not cover exactly the files of
-`git diff --name-only <base>..HEAD` or does not say what it covered; otherwise with the reading
+`git diff --name-only <base>...HEAD` or does not say what it covered; otherwise with the reading
 list. Only what the diff adds or changes is reviewed. One block per run, newest first; earlier
 runs are carried forward unchanged, as in §8.
 
@@ -294,7 +296,7 @@ Runs with findings: <n> of 3
 
 ### Evidence
 
-<!-- The commands verify ran and their results, one line each: `openspec validate --all --json` (§1), the strict validation of §8, the task and step counts (§2), and the commit range (§5). -->
+<!-- The commands verify ran and their results, one line each: `openspec validate --all --json` (§1), the latest run's **Strict validation** line in §8, the task and step counts (§2), and the commit range (§5). -->
 
 ### Security pass
 
