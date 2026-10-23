@@ -1107,14 +1107,18 @@ apply:
          rounds of step 3.
        - Stop and ask the human before any action that the adopter's
          safety rules (from `rules.plan`, carried in plan.md's Global
-         Constraints)
-         or its apply guidance (the `operationGuidance` field that
-         `openspec instructions apply --json` returns beside this
-         instruction, from `operations.apply.guidance` in
+         Constraints) or its apply guidance (the `operationGuidance`
+         field that `openspec instructions apply --json` returns beside
+         this instruction, from `operations.apply.guidance` in
          `openspec/config.yaml`) reserve for a human — in addition to
-         the four stop classes above. These are not rulings: an
-         implementer that reports such an action as its next step is
-         blocked, and the controller asks rather than rules. With no
+         the four stop classes above. The apply guidance is not in
+         plan.md, so add it to every brief you dispatch; and add
+         plan.md's Global Constraints to every brief plan.md does not
+         carry, such as the fix rounds of step 3. An implementer
+         reports BLOCKED rather than perform an action either reserves
+         for a human. These are not rulings: the controller asks the
+         human rather than rules, and holds to the same stop for the
+         actions it takes itself, such as the push at step 6. With no
          safety rules and no apply guidance, the four classes are the
          whole stop rule. Rules about the content of code (no secret
          values, no disabled certificate check) are better enforced
@@ -1257,8 +1261,8 @@ apply:
        request without it, edit the description afterwards with the
        forge's CLI (`gh pr edit`, `glab mr update`). The card is a view
        of verify.md, which stays the record. If the card is still
-       unfilled, fill it as step 3 says, in the archived verify.md;
-       the branch must carry it, committed, before the push. This
+       unfilled, STOP and complete it before the push: fill it in
+       verify.md as step 3 says, and get it onto the branch. This
        bundle posts no inline review comments; the forge's own review
        tools stay the human's.
 

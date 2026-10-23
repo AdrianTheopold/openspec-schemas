@@ -299,4 +299,4 @@ runs are carried forward unchanged, as in §8.
 
 ### Rulings
 
-<!-- The number of rulings the executor made, with a pointer to the list in §4. -->
+<!-- The number of rulings the executor made, with a pointer to the list: verify.md's path in the archived change folder (`openspec/changes/archive/YYYY-MM-DD-<change-name>/verify.md`) and its § 4, so the pointer still resolves once the card is copied into the pull request description. -->
