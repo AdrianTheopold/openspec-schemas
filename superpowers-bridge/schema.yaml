@@ -1094,6 +1094,33 @@ apply:
          that dies with the ledger was a decision made in secret. The
          controller hands that list to verify (check 4) and the
          retrospective (§3).
+       - The comment rule, as a backup to plan.md's Global Constraints,
+         which carry it to every implementer brief and the task
+         reviewer: code comments, docstrings and messages state the
+         reason in words. They cite no planning labels — design
+         decisions (D9), task or step numbers (Task 5, Step 2), review
+         fix tags (FIX-2) or change-folder files (design.md, plan.md).
+         Where a comment needs its source, it names the change:
+         "decision D9 of the change <change-name>". Commit messages
+         carry the trace. Apply it to every brief you dispatch,
+         including the ones plan.md does not carry, such as the fix
+         rounds of step 3.
+       - Stop and ask the human before any action that the adopter's
+         safety rules (from `rules.plan`, carried in plan.md's Global
+         Constraints)
+         or its apply guidance (the `operationGuidance` field that
+         `openspec instructions apply --json` returns beside this
+         instruction, from `operations.apply.guidance` in
+         `openspec/config.yaml`) reserve for a human — in addition to
+         the four stop classes above. These are not rulings: an
+         implementer that reports such an action as its next step is
+         blocked, and the controller asks rather than rules. With no
+         safety rules and no apply guidance, the four classes are the
+         whole stop rule. Rules about the content of code (no secret
+         values, no disabled certificate check) are better enforced
+         by a deterministic check the runtime runs on every edit, such
+         as a pattern hook; which check, if any, is the adopter's
+         configuration, not this bundle's.
 
        IMPORTANT — where TDD and code review come from:
        you do NOT invoke either skill manually here.
@@ -1139,6 +1166,46 @@ apply:
        `verify` artifact by invoking **openspec-verify-change**
        to check completeness, correctness, and coherence.
        Re-run verify until all blocking issues are resolved.
+
+       The review loop — checks 8 (spec review) and 10 (security pass)
+       raise findings that the controller clears, not the human:
+       - Clear every finding the way the check says: fix it, dismiss it
+         with a one-line reason in its row, or mark it
+         `deviation — check 9` when its fix would change behavior a
+         governing source states. A deviation marked by check 10 means
+         check 9 runs again, because check 9 runs before check 10 and
+         its report must carry it.
+       - Make the fixes through the executor's normal flow — an
+         implementer subagent with the findings as its brief, which
+         commits its work as any task does — so that the tree is
+         committed before the check runs again: each run records the
+         commit it reviewed, and the capped run's base is the commit
+         the previous run recorded. After a fix round, run check 5
+         again; the fixes changed files after it was recorded.
+       - Re-run the check until it reports no uncleared finding, under
+         the rule file's round cap: the run line `Run <n> of 3` counts
+         that check's runs that reported findings, and after the third
+         the capped run, `Run 4 of 3`, reviews only what changed since
+         the previous run's recorded commit. A finding still open after
+         the capped run is marked `open — review card`, sets Overall
+         Decision to PASS WITH WARNINGS rather than FAIL, and goes to
+         the human on the review card instead of into another run.
+         Fixes made after the capped run go on the card as not
+         re-reviewed.
+
+       When verify has no blocking issue left, fill verify.md's
+       `## Review Card` from its sections, so the card is committed
+       with verify.md and travels into the archive with it; step 6
+       puts it in front of the human. Each of its six parts says what
+       goes in it. "What the checks did not cover" is yours to derive:
+       the sensitive areas the adopter's verify rules (`rules.verify`)
+       name that the diff touches, every check verify did not run or
+       ran on a fallback path (for example check 10's `Reviewed by`
+       naming the reading list, or verify's checks run by hand), the
+       findings marked `open — review card`, and the fixes made after
+       a capped run. A part with nothing to list says so in words; an
+       empty part reads as unchecked.
+
        A PASS verify is mid-cycle, not an endpoint: steps 4–5
        (retrospective, archive) gate the PR/MR (step 6) and must
        land on the same branch — if the session ends after verify,
@@ -1182,6 +1249,18 @@ apply:
        glab), reporting the URL. Creating the MR/PR this way is
        sanctioned. Merging is not: NEVER merge or arm auto-merge —
        the merge button belongs to your human partner.
+
+       The review card goes at the top of the PR/MR description: the
+       `## Review Card` section of verify.md (now under the archived
+       change folder), as filled at step 3. Give it to finishing as
+       the opening of the description; if finishing created the
+       request without it, edit the description afterwards with the
+       forge's CLI (`gh pr edit`, `glab mr update`). The card is a view
+       of verify.md, which stays the record. If the card is still
+       unfilled, fill it as step 3 says, in the archived verify.md;
+       the branch must carry it, committed, before the push. This
+       bundle posts no inline review comments; the forge's own review
+       tools stay the human's.
 
        The pushed branch MUST contain the complete archived cycle
        (all 8 artifacts, specs synced, change under archive/). If it

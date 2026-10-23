@@ -266,3 +266,37 @@ runs are carried forward unchanged, as in §8.
 > The publish step goes through **superpowers:finishing-a-development-branch** (skill
 > invocation, not a bare `git push`): it re-runs the full suite on the tree being
 > integrated and leaves the integration decision to your human partner.
+
+---
+
+## Review Card
+
+> The apply controller fills this card once verify has no blocking issue left, and copies it to
+> the top of the pull request description when the branch is published. It is a one-screen view
+> of the sections above, which stay the record: no style or nit-level content, and no inline
+> review comments. The first two parts ask the human to read; the other four are for a glance.
+> A part with nothing to list says so in words — an empty part reads as unchecked.
+
+### Deviations
+
+<!-- Copied from §9: each deviation with its source and place, what the source says, what the change does instead, why, the cost if wrong, and the proposed edit. Or `No deviations from the governing sources.` — or `No governing sources configured`. The only part that asks for decisions. -->
+
+### What the checks did not cover
+
+<!-- Derived by the controller, not copied: the sensitive areas the adopter's verify rules (`rules.verify`) name that the diff touches; every check verify did not run or ran on a fallback path (for example §10's **Reviewed by** naming the reading list, or verify's checks run by hand); the findings marked `open — review card` in §8 and §10; and the fixes made after a capped run (`Run 4 of 3`), not re-reviewed by the check that raised them. This tells the human where to read the code itself. -->
+
+### Evidence
+
+<!-- The commands verify ran and their results, one line each: `openspec validate --all --json` (§1), the strict validation of §8, the task and step counts (§2), and the commit range (§5). -->
+
+### Security pass
+
+<!-- From §10: the latest run line, which path reviewed it, its count line, and the outcomes (fixed / dismissed / deviation / open). -->
+
+### How to revert
+
+<!-- What undoing the change takes: the commits or merge to revert, and anything a revert does not undo — data written, configuration applied outside the repository, the spec sync of the archive. -->
+
+### Rulings
+
+<!-- The number of rulings the executor made, with a pointer to the list in §4. -->

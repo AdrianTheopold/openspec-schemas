@@ -273,6 +273,35 @@ check_plan() {
   assert_json clean plan-template-sections "openspec instructions plan --change add-order-cancellation --json" '"## Global Constraints" in j["template"] and "## Review Focus" in j["template"]'
 }
 
+# The apply controller holds to the adopter's apply guidance and ends by writing
+# the review card into the pull request, so the guidance must arrive through
+# OpenSpec's own channel and the instruction must carry the card and the comment
+# rule. Staged with a configuration that carries one apply guidance line.
+check_apply() {
+  DIR="$TMPROOT/apply"
+  stage clean "$DIR" --config "$HERE/fixtures/clean/config.apply.yaml" >/dev/null || { report FAIL clean apply-stage "staging failed"; return; }
+
+  assert_json clean apply-guidance-delivered "openspec instructions apply --change add-order-cancellation --json" 'any("database migration" in g for g in (j.get("operationGuidance") or []))'
+  assert_json clean apply-card-rule "openspec instructions apply --change add-order-cancellation --json" '"Review Card" in j["instruction"] and "cite no planning labels" in j["instruction"]'
+  assert_true template card-order 'card_order "$BUNDLE/templates/verify.md"'
+}
+
+# The review card's six parts in their fixed order, under a final section of
+# verify.md, so the card the controller copies into the pull request reads the
+# same in every change.
+card_order() { # <template file>
+  python3 - "$1" <<'PY'
+import re, sys
+t = open(sys.argv[1]).read()
+parts = ["### Deviations", "### What the checks did not cover", "### Evidence",
+         "### Security pass", "### How to revert", "### Rulings"]
+card = t.index("## Review Card")
+idx = [t.index(p, card) for p in parts]
+assert idx == sorted(idx)
+assert not re.search(r"^## ", t[card + 1:], re.M), "a section follows the review card"
+PY
+}
+
 # A change that moves away from its governing source. The source repository has
 # a branch amending that source checked out, so a reader that takes the working
 # tree instead of the trunk sees no deviation at all.
@@ -310,6 +339,7 @@ check() {
   TMPROOT=$(mktemp -d)
   check_clean
   check_plan
+  check_apply
   check_seeded
   check_seeded_proposal
   check_rule_file

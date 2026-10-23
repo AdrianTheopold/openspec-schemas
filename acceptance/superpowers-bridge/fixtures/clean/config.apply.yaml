@@ -1,0 +1,5 @@
+schema: superpowers-bridge
+operations:
+  apply:
+    guidance:
+      - "Stop before any database migration."
