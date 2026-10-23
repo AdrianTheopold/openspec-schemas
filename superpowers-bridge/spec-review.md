@@ -60,6 +60,13 @@ Level-4 headers that are not scenarios, with their line numbers:
 grep -Hn '^#### ' openspec/changes/<change>/specs/*/spec.md | grep -v ':#### Scenario:'
 ```
 
+To locate a command finding, report its file from the repository root and find the
+line yourself. For a change, an issue's `path` is relative to the change's `specs/`
+directory (`orders/spec.md` is `openspec/changes/<change>/specs/orders/spec.md`) and
+carries no line: run `grep -n` for the requirement header its message quotes. For a
+main spec, the file is `openspec/specs/<capability>/spec.md`; use the issue's `line`
+where it has one.
+
 When **strict** reports a MODIFIED block dropping a main-spec scenario because the block
 rewrote it under a new title, carry the scenario under its old title, reworded if the
 behavior changed — archive matches scenarios by title. Copying the old text back
@@ -120,7 +127,8 @@ Tests: every term is introduced before it is relied on. No cross-reference point
 the change folder — design decision labels, task numbers, plan steps — because it
 dangles once the folder is archived; a reference to another requirement in the same
 spec is fine. A THEN states an observable outcome; rationale belongs in the requirement
-text. Any of these failing is a finding.
+text. Any of these failing is a finding. A label in a requirement or scenario title
+belongs to rule 5, not here.
 Before: "THEN the order is rejected, because design D4 keeps validation in the gateway."
 After: "THEN the order is rejected before it is stored."
 
@@ -222,12 +230,14 @@ The count comes first, then one line per finding:
 
 `<n>` is a rule number from section 4 or a rule name in bold from sections 2, 3 and 5.
 Every finding quotes the text it is about; a finding without `<file>:<line>` and a quote
-is not reported. Append `(pre-existing)` to a `pre-existing` finding's line. Where one
+is not reported. Text that fails several rules is one finding, reported under the first
+that applies, in this order: a section 2 row, then a section 4 rule, then section 5,
+then **authoring**. Append `(pre-existing)` to a `pre-existing` finding's line. Where one
 defect recurs, report one finding that names the class and lists every place, not one
 line per place:
 
 ```text
-specs/orders/spec.md:12, :31, :47 — rule 3 — "This change …" (3 places) — state each behavior without referring to the change
+openspec/changes/<change>/specs/orders/spec.md:12, :31, :47 — rule 3 — "This change …" (3 places) — state each behavior without referring to the change
 ```
 
 With nothing to report, the whole report is:
