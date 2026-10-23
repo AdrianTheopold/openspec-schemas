@@ -52,7 +52,7 @@
 | `.github/workflows/validate-schemas.yml` (modify) | Runs `run.sh check` |
 | `CLAUDE.md` (modify) | Repository tree gains `acceptance/` and `spec-review.md` |
 
-Reuse check for the two `Create:` entries outside fixtures: the repository has no test harness (`git ls-files` shows only the bundle, docs and one workflow), and the workbench `bridge` tests exercise a different tool. The fixtures live outside `superpowers-bridge/` so that installing the bundle does not install them.
+Reuse check for the two `Create:` entries outside fixtures: the repository has no test harness (`git ls-files` shows only the bundle, docs and one workflow). The fixtures live outside `superpowers-bridge/` so that installing the bundle does not install them.
 
 ---
 
@@ -539,7 +539,7 @@ Each item runs in a fresh subagent, cwd inside a directory produced by `run.sh s
 
 ### Task 13: Pilot across the owner's repositories before release
 
-`main` is the public release: what `bridge install` ships and what other OpenSpec users see. The review card, the blocking checks 8 and 10 and the safety stop change how every adopter's apply ends, so the branch is used for a few days of real work in all of the owner's repositories before it reaches `main`. The install mechanics (a user-tier install from this branch, and the rollback) are in the owner's own tooling, outside this repository.
+`main` is the public release: what installers fetch and what other OpenSpec users see. The review card, the blocking checks 8 and 10 and the safety stop change how every adopter's apply ends, so the branch is used for a few days of real work in all of the owner's repositories before it reaches `main`. The install mechanics (installing from this branch, and the rollback) live outside this repository.
 
 - [ ] **Step 1: Hands-on period** — the owner runs real changes on the branch bundle across the repositories. For each change, keep: check 8's findings and how each was cleared; check 9's deviations; check 10's findings; the card as written into the pull request description; where the flow stopped for a human, and why.
 - [ ] **Step 2: Without adopter configuration** — run checks 8–10 on the `clean` fixture staged with no `config.yaml` keys beyond `schema`. Expected: the bundle works with no governing sources (`No governing sources configured`), so it stands without any particular knowledge base.

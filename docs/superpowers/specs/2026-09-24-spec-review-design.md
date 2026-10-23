@@ -662,6 +662,12 @@ or dismisses it with a reason, and only a finding whose fix would change behavio
 governing source states reaches the human, as a deviation. `verify.md` § 10 records the
 count first, then each finding with its outcome.
 
+**As built**: check 10 always runs in a fresh subagent, which invokes the runtime's
+security review where it can, checks that the files the review covered match the diff's
+files, and otherwise reviews the diff with the reading list — because a skill loads into
+the turn that calls it, and acceptance showed the built-in reviewing the session's own
+repository instead of the change's.
+
 **Why**: Nothing in the flow so far looks for security defects specifically: the
 Superpowers task and final reviewers each carry one generic question about security,
 and check 8 reviews specs, not code. Security review is a different reading of the same
