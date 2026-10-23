@@ -5,7 +5,8 @@
 #   run.sh stage <fixture> <dir> [--config <file>]
 #                                         build a throwaway repository for a fixture
 #
-# Set OPENSPEC to run the same assertions against another CLI binary.
+# Set OPENSPEC to run the same assertions against another CLI: a binary path or
+# a command of several words, such as an npx invocation pinned to a version.
 set -u
 
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
@@ -18,7 +19,12 @@ export GIT_AUTHOR_NAME=fixture GIT_AUTHOR_EMAIL=fixture@example.invalid
 export GIT_COMMITTER_NAME=fixture GIT_COMMITTER_EMAIL=fixture@example.invalid
 
 # Every OpenSpec call, including those inside assertion commands, goes through here.
-openspec() { command "${OPENSPEC:-openspec}" "$@"; }
+# OPENSPEC is split on whitespace so that a command with its own arguments works.
+openspec() {
+  local cmd
+  read -ra cmd <<< "${OPENSPEC:-openspec}"
+  command "${cmd[@]}" "$@"
+}
 
 # Planning labels that stop resolving once a change folder is archived.
 LABEL_PATTERNS='\bD[0-9]+\b|\bTasks? [0-9]|\bStep [0-9]|\bFIX-[0-9]|design\.md|plan\.md'
