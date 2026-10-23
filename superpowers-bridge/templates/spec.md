@@ -18,6 +18,12 @@ Hard format rules (validated by OpenSpec):
 - Keep each requirement's description to 500 characters or fewer, one behavior
   per requirement (`openspec validate --strict` fails on a longer ADDED one;
   never trim an existing requirement under MODIFIED just to meet the length)
+
+Before finishing the delta spec, run the draft-time self-check in
+spec-review.md, at <path>/spec-review.md where `path` comes from
+`openspec schema which superpowers-bridge --json`. Fix what it finds. If the
+change has more than 10 deltas, confirm it has one intent: split it, or state
+the intent in one sentence in the proposal.
 -->
 
 ## Purpose

@@ -189,6 +189,19 @@ check_rule_file() {
   # The rule file and label_hits must search for the same thing, so the runner's
   # alternation has to appear in the rule file exactly as written here.
   assert_true rule-file patterns-match-runner '[ "$(grep -oF -- "$LABEL_PATTERNS" "$BUNDLE/spec-review.md" | head -1)" = "$LABEL_PATTERNS" ]'
+  assert_json clean template-carries-note "openspec instructions specs --change add-order-cancellation --json" '"spec-review.md" in j["template"] and "schema which superpowers-bridge" in j["template"]'
+  assert_true template note-inside-comment 'note_inside_comment "$BUNDLE/templates/spec.md"'
+}
+
+# The template's note must sit inside an HTML comment: OpenSpec warns on prose
+# above a spec's first section, and a comment does not trigger it.
+note_inside_comment() { # <template file>
+  python3 - "$1" <<'PY'
+import sys
+t = open(sys.argv[1]).read()
+i = t.index("spec-review.md")
+assert t.rfind("<!--", 0, i) > t.rfind("-->", 0, i)
+PY
 }
 
 # A change with code but no delta specs still gets the code-label search.
