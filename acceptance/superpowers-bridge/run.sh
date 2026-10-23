@@ -175,11 +175,43 @@ check_seeded_proposal() {
   assert_json seeded-proposal no-deltas-while-unparsed "openspec show fix-order-rounding --json --deltas-only" 'j.get("deltaCount",0)==0'
 }
 
+# The rule file both review points read: it must be found where agents look for
+# it, and it must carry the strings and patterns the checks and the card match on.
+check_rule_file() {
+  DIR="$TMPROOT/rule-file"
+  stage clean "$DIR" >/dev/null || { report FAIL rule-file stage "staging failed"; return; }
+
+  assert_json clean rule-file-resolves "openspec schema which superpowers-bridge --json" '__import__("os").path.isfile(j["path"]+"/spec-review.md")'
+  local s
+  for s in 'Archive would refuse this delta' 'Purpose section is still a placeholder' 'No findings.' 'pre-existing' '\bD[0-9]+\b' '\bTasks? [0-9]' '\bStep [0-9]' '\bFIX-[0-9]' 'design\.md' 'plan\.md'; do
+    assert_true rule-file "pins $s" "grep -qF -- '$s' \"$BUNDLE/spec-review.md\""
+  done
+  # The rule file and label_hits must search for the same thing, so the runner's
+  # alternation has to appear in the rule file exactly as written here.
+  assert_true rule-file patterns-match-runner '[ "$(grep -oF -- "$LABEL_PATTERNS" "$BUNDLE/spec-review.md" | head -1)" = "$LABEL_PATTERNS" ]'
+}
+
+# A change with code but no delta specs still gets the code-label search.
+check_no_deltas() {
+  local fixture=no-deltas
+  if [ ! -d "$HERE/fixtures/$fixture" ]; then
+    report FAIL "$fixture" fixture-present "no fixtures/$fixture directory"
+    return
+  fi
+  DIR="$TMPROOT/$fixture"
+  stage "$fixture" "$DIR" >/dev/null || { report FAIL "$fixture" stage "staging failed"; return; }
+
+  assert_json no-deltas empty-deltas "openspec show tidy-order-module --json --deltas-only" 'j.get("deltaCount",0)==0'
+  assert_true no-deltas no-label-hits '[ -z "$(label_hits .)" ]'
+}
+
 check() {
   TMPROOT=$(mktemp -d)
   check_clean
   check_seeded
   check_seeded_proposal
+  check_rule_file
+  check_no_deltas
   exit "$FAILED"
 }
 
