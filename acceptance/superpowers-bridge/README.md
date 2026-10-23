@@ -60,3 +60,14 @@ checks correctly is tested by hand, one check per run:
 3. Compare its report with the fixture's `expected.md`: every expected outcome present
    once, nothing else reported. A miss in the bundle is fixed in the bundle and the run
    repeated; an expectation found wrong is corrected in `expected.md`.
+
+## Why `check` runs in CI
+
+`check` is worth its CI step only if it notices OpenSpec changing the behavior
+the rule file relies on when the pinned CLI moves. Run under OpenSpec 1.13.0
+(`OPENSPEC="npx -y @fission-ai/openspec@1.13.0" run.sh check`, 2026-10-23), it
+failed exactly one assertion, `seeded: strict-fails`: 1.13.0 does not fail
+strict validation on an ADDED requirement over 500 characters, the first
+behavior difference the design records between 1.13.0 and 1.14.x. The other 48
+assertions passed. Run the same command against the next CLI version before
+moving the pin.
