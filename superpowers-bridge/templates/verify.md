@@ -140,12 +140,43 @@ it in the retrospective's Misses.
 
 ---
 
+## 8. Spec Review
+
+A fresh-context subagent reviews the delta specs against the bundle's `spec-review.md` (path:
+`openspec schema which superpowers-bridge --json` → `path`). One block per run, newest first. When
+verify is re-run, earlier runs are carried forward unchanged: the next run's subagent reads them
+for the round cap, the no-repeat rule and the capped run's diff base.
+
+### Run <n> of 3
+
+**Reviewed commit**: `<git rev-parse HEAD at this run>`
+
+**Count**: `<n> findings, <m> pre-existing` — or `No findings.`
+
+| File:line | Rule | Quoted text | Outcome | pre-existing? |
+|---|---|---|---|---|
+| `<file>:<line>` | `rule <n>` or a bold rule name (`strict`, `archive-refusal`, `proposal`, `scenario-steps`, `scenario-header`, `purpose`, `authoring`, `sibling`, `code-label`) | "<quoted text>" | fixed / dismissed — `<reason>` / deviation — check 9 / open — review card | yes / no |
+
+> **Outcomes**: *fixed* — the text or code was changed; *dismissed* — a one-line reason, and the
+> quoted text stays as the no-repeat rule's reference; *deviation* — the fix would change behavior
+> a governing source states, so check 9 reports it; *open — review card* — still open after the
+> capped run (`Run 4 of 3`, which reviews only what changed since the previous run's reviewed
+> commit) and handed to the human. An empty Outcome cell means the finding is uncleared, and
+> Overall Decision is FAIL.
+
+<!-- Earlier runs follow here, carried forward unchanged: ### Run <n-1> of 3 … -->
+
+---
+
 ## Overall Decision
 
 - [ ] ✅ PASS — proceed in order: retrospective → archive → invoke
   **superpowers:finishing-a-development-branch** (its push option publishes the branch)
 - [ ] ⚠️ PASS WITH WARNINGS — may proceed, but note: `<explanation>`
-- [ ] ❌ FAIL — return to the failing artifact, fix it, and re-run verify
+- [ ] ❌ FAIL — return to the failing artifact, fix it, and re-run verify. Always FAIL while
+  §8 holds a finding that is not fixed, dismissed with a reason, marked a deviation, or carried
+  to the review card after the capped run; findings carried to the review card make it PASS WITH
+  WARNINGS at best
 
 **Next step**:
 

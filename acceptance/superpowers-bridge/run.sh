@@ -150,6 +150,9 @@ check_clean() {
   assert_true clean only-scenario-headers "! grep -nP '^#### (?!Scenario:)' openspec/changes/add-order-cancellation/specs/orders/spec.md"
   assert_true clean purpose-set "! openspec validate orders --type spec --strict --json | grep -q 'Purpose section is still a placeholder'"
   assert_true clean no-label-hits '[ -z "$(label_hits .)" ]'
+  # Verify's spec review must survive a later refresh of the instruction and template.
+  assert_json clean verify-has-check-8 "openspec instructions verify --change add-order-cancellation --json" '"8. **Spec review**" in j["instruction"] and "spec-review.md" in j["instruction"]'
+  assert_json clean verify-template-8 "openspec instructions verify --change add-order-cancellation --json" '"## 8. Spec Review" in j["template"]'
 }
 
 check_seeded() {

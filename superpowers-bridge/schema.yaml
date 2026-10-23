@@ -623,8 +623,57 @@ artifacts:
          In that case, reconstruct the deferral state from the SDD
          ledger and the commits, tick plan.md to match, and re-run.
 
+      8. **Spec review**: Review the change's delta specs against the
+         bundle's rule file, found at `<path>/spec-review.md`, where
+         `<path>` is the `path` field of
+         `openspec schema which superpowers-bridge --json` — the same
+         lookup the spec template's note uses. The rule file holds the
+         rules, the clearing
+         rules and the report format; this check does not restate them.
+
+         Dispatch a general-purpose subagent with no prior context, the
+         way superpowers:requesting-code-review dispatches its final
+         reviewer: no session history, only the change name, the rule
+         file's path and — on any run after the first — the previous
+         verify.md §8 (or verify.md's path). The subagent applies the
+         whole rule file, including its own strict validation
+         (`openspec validate <change-name> --strict --json`, rule file
+         section 2; check 1 stays non-strict), and returns its report in
+         the rule file's section 7 format.
+
+         Record the run in verify.md §8: the run line `Run <n> of 3`,
+         where n counts this change's runs of check 8 (the capped run
+         that follows a third run is `Run 4 of 3`); the commit the
+         run reviewed (`git rev-parse HEAD`); the report's count line;
+         and one table row per finding with its file and line, its rule
+         (`rule <n>` or the bold name the rule file gives), the quoted
+         text, its outcome and whether it is `pre-existing`. Then clear
+         every finding as the rule file's section 1 says: fix the text or
+         the code, or dismiss it with a one-line reason in its row. A
+         finding whose fix would change behavior a governing source
+         states is not cleared here; mark its outcome as a deviation for
+         check 9.
+
+         Re-run check 8 until it reports no uncleared finding, under the
+         rule file's round cap, no-repeat and `pre-existing` rules. The
+         previous §8 is what makes them applicable to a subagent with no
+         memory of earlier runs: its run line counts toward the cap, its
+         dismissed rows and their quoted text are what "no repeats"
+         compares against, and its recorded commit is the base of the
+         capped run, which reviews only what `git diff <commit>` shows
+         changed since then. A finding still open after the capped run is
+         marked `open — review card` and carried to the review card for
+         the human; it is not sent into another run.
+
+         Blocking: any finding that is neither fixed, dismissed, marked a
+         deviation, nor carried to the review card after the cap sets
+         Overall Decision to FAIL. Findings carried to the review card
+         set it to PASS WITH WARNINGS, naming them.
+
       Verify MAY be re-run multiple times as the implementation is
-      refined — each run overwrites verify.md with current state.
+      refined — each run overwrites verify.md with current state,
+      except §8's earlier runs, which are carried forward unchanged so
+      the next run of check 8 can read them.
 
       If `openspec-verify-change` skill is unavailable, fall back to
       running the numbered checks above manually and recording results
