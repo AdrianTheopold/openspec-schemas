@@ -41,3 +41,6 @@ jobs:
       - name: List schemas (smoke test)
         working-directory: /tmp/test-project
         run: openspec schemas
+
+      - name: Mechanical acceptance
+        run: acceptance/superpowers-bridge/run.sh check
