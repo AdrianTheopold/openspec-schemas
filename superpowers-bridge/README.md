@@ -331,7 +331,7 @@ Implemented purely via context injection at invocation time, not by modifying sk
 ```bash
 /opsx:ff my-feature    # one-shot: scaffold + brainstorm + proposal + design + specs + tasks + plan
 /opsx:apply            # worktree + subagent-driven-development (per-task review; TDD via plan steps)
-/opsx:verify           # produces verify.md (10 checks) and its Review Card
+/opsx:verify           # produces verify.md §§ 1–10 (the Review Card is filled by apply step 3)
 /opsx:continue         # → retrospective (produces retrospective.md, §0 + 6 sections)
 /opsx:archive          # archive
 ```
@@ -346,7 +346,7 @@ Implemented purely via context injection at invocation time, not by modifying sk
 /opsx:continue         # → tasks
 /opsx:continue         # → plan
 /opsx:apply            # → implementation + worktree + subagent-driven-development
-/opsx:verify           # → verify.md (post-apply, runs the 10 checks, fills the Review Card)
+/opsx:verify           # → verify.md §§ 1–10 (post-apply; apply step 3 fills the Review Card)
 /opsx:continue         # → retrospective.md (post-verify, evidence-first §0 + 6 sections)
 /opsx:archive
 ```
@@ -568,7 +568,7 @@ The contract is two layers — **baseline declaration + human review** — not a
 |---|---|---|---|
 | Structural | [`validate-schemas.yml`](../.github/workflows/validate-schemas.yml) on every push/PR | Schema-graph breaks (field renames, removed `requires:` edges, PRECHECK syntax changes) | CI run fails red |
 | Baseline drift | Manual — a maintainer periodically compares the pinned baselines above against latest OpenSpec / Superpowers releases | Pinned ≠ latest upstream | Maintainer bumps the baselines + re-attests (no automated drift bot — it was retired with the fork) |
-| Acceptance fixtures | [`acceptance/superpowers-bridge/run.sh check`](../acceptance/superpowers-bridge/README.md) | The CLI behaviors verify checks 8–10 and the plan and apply instructions rely on: message texts, `--strict` outcomes, fixtures with one seeded defect per rule | Run by a maintainer on each re-attestation; green on the new pin is part of it |
+| Acceptance fixtures | [`acceptance/superpowers-bridge/run.sh check`](../acceptance/superpowers-bridge/README.md) | The CLI behaviors verify checks 8–10 and the plan and apply instructions rely on: message texts, `--strict` outcomes, fixtures with one seeded defect per rule | CI runs it in `validate-schemas.yml` on every push to `main` and every pull request to it; a maintainer also runs it on each re-attestation, and green on the new pin is part of it |
 | End-to-end workflow | **Not automated** | Behavioral changes inside Superpowers skills (renames, prose rewrites altering PRECHECK semantics, transitive-dependency changes); subtle OpenSpec engine semantic shifts | A human reads upstream release notes when the drift issue fires |
 
 The "Baseline as of" date is bumped when a maintainer manually re-runs a full cycle against the listed versions and confirms nothing degraded — including that `acceptance/superpowers-bridge/run.sh check` passes on the new pin. Until then, the date marks human attestation, not an automated test pass.

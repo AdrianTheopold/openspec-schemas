@@ -334,7 +334,7 @@ Superpowers skill 有預設輸出路徑(例如 brainstorming 寫到 `docs/superp
 ```bash
 /opsx:ff my-feature    # 一條龍:scaffold + brainstorm + proposal + design + specs + tasks + plan
 /opsx:apply            # worktree + subagent-driven-development(per-task review;TDD 經由 plan step)
-/opsx:verify           # 產出 verify.md(10 項檢查)與其 Review Card
+/opsx:verify           # 產出 verify.md §§ 1–10(Review Card 由 apply step 3 填寫)
 /opsx:continue         # → retrospective(產出 retrospective.md,§0 + 6 sections)
 /opsx:archive          # 封存
 ```
@@ -349,7 +349,7 @@ Superpowers skill 有預設輸出路徑(例如 brainstorming 寫到 `docs/superp
 /opsx:continue         # → tasks
 /opsx:continue         # → plan
 /opsx:apply            # → 實作 + worktree + subagent-driven-development
-/opsx:verify           # → verify.md(post-apply,跑 10 項檢查並填寫 Review Card)
+/opsx:verify           # → verify.md §§ 1–10(post-apply;Review Card 由 apply step 3 填寫)
 /opsx:continue         # → retrospective.md(post-verify,evidence-first §0 + 6 sections)
 /opsx:archive
 ```
@@ -571,7 +571,7 @@ LLM 不必解讀 timing 文字 —— 跑指令、看結果即可。這是顧慮
 |---|---|---|---|
 | 結構性 | [`validate-schemas.yml`](../.github/workflows/validate-schemas.yml) 每次 push/PR | schema graph 結構性破壞(欄位改名、`requires:` 邊移除、PRECHECK 語法變動) | CI run 變紅 |
 | 基準 drift | 手動 —— maintainer 定期把上面 pinned 基準對照 latest OpenSpec / Superpowers release | Pinned ≠ latest upstream | maintainer 更新基準 + 重新 attest(沒有自動 drift bot —— 已隨 fork 退役) |
-| Acceptance fixtures | [`acceptance/superpowers-bridge/run.sh check`](../acceptance/superpowers-bridge/README.md) | verify 檢查 8–10 以及 plan、apply instruction 所依賴的 CLI 行為:訊息文字、`--strict` 結果、每條規則各埋一個缺陷的 fixtures | maintainer 在每次重新 attest 時執行;在新的基準上全綠是 attest 的一部分 |
+| Acceptance fixtures | [`acceptance/superpowers-bridge/run.sh check`](../acceptance/superpowers-bridge/README.md) | verify 檢查 8–10 以及 plan、apply instruction 所依賴的 CLI 行為:訊息文字、`--strict` 結果、每條規則各埋一個缺陷的 fixtures | CI 在 `validate-schemas.yml` 中,於每次 push 到 `main` 與每個指向它的 pull request 時執行;maintainer 也在每次重新 attest 時執行,在新的基準上全綠是 attest 的一部分 |
 | 端對端 workflow | **未自動化** | Superpowers skill 內部行為改變(改名、改寫 prose 影響 PRECHECK 語意、傳遞依賴變動);OpenSpec 引擎語意微調 | drift issue 觸發時,人類讀 upstream release notes |
 
 「基準日期」由 maintainer 手動重跑完整 cycle 確認沒退步後才推進 —— 包括 `acceptance/superpowers-bridge/run.sh check` 在新基準上通過。在那之前,日期代表的是人類聲明,不是自動測試通過。
