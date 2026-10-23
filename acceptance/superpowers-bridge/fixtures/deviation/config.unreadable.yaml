@@ -1,0 +1,8 @@
+schema: superpowers-bridge
+context: |
+  Governing sources: missing-direction.md in the repository at @KB@.
+  Read it at that repository's trunk with `git -C @KB@ show main:missing-direction.md`,
+  never from its working tree.
+rules:
+  verify:
+    - "Sensitive areas: CI configuration (.github/workflows/)."

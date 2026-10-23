@@ -29,11 +29,25 @@ TMPROOT=""
 cleanup() { [ -n "$TMPROOT" ] && rm -rf "$TMPROOT"; }
 trap cleanup EXIT
 
-# The source repository that stands in for governing documents. Fixtures without
-# a kb/ directory have none, so the placeholder stays unresolved for them.
-kb_source() {
-  [ -d "$HERE/fixtures/$1/kb" ] && echo "$HERE/fixtures/$1/kb"
-  return 0
+# A second repository beside the staged one stands in for an adopter's governing
+# documents: kb/trunk/ is its accepted state on main, kb/amend/ a branch that
+# amends it. The amending branch is left checked out, so the working tree shows
+# the amended text and only a read at the trunk shows what was accepted.
+stage_kb() { # <fixture dir> <kb repository dir>
+  local fx=$1 kb=$2
+  mkdir -p "$kb"
+  (
+    cd "$kb" || exit 1
+    git init -q -b main . || exit 1
+    git config commit.gpgsign false
+    cp -R "$fx/kb/trunk/." . || exit 1
+    git add -A && git commit -q -m "accepted" || exit 1
+    git checkout -q -b amend || exit 1
+    # Replace the tree rather than overlay it, so a file the branch removes is gone.
+    git rm -rq . || exit 1
+    cp -R "$fx/kb/amend/." . || exit 1
+    git add -A && git commit -q --allow-empty -m "amend" || exit 1
+  )
 }
 
 stage() {
@@ -47,10 +61,20 @@ stage() {
   done
   local fx="$HERE/fixtures/$fixture"
   [ -d "$fx" ] || { echo "stage: no fixture named $fixture" >&2; return 2; }
+  if [ -n "$config" ]; then
+    # Absolute, because the config is read after changing into the staged directory.
+    [ -f "$config" ] || { echo "stage: no config file $config" >&2; return 2; }
+    config="$(cd "$(dirname "$config")" && pwd)/$(basename "$config")"
+  fi
 
-  local trunk
+  local trunk kb=""
   trunk=$(tr -d '[:space:]' < "$fx/trunk")
   mkdir -p "$dir"
+  if [ -d "$fx/kb" ]; then
+    # Absolute, because the path is written into the staged configuration.
+    kb="$(cd "$dir" && pwd).kb"
+    stage_kb "$fx" "$kb" || return 1
+  fi
   (
     cd "$dir" || exit 1
     git init -q -b "$trunk" . || exit 1
@@ -70,8 +94,6 @@ stage() {
     mkdir -p .git/info
     echo "openspec/schemas/" >> .git/info/exclude
 
-    local kb
-    kb=$(kb_source "$fixture")
     if [ -n "$config" ]; then
       src=$config
     elif [ -f "$fx/config.yaml" ]; then
@@ -79,8 +101,11 @@ stage() {
     else
       src=""
     fi
-    if [ -n "$src" ]; then
+    # A fixture without kb/ has no source repository, so its placeholder stays.
+    if [ -n "$src" ] && [ -n "$kb" ]; then
       sed "s|@KB@|$kb|g" "$src" > openspec/config.yaml
+    elif [ -n "$src" ]; then
+      cp "$src" openspec/config.yaml
     else
       echo "schema: superpowers-bridge" > openspec/config.yaml
     fi
@@ -153,6 +178,9 @@ check_clean() {
   # Verify's spec review must survive a later refresh of the instruction and template.
   assert_json clean verify-has-check-8 "openspec instructions verify --change add-order-cancellation --json" '"8. **Spec review**" in j["instruction"] and "spec-review.md" in j["instruction"]'
   assert_json clean verify-template-8 "openspec instructions verify --change add-order-cancellation --json" '"## 8. Spec Review" in j["template"]'
+  # The deviation report must survive a later refresh too, including the line
+  # an adopter without governing sources gets.
+  assert_json clean verify-has-check-9 "openspec instructions verify --change add-order-cancellation --json" '"9. **Deviation report**" in j["instruction"] and "No governing sources configured" in j["instruction"]'
 }
 
 check_seeded() {
@@ -221,6 +249,23 @@ check_no_deltas() {
   assert_true no-deltas no-label-hits '[ -z "$(label_hits .)" ]'
 }
 
+# A change that moves away from its governing source. The source repository has
+# a branch amending that source checked out, so a reader that takes the working
+# tree instead of the trunk sees no deviation at all.
+check_deviation() {
+  local fixture=deviation
+  if [ ! -d "$HERE/fixtures/$fixture" ]; then
+    report FAIL "$fixture" fixture-present "no fixtures/$fixture directory"
+    return
+  fi
+  DIR="$TMPROOT/$fixture"
+  stage "$fixture" "$DIR" >/dev/null || { report FAIL "$fixture" stage "staging failed"; return; }
+
+  assert_json deviation context-delivered "openspec instructions verify --change purge-cancelled-orders --json" '"show main:orders-direction.md" in j.get("context","")'
+  assert_json deviation verify-rules-delivered "openspec instructions verify --change purge-cancelled-orders --json" 'any("Sensitive areas" in r for r in j.get("rules",[]))'
+  assert_true deviation source-on-amend-branch '[ "$(git -C "$DIR.kb" branch --show-current)" = amend ]'
+}
+
 check() {
   TMPROOT=$(mktemp -d)
   check_clean
@@ -228,6 +273,7 @@ check() {
   check_seeded_proposal
   check_rule_file
   check_no_deltas
+  check_deviation
   exit "$FAILED"
 }
 

@@ -19,5 +19,10 @@ The runner copies the bundle itself, so it needs no install beyond the CLI.
 
 `fixtures/<name>/` holds `trunk` (the trunk branch name), `base/` (committed on the trunk),
 `branch/` (committed on branch `change`), `expected.md` (the outcomes an agent review should
-report), and optionally `config.yaml`. `@KB@` in a config is replaced with the fixture's
-`kb/` source repository when it has one.
+report), and optionally `config.yaml`.
+
+A fixture with a `kb/` directory also gets a source repository, staged at `<dir>.kb`, that
+stands in for an adopter's governing documents: `kb/trunk/` is committed on `main`, then
+`kb/amend/` on a branch `amend`, which is left checked out. `@KB@` in the config becomes
+that repository's path. Stage with `--config` to swap in another config, for example
+`fixtures/deviation/config.unreadable.yaml`.

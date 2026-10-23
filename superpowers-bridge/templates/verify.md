@@ -172,6 +172,39 @@ for the round cap, the no-repeat rule and the capped run's diff base.
 
 ---
 
+## 9. Deviation Report
+
+A fresh-context subagent compares the change with the governing sources the adopter names in
+`openspec/config.yaml` (`context`), under the adopter's verify rules (`rules.verify`). Each source
+is read at the adopter's trunk, never from a branch that amends it. A deviation is a point where
+the change contradicts, drops, or goes beyond what a source states, including a stated non-goal.
+
+If no governing source is configured, write only `No governing sources configured` and stop here.
+
+**Sources read**:
+
+| Source | Read at | Review status as read |
+|---|---|---|
+| `<source>` | `<trunk, and the read used>` | `<status, or "no status stated">` — or *unreadable*: `<what the read returned>` |
+
+Then one block per deviation, or `No deviations from the governing sources.`
+
+### Deviation <n>: <short name>
+
+- **Source and place**: `<source>`, `<section or line>`
+- **What it says**: "<quoted text>"
+- **What the change does instead**: <behavior, with the file or spec that carries it>
+- **Why**: <the reason for moving away>
+- **Cost if wrong**: <what it costs if that reason is wrong>
+- **Proposed edit to the source**: <the edit, in the form the adopter's verify rules ask for>
+
+> A deviation does not fail verify: accepting it, amending the source, or reversing the code is
+> the human's decision at merge time, and the review card puts it in front of them. FAIL only
+> when this section is missing, a deviation has no **Why**, or a configured source is
+> *unreadable*.
+
+---
+
 ## Overall Decision
 
 - [ ] ✅ PASS — proceed in order: retrospective → archive → invoke
@@ -180,7 +213,8 @@ for the round cap, the no-repeat rule and the capped run's diff base.
 - [ ] ❌ FAIL — return to the failing artifact, fix it, and re-run verify. Always FAIL while
   §8 holds a finding that is not fixed, dismissed with a reason, marked a deviation, or carried
   to the review card after the capped run; findings carried to the review card make it PASS WITH
-  WARNINGS at best
+  WARNINGS at best. Also FAIL while §9 has no report, a deviation without its **Why**, or a
+  configured source that could not be read — deviations themselves never fail verify
 
 **Next step**:
 

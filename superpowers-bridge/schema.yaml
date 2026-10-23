@@ -677,6 +677,67 @@ artifacts:
          Overall Decision to FAIL. Findings carried to the review card
          set it to PASS WITH WARNINGS, naming them.
 
+      9. **Deviation report**: Report every point where the change
+         moves away from the governing sources the adopter names. The
+         adopter names them, and how to read each one (a file path, a
+         URL or a command), in the `context` field that
+         `openspec instructions verify --json` returns beside this
+         instruction; its verify rules are the `rules` field beside it.
+         Both come from `openspec/config.yaml` (`context`,
+         `rules.verify`). If the context names no governing source,
+         record `No governing sources configured` in verify.md §9 and
+         pass this check: there is nothing to deviate from.
+
+         Otherwise dispatch a general-purpose subagent with no prior
+         context, as check 8 does — the agent that implemented the
+         change leaves out what it did not think counted. Pass it the
+         change name, the context, the verify rules and this check's
+         text. It reads:
+         - each governing source at the version the adopter has
+           accepted — its trunk — using the read the context gives, and
+           never from a working tree or a branch that amends the source,
+           including one this same work uses to amend it: a change must
+           not rewrite the rules it is judged by. Record each source with
+           its review status as read (for example a status field), or
+           "no status stated";
+         - the change's proposal, design and delta specs as they will be
+           archived;
+         - the diff of the change against the branch it merges into
+           (`git diff <base>..HEAD`, with `<base>` the merge base the
+           PRECHECK's first command finds);
+         - the executor's "Rulings I made" list (check 4), and every §8
+           finding marked `deviation — check 9`.
+
+         A deviation is a point where the change contradicts, drops, or
+         goes beyond what a governing source states — including a stated
+         non-goal — so that the source would need an edit to stay true.
+         Drift between the delta specs and their own first draft is not a
+         deviation; only drift that also moves away from a governing
+         source is. A §8 finding marked `deviation — check 9` that moves
+         away from no source is not a deviation either: return it to
+         check 8 to be fixed or dismissed. The adopter's verify rules may
+         narrow or widen this definition; where they say nothing, it
+         holds as written. Areas the verify rules call sensitive are for
+         the review card, not deviations in themselves.
+
+         For each deviation the report gives: the source and the place in
+         it; what it says; what the change does instead; why; what it
+         costs if that reasoning is wrong; and the proposed edit to the
+         source, in the form the verify rules say a proposed edit reaches
+         its source (replacement text where they say nothing). Or it
+         reports `No deviations from the governing sources.`
+
+         Record in verify.md §9 the sources read with their review status
+         as read, then the report.
+
+         A deviation does not fail verify: whether to accept it, amend the
+         source, or reverse the code is the human's decision at merge
+         time, and the report is what the review card puts in front of
+         them. Blocking — any of these sets Overall Decision to FAIL: no
+         report in §9; a deviation without its why; a governing source the
+         context names that the subagent could not read (name the source
+         and what the read returned).
+
       Verify MAY be re-run multiple times as the implementation is
       refined — each run overwrites verify.md with current state,
       except §8's earlier runs, which are carried forward unchanged so
