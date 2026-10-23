@@ -205,6 +205,39 @@ Then one block per deviation, or `No deviations from the governing sources.`
 
 ---
 
+## 10. Security Pass
+
+A fresh-context review of the change's diff against the branch it merges into
+(`git diff <base>..HEAD`) for security defects: untrusted input flow, trust boundaries,
+secrets, injection, verification turned off. Where the runtime ships its own security review
+(in Claude Code, `/security-review`) it runs that; otherwise a fresh-context subagent reads the
+diff. Only what the diff adds or changes is reviewed. One block per run, newest first; earlier
+runs are carried forward unchanged, as in §8.
+
+### Run <n> of 3
+
+<!-- n counts runs of check 10 that reported findings, as §8 counts check 8's runs. -->
+
+**Reviewed by**: `/security-review` / fresh-context subagent
+
+**Reviewed commit**: `<git rev-parse HEAD at this run>`
+
+**Count**: `<n> findings` — or `No findings.`
+
+| File:line | Defect | Outcome |
+|---|---|---|
+| `<file>:<line>` | `<defect>`: "<quoted code>" | fixed / dismissed — `<reason>` / deviation — check 9 / open — review card |
+
+> **Outcomes** read as in §8: *fixed* — the code was changed; *dismissed* — a one-line reason,
+> and the quoted code stays as the no-repeat rule's reference; *deviation* — the fix would
+> change behavior a governing source states, so check 9 reports it; *open — review card* —
+> still open after the capped run and handed to the human. An empty Outcome cell means the
+> finding is uncleared, and Overall Decision is FAIL.
+
+<!-- Earlier runs follow here, carried forward unchanged: ### Run <n-1> of 3 … -->
+
+---
+
 ## Overall Decision
 
 - [ ] ✅ PASS — proceed in order: retrospective → archive → invoke
@@ -213,8 +246,9 @@ Then one block per deviation, or `No deviations from the governing sources.`
 - [ ] ❌ FAIL — return to the failing artifact, fix it, and re-run verify. Always FAIL while
   §8 holds a finding that is not fixed, dismissed with a reason, marked a deviation, or carried
   to the review card after the capped run; findings carried to the review card make it PASS WITH
-  WARNINGS at best. Also FAIL while §9 has no report, a deviation without its **Why**, or a
-  configured source that could not be read — deviations themselves never fail verify
+  WARNINGS at best. The same holds for §10's findings, and §10 must hold a report. Also FAIL
+  while §9 has no report, a deviation without its **Why**, or a configured source that could
+  not be read — deviations themselves never fail verify
 
 **Next step**:
 

@@ -706,18 +706,18 @@ artifacts:
            (`git diff <base>..HEAD`, with `<base>` the merge base the
            PRECHECK's first command finds);
          - the executor's "Rulings I made" list (check 4), and every §8
-           finding marked `deviation — check 9`.
+           and §10 finding marked `deviation — check 9`.
 
          A deviation is a point where the change contradicts, drops, or
          goes beyond what a governing source states — including a stated
          non-goal — so that the source would need an edit to stay true.
          Drift between the delta specs and their own first draft is not a
          deviation; only drift that also moves away from a governing
-         source is. A §8 finding marked `deviation — check 9` that moves
-         away from no source is not a deviation either: return it to
-         check 8 by emptying its Outcome cell in §8, so §8's rule that an
-         empty Outcome is uncleared holds Overall Decision at FAIL until
-         check 8 fixes or dismisses it. The adopter's verify rules may
+         source is. A §8 or §10 finding marked `deviation — check 9` that
+         moves away from no source is not a deviation either: return it
+         to the check that raised it by emptying its Outcome cell there,
+         so that section's rule that an empty Outcome is uncleared holds
+         Overall Decision at FAIL until that check fixes or dismisses it. The adopter's verify rules may
          narrow or widen this definition; where they say nothing, it
          holds as written. Areas the verify rules call sensitive are for
          the review card, not deviations in themselves.
@@ -740,10 +740,55 @@ artifacts:
          context names that the subagent could not read (name the source
          and what the read returned).
 
+      10. **Security pass**: Review the change's diff against the branch
+         it merges into for security defects, in a fresh context. The
+         diff is `git diff <base>..HEAD`, with `<base>` the merge base
+         the PRECHECK's first command finds. Only what the diff adds or
+         changes is in scope; a repository-wide scan is not part of this
+         check.
+
+         Where the runtime ships a security review the agent can invoke
+         — in Claude Code, the built-in `/security-review`, through the
+         Skill tool — invoke it on the branch. Otherwise, or if it cannot
+         review this branch against `<base>`, dispatch a general-purpose
+         subagent with no prior context, as check 8 does, and pass it
+         the diff and this reading list: how untrusted input flows
+         through the changed code; the trust boundaries it crosses;
+         secrets and credentials written into code or config; injection
+         (SQL, shell, path, template); verification turned off or
+         skipped (TLS, signatures, authentication, authorization). It
+         returns a count line, then each finding with its file and line,
+         the defect and the quoted code — or `No findings.`
+
+         Record the run in verify.md §10 the way check 8 records its run
+         in §8 — the run line, which path reviewed it, the reviewed
+         commit, the count line — then one table row per finding with
+         its file and line, the defect with the quoted code, and its
+         outcome. Clear every
+         finding as check 8 does: fix the code, or dismiss the finding
+         with a one-line reason in its row. A finding whose fix would
+         change behavior a governing source states is not cleared here:
+         mark its outcome `deviation — check 9` and run check 9 again so
+         its report carries it.
+
+         Re-run check 10 until it reports no uncleared finding, under
+         check 8's round cap and no-repeat rule, counted on check 10's
+         own runs in §10 and read from §10 in place of §8. Whichever
+         path reviewed the run, the controller drops a finding whose
+         dismissed row quotes unchanged code, and on the capped run keeps
+         only findings in what `git diff <commit>` shows changed, with
+         `<commit>` the one the previous run recorded.
+
+         Blocking: no report in §10, or any finding that is neither
+         fixed, dismissed, marked a deviation, nor carried to the review
+         card after the cap, sets Overall Decision to FAIL. Findings
+         carried to the review card set it to PASS WITH WARNINGS, naming
+         them.
+
       Verify MAY be re-run multiple times as the implementation is
       refined — each run overwrites verify.md with current state,
-      except §8's earlier runs, which are carried forward unchanged so
-      the next run of check 8 can read them.
+      except the earlier runs in §8 and §10, which are carried forward
+      unchanged so the next run of check 8 or check 10 can read them.
 
       If `openspec-verify-change` skill is unavailable, fall back to
       running the numbered checks above manually and recording results

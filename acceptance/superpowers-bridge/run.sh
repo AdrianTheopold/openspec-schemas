@@ -190,6 +190,8 @@ check_clean() {
   # The deviation report must survive a later refresh too, including the line
   # an adopter without governing sources gets.
   assert_json clean verify-has-check-9 "openspec instructions verify --change add-order-cancellation --json" '"9. **Deviation report**" in j["instruction"] and "No governing sources configured" in j["instruction"]'
+  # The security pass must survive a later refresh of the instruction as well.
+  assert_json clean verify-has-check-10 "openspec instructions verify --change add-order-cancellation --json" '"10. **Security pass**" in j["instruction"]'
 }
 
 check_seeded() {
@@ -275,6 +277,22 @@ check_deviation() {
   assert_true deviation source-on-amend-branch '[ "$(git -C "$DIR.kb" branch --show-current)" = amend ]'
 }
 
+# A change whose code carries two security defects for the security pass to find:
+# a hard-coded credential and a request with certificate verification turned off.
+# The assertion only proves both reach the diff against the trunk; finding them
+# is the agent's part.
+check_security() {
+  local fixture=security
+  if [ ! -d "$HERE/fixtures/$fixture" ]; then
+    report FAIL "$fixture" fixture-present "no fixtures/$fixture directory"
+    return
+  fi
+  DIR="$TMPROOT/$fixture"
+  stage "$fixture" "$DIR" >/dev/null || { report FAIL "$fixture" stage "staging failed"; return; }
+
+  assert_true security two-seeds '[ "$(git diff main...HEAD -U0 | grep -cE "^\+.*(API_PASSWORD = |verify=False)")" = 2 ]'
+}
+
 check() {
   TMPROOT=$(mktemp -d)
   check_clean
@@ -283,6 +301,7 @@ check() {
   check_rule_file
   check_no_deltas
   check_deviation
+  check_security
   exit "$FAILED"
 }
 
