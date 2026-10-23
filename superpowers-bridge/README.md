@@ -212,7 +212,8 @@ Differences from `spec-driven`:
 | Plan layer | tasks (coarse) | tasks + **plan** (TDD micro-steps) |
 | apply requires | tasks | **plan** |
 | apply method | standard task-by-task | **worktree + subagent-driven-development** (per-task review; TDD via the plan's test-first steps) |
-| Post-apply | (none) | **verify** + **retrospective** artifacts |
+| Post-apply | (none) | **verify** (10 checks) + **retrospective** artifacts |
+| Review | (none) | **spec review** at draft time and in verify; **security pass** in verify; the agent clears their findings; a **review card** on the PR/MR |
 | New artifacts | — | brainstorm, plan, verify, retrospective |
 
 ### Lifecycle (apply orchestration + timing notes)
@@ -228,7 +229,7 @@ flowchart TD
         BS["<b>brainstorm.md</b><br/><i>superpowers:brainstorming</i>"]
         PROP["<b>proposal.md</b>"]
         DES["<b>design.md</b><br/><i>(required, structured decisions)</i>"]
-        SP["<b>specs/**/*.md</b>"]
+        SP["<b>specs/**/*.md</b><br/><i>draft-time self-check<br/>(spec-review.md)</i>"]
         TK["<b>tasks.md</b>"]
         PL["<b>plan.md</b><br/><i>superpowers:writing-plans</i>"]
 
@@ -246,10 +247,10 @@ flowchart TD
         A0["<b>0. Pre-flight skill check</b>"]
         A1["<b>1. Workspace</b><br/><i>using-git-worktrees</i>"]
         A2["<b>2. Executor</b><br/><i>subagent-driven-development</i><br/>↳ per-task review · TDD via plan steps"]
-        A3["<b>3. Verification</b><br/><i>openspec-verify-change</i> → verify.md"]
+        A3["<b>3. Verification</b><br/><i>openspec-verify-change</i> → verify.md<br/>↳ 10 checks · review loop on 8 and 10 · Review Card"]
         A4["<b>4. Retrospective</b> → retrospective.md<br/>(BEFORE finish; hot context)"]
         A5["<b>5. Archive</b><br/><i>openspec archive -y</i><br/>(sync delta + move folder)"]
-        A6["<b>6. Completion</b><br/><i>finishing-a-development-branch</i><br/>🏁 push is LAST"]
+        A6["<b>6. Completion</b><br/><i>finishing-a-development-branch</i><br/>Review Card opens the PR/MR description<br/>🏁 push is LAST"]
 
         A0 --> A1 --> A2 --> A3
         A3 -. blocking → fix .-> A2
@@ -275,23 +276,27 @@ PLANNING ━━━━━━━━━━━━━━━━━━━━━━━�
   brainstorm.md ──┬─→ proposal.md ──→ specs/**/*.md ──┐
                   │                                   ├─→ tasks.md ──→ plan.md
                   └─→ design.md (required) ───────────┘
-                                                                       │
+                         (draft-time spec self-check)                  │
                           apply.requires: [plan], apply.tracks: tasks  ▼
 APPLY ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   0. Pre-flight skill check
   1. superpowers:using-git-worktrees
   2. superpowers:subagent-driven-development (+ per-task review; TDD via plan steps)
-  3. openspec-verify-change → verify.md ◄┐
-                              │           │ blocking → fix
+  3. openspec-verify-change → verify.md (10 checks, Review Card) ◄┐
+                              │                                    │ blocking → fix
+                              │ (checks 8, 10: agent clears findings)
                               ▼           │
   4. retrospective.md (BEFORE PR; hot context)
   5. openspec archive -y (sync delta + move folder)
-  6. superpowers:finishing-a-development-branch (🏁 push is LAST)
+  6. superpowers:finishing-a-development-branch (Review Card in the PR/MR description; 🏁 push is LAST)
 ```
+
+Two review points sit in the flow, both before the PR/MR exists. The first is the **draft-time spec review**: a note in `templates/spec.md` tells the drafting agent to run [spec-review.md](./spec-review.md) against the delta spec before finishing it. The second is verify: **check 8** runs the same rule file in a fresh subagent, **check 9** reports where the change departs from the adopter's governing sources, and **check 10** reviews the diff for security defects. The agent clears the findings of checks 8 and 10 itself; the human reads one artifact, the review card, at merge time.
 
 > **Timing notes** (full rationale in "Six design touches" #6):
 > - `verify.md` declares `requires: plan` in the graph but is actually produced inside apply step 3.
 > - `retrospective.md` declares `requires: verify` and per Step 4 is produced **before** finish/push (step 6) — so the pushed branch includes the complete archived cycle (all artifacts done, spec synced, change folder under `archive/`).
+> - Checks 8 and 10 block verify until their findings are cleared, so the PASS that gates steps 4–5 only arrives after the review loop (see "Six design touches" #6).
 > - The `requires:` edges are file-existence dependencies for OpenSpec's graph engine; runtime ordering lives in instruction prose.
 
 ### Seven Superpowers touchpoints
@@ -327,7 +332,7 @@ Implemented purely via context injection at invocation time, not by modifying sk
 ```bash
 /opsx:ff my-feature    # one-shot: scaffold + brainstorm + proposal + design + specs + tasks + plan
 /opsx:apply            # worktree + subagent-driven-development (per-task review; TDD via plan steps)
-/opsx:verify           # produces verify.md (7 checks)
+/opsx:verify           # produces verify.md (10 checks) and its Review Card
 /opsx:continue         # → retrospective (produces retrospective.md, §0 + 6 sections)
 /opsx:archive          # archive
 ```
@@ -342,7 +347,7 @@ Implemented purely via context injection at invocation time, not by modifying sk
 /opsx:continue         # → tasks
 /opsx:continue         # → plan
 /opsx:apply            # → implementation + worktree + subagent-driven-development
-/opsx:verify           # → verify.md (post-apply, runs the 7 checks)
+/opsx:verify           # → verify.md (post-apply, runs the 10 checks, fills the Review Card)
 /opsx:continue         # → retrospective.md (post-verify, evidence-first §0 + 6 sections)
 /opsx:archive
 ```
@@ -388,15 +393,28 @@ Main agent reads `plan.md`, dispatches a fresh subagent per micro-task:
 - **TDD** (`superpowers:test-driven-development`): reaches each task through the plan, not through SDD — the plan artifact requires every behavior task to open with "write the failing test" and "run it, expect it to fail", and SDD's implementer writes tests "following TDD if task says to", reporting RED and GREEN evidence that the task reviewer reads
 - **Per-task review**: after each task the controller dispatches subagent-driven-development's own merged task-reviewer (spec-compliance + code-quality) — not a separate skill invocation; critical issues block forward motion
 
+Every brief carries plan.md's Global Constraints, which hold the comment rule and the adopter's safety rules. The controller stops and asks the human before any action those rules, or the adopter's apply guidance, reserve for a human, in addition to Superpowers' own stop classes; with no safety rules and no apply guidance, those classes are the whole stop rule. See [Configuration keys](#configuration-keys).
+
 Both committed ledgers tick as tasks complete — the coarse `tasks.md` checkboxes and the cleared task's `plan.md` step boxes — in the same bookkeeping step as the SDD progress-ledger line. A step deferred rather than cleared is marked `[~]` in `plan.md` at that moment, because that is what verify §7 reads. After all tasks, a final whole-branch code review (`superpowers:requesting-code-review`) covers the implementation.
 
 This schema does NOT support `superpowers:executing-plans` as a fallback. See the "Six design touches" section below for rationale.
 
 #### 3. Verification — `openspec-verify-change`
 
-Produces `verify.md` from 7 checks: structural validation (`openspec validate --all --json`), task completion, delta-spec sync state, design/specs coherence (non-blocking warning), implementation signal (committed code), front-door routing leak detector (non-blocking warning), and deferred-dogfood vs automated-test equivalence. The last check blocks only when `plan.md` has `[~]` deferrals but the equivalence section is empty (gap analysis skipped); otherwise it is informational.
+Produces `verify.md` from 10 checks:
 
-Failures route back to the corresponding artifact for fix; verify can be re-run.
+1. structural validation (`openspec validate --all --json`)
+2. task completion
+3. delta-spec sync state
+4. design/specs coherence (non-blocking warning)
+5. implementation signal (committed code)
+6. front-door routing leak detector (non-blocking warning)
+7. deferred-dogfood vs automated-test equivalence — blocks only when `plan.md` has `[~]` deferrals but the equivalence section is empty (gap analysis skipped); otherwise informational
+8. **spec review** — a fresh subagent runs [spec-review.md](./spec-review.md) against the delta specs: the rules `openspec validate --strict` does not cover, so that what reaches `openspec/specs/` reads correctly once merged. Findings block verify until the agent fixes them or dismisses each with a recorded reason; after three runs with findings, the next run reviews only what changed and anything still open goes to the review card. A clean run reports `No findings.`
+9. **deviation report** — a fresh subagent reads the governing sources the adopter names (at the version its trunk holds, never from a branch amending them), the change's artifacts and its diff, and reports every point where the change contradicts, drops or goes beyond a source, each with a reason, the cost if the reasoning is wrong and a proposed edit to the source. A deviation does not fail verify: accepting it, amending the source or reversing the code is the human's call at merge time. A missing report, a deviation without a reason, or an unreadable source does fail it. A clean run reports `No deviations from the governing sources.`; with no sources configured it records `No governing sources configured` and passes
+10. **security pass** — the diff against the branch it merges into is reviewed for security defects in a fresh context, with the runtime's own security review where it ships one (in Claude Code, `/security-review`), otherwise a subagent. The agent fixes each finding or dismisses it with a reason; a finding whose fix would change behavior a governing source states becomes a deviation for check 9
+
+Failures route back to the corresponding artifact for fix; verify can be re-run. When no blocking issue is left, the controller fills the `## Review Card` section of `verify.md`: **Deviations** (check 9's report) and **What the checks did not cover** (the sensitive areas the diff touches, checks that did not run or ran on a fallback path, findings left open) are the two parts to read; **Evidence**, **Security pass**, **How to revert** and **Rulings** are for a glance. The card is a view of `verify.md`, which stays the record, and step 6 puts it at the top of the PR/MR description.
 
 > **Steps 4–6 are the canonical post-verify sequence: retro → archive → PR. Reordering produces incomplete PRs (retrospective + archive land as trailing post-merge commits, losing hot context).**
 
@@ -412,7 +430,37 @@ Syncs delta specs into `openspec/specs/<capability>/spec.md` and moves the chang
 
 #### 6. Completion — `superpowers:finishing-a-development-branch`
 
-Confirms tests are green, presents merge / PR / keep-branch / discard options. The worktree is cleaned up only on the merge or discard options; the push/PR path preserves it so you can iterate on PR feedback. **PR is the last step** — if retro or archive haven't been done, finish them first.
+Confirms tests are green, presents merge / PR / keep-branch / discard options. The Review Card from `verify.md` goes at the top of the PR/MR description (edited in afterwards if the request was created without it); an unfilled card is a STOP, not something to skip. The bundle posts no inline review comments of its own. The worktree is cleaned up only on the merge or discard options; the push/PR path preserves it so you can iterate on PR feedback. **PR is the last step** — if retro or archive haven't been done, finish them first.
+
+---
+
+## Configuration keys
+
+The bundle holds no adopter content. An adopter's governing sources, deviation threshold and safety rules stay in its own sources, and `openspec/config.yaml` — OpenSpec's project configuration — **points** at them: it names where a ruleset lives and how to load it (a file path, a URL, or a command), never a copy, so a rule changes in one place and needs no bundle release. The bundle reads four keys:
+
+| Key | Delivered with | What the bundle does with it |
+|---|---|---|
+| `context` | every artifact's instructions | Names the governing sources and how to read them. Check 9 reads them at the version the adopter has accepted (its trunk), never from a branch that amends them, and records each source's review status as read. |
+| `rules.verify` | the verify artifact's instructions | Narrows or widens what check 9 counts as a deviation (default: the change contradicts, drops or goes beyond what a source states, a stated non-goal included), says how a proposed edit reaches its source, and names the sensitive areas the review card lists when the diff touches them. |
+| `rules.plan` | the plan artifact's instructions | The safety rules, or a pointer to where they live. The plan instruction puts them in `plan.md`'s Global Constraints as given, rules or pointer (a pointer tells every implementer to load the rules before its first action), so they reach every implementer brief and the task reviewer. |
+| `operations.apply.guidance` | the apply instructions (the `operationGuidance` field of `openspec instructions apply --json`) | Anything the controller must hold to during apply, such as which actions to stop for. Added to every brief the controller dispatches. |
+
+A minimal example, with a neutral `orders` domain:
+
+```yaml
+schema: superpowers-bridge
+context: |
+  Governing sources: orders-direction.md in the repository at <path>.
+  Read it at that repository's trunk with `git -C <path> show main:orders-direction.md`,
+  never from its working tree.
+rules:
+  verify:
+    - "Sensitive areas: CI configuration (.github/workflows/)."
+```
+
+Without these keys the bundle behaves as before: check 9 records `No governing sources configured` and passes, the review card lists no sensitive areas, Global Constraints carry the comment rule alone, and the four Superpowers stop classes are the whole stop rule.
+
+A rule about the content of code (no secret values, no disabled certificate check) is better enforced by a deterministic per-edit check than by a brief: for example a pattern hook the runtime runs on every edit, in the main session and in subagents alike. Which check, if any, is adopter configuration, not bundle content.
 
 ---
 
@@ -465,6 +513,8 @@ The LLM does not need to interpret timing prose — it runs commands and reads r
 
 `verify.requires: [plan]` and `retrospective.requires: [verify]` are file-existence dependencies in the schema graph, but each instruction explicitly states "MUST run AFTER apply phase / verify pass". This is intentional misalignment — OpenSpec's engine only checks predecessor file existence. Engine-native fix awaits a `post_apply` phase concept upstream (analogous to spec-kit's `after_implement` hook); evidence-based PRECHECK above is the v1 mitigation.
 
+Since 1.5.0 the same misalignment bites harder, because checks 8 and 10 block: verify runs as a loop inside apply step 3 (find, fix through an implementer subagent, commit, re-run) rather than a single pass, and each run records the commit it reviewed so the next run, and the capped run, know their base. Verify's PRECHECK still reads only observable state (commits, ticked boxes). A finding still open after the capped run does not hold verify at FAIL: it sets Overall Decision to PASS WITH WARNINGS and goes to the review card, so the retrospective and archive that follow are not blocked by a finding the agent could not clear. Because the review card is committed with `verify.md` before archive, it travels into the archived change and into the PR/MR diff.
+
 ---
 
 ## Versioning
@@ -484,7 +534,7 @@ A bundle release `1.x.y` is a published cut of schema major `v1`. A future schem
 
 Baseline versions this schema was authored against. This is a **historical snapshot, not an end-to-end compatibility guarantee** — CI cannot run the full prompt-layer workflow in headless mode, so behavioral compatibility relies on human review when drift fires.
 
-Current bundle release: **`1.4.1`** (see [VERSION](./VERSION)).
+Current bundle release: **`1.5.0`** (see [VERSION](./VERSION)).
 
 | superpowers-bridge | OpenSpec CLI | Superpowers plugin | Baseline as of |
 |---|---|---|---|
@@ -493,6 +543,8 @@ Current bundle release: **`1.4.1`** (see [VERSION](./VERSION)).
 | v1 | `1.5.0` | `6.2.0` | 2026-08-12 |
 | v1 | `1.5.0` | `6.1.0` | 2026-07-02 |
 
+> Bundle **1.5.0** adds no schema-graph change (the same artifacts, `requires:` edges and PRECHECKs) and no baseline bump; the baselines below stand. It adds the spec review, deviation report and security pass to verify, the Global Constraints rules to plan, and the stop rule, review loop and review card to apply. Its acceptance suite, `acceptance/superpowers-bridge/run.sh check`, pins on the CLI the message texts the checks read (`Archive would refuse this delta`, `Purpose section is still a placeholder`, the `--strict` failure on an ADDED requirement over 500 characters, the `proposal.md` parse status), so a CLI release that rewords one fails the run instead of silently emptying a check.
+>
 > Re-attested against **OpenSpec 1.14.3** (2026-10-21, bundle 1.4.1) on the OpenSpec side. Structural: `openspec schema validate` passes, instructions render for every artifact and for apply, and a probe change written from the templates passes `openspec validate --strict`. Absorbed from the 1.14.3 `spec-driven` text into the four inherited instructions: **proposal** — name a new capability for a durable system behavior, not for the work in this change, with a cohesive boundary and no catch-all; **specs** — write the spec files one at a time, starting at the first listed capability with no file; keep a requirement's description to 500 characters, one behavior per requirement (`--strict` fails on a longer ADDED one), and never trim an existing requirement under MODIFIED just to meet the length; `## Purpose` is a new capability delta's first section; **tasks** — only a box holding `x` counts as done (every other marker, `[~]` included, reads as unfinished), work outside tracked progress goes as plain bullets in an optional `## Workflow follow-up` section, and each task group lands its own tests and documentation. **design** is unchanged upstream. Templates gain the upstream H1 titles and the capability-naming and length rules. Adapted to the bridge: the `[~]` deferral marker stays in `plan.md` only, and the workflow follow-up names apply steps 3–6 — tracked tasks never cover verify, retrospective, archive or finish, because verify's task-completion check needs every `tasks.md` box ticked before archive. Carried through unchanged: the brainstorm-first framing, the spec-inventory paragraph, the MODIFIED-completeness paragraph (no upstream counterpart), the `tasks.md` / `plan.md` ledger split. Left out on purpose, as in 1.4.0: the `--store` arguments (stores stay unused).
 >
 > Re-attested against **Superpowers 7.0.0** (2026-10-21, bundle 1.4.1) via a full v6.4.2→v7.0.0 skill diff, installed copy confirmed identical to the upstream tag. One behavioral change absorbed: **brainstorming** was rebuilt. It no longer classifies spike / bounded / architectural; it sizes the work as a quick task, a small change or a project with a written design. Its first message offers to skip the questions, and taking that offer ends the skill with no document. It shows a comparison of approaches only when that helps the user decide, plays the design back in chunks of about 200–300 words, and has a fresh builder-check subagent read the written design before handover. The brainstorm instruction now answers "a project with a written design", closes the skip exit for this flow (the manual `brainstorm.md` path remains), and stops the skill's writing-plans handoff, because the plan is a later artifact here. Still holding: the written design defaults to `docs/superpowers/specs/` and yields to the user's preference, so the output redirection stands. Not affecting the bridge: the spec-document-reviewer prompt was removed (the builder check replaces it); `sdd-workspace` no longer overwrites an existing `.superpowers/sdd/.gitignore` and still resolves the workspace under `.superpowers/sdd/`; `executing-plans`' `task-done` script and the `requesting-code-review` example changed in shell detail only. Also corrected here, though stale since **6.2.0**: the bundle claimed SDD transitively enforces TDD. SDD's SKILL.md has not named `test-driven-development` since v6.2.0 (it did at v6.1.0), and its implementer prompt says only "Write tests (following TDD if task says to)". TDD reaches each task through writing-plans' test-first steps ("Write the failing test" as a task's first step), so the plan instruction now requires those steps and apply step 2, the touchpoint table and design touch #3 state that mechanism. The no-fallback rationale no longer leans on TDD: `executing-plans` loads TDD itself; the decision rests on per-task review and fresh context per task.
@@ -517,9 +569,19 @@ The contract is two layers — **baseline declaration + human review** — not a
 |---|---|---|---|
 | Structural | [`validate-schemas.yml`](../.github/workflows/validate-schemas.yml) on every push/PR | Schema-graph breaks (field renames, removed `requires:` edges, PRECHECK syntax changes) | CI run fails red |
 | Baseline drift | Manual — a maintainer periodically compares the pinned baselines above against latest OpenSpec / Superpowers releases | Pinned ≠ latest upstream | Maintainer bumps the baselines + re-attests (no automated drift bot — it was retired with the fork) |
+| Acceptance fixtures | [`acceptance/superpowers-bridge/run.sh check`](../acceptance/superpowers-bridge/README.md) | The CLI behaviors verify checks 8–10 and the plan and apply instructions rely on: message texts, `--strict` outcomes, fixtures with one seeded defect per rule | Run by a maintainer on each re-attestation; green on the new pin is part of it |
 | End-to-end workflow | **Not automated** | Behavioral changes inside Superpowers skills (renames, prose rewrites altering PRECHECK semantics, transitive-dependency changes); subtle OpenSpec engine semantic shifts | A human reads upstream release notes when the drift issue fires |
 
-The "Baseline as of" date is bumped when a maintainer manually re-runs a full cycle against the listed versions and confirms nothing degraded. Until then, the date marks human attestation, not an automated test pass.
+The "Baseline as of" date is bumped when a maintainer manually re-runs a full cycle against the listed versions and confirms nothing degraded — including that `acceptance/superpowers-bridge/run.sh check` passes on the new pin. Until then, the date marks human attestation, not an automated test pass.
+
+### Upgrading to 1.5.0
+
+1.5.0 changes behavior, not the schema graph, so adopters on v1 need no structural migration:
+
+- **Refresh the installed bundle** (see "Upgrading an existing install"). The bundle gains one file, `spec-review.md`, which the upgrade copies with the rest of the directory.
+- **Set the configuration keys** of "Configuration keys" if you want check 9, the review card's sensitive areas and the safety rules to read your own sources. Without them nothing else changes, apart from the new checks 8 and 10.
+- **A change already past verify is unaffected.** A change that re-runs verify gets checks 8, 9 and 10 and the Review Card section.
+- **Rollback:** reinstall 1.4.1.
 
 ### Known breaking changes
 
@@ -562,6 +624,8 @@ If a Superpowers skill is unavailable:
 
 - [schema.yaml](./schema.yaml) — machine-readable schema definition
 - [templates/](./templates/) — markdown templates per artifact
+- [spec-review.md](./spec-review.md) — the rule file behind the draft-time spec review and verify check 8
+- [acceptance/superpowers-bridge/](../acceptance/superpowers-bridge/README.md) — mechanical acceptance checks and fixtures
 - [README.zh-TW.md](./README.zh-TW.md) — 繁體中文版
 - [obra/superpowers](https://github.com/obra/superpowers) — Superpowers skill source
 - [Fission-AI/OpenSpec](https://github.com/Fission-AI/OpenSpec) — OpenSpec

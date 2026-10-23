@@ -18,6 +18,8 @@ openspec-schemas/                     ← 本 repo
 ├── .gitignore
 ├── .github/workflows/
 │   └── validate-schemas.yml          ← CI 對每個 bridge 跑 openspec schema validate
+├── acceptance/
+│   └── superpowers-bridge/           ← 機械式 acceptance:run.sh check|stage、fixtures、自己的 README
 ├── docs/
 │   ├── roadmap.md / .zh-TW.md        ← 公開 roadmap
 │   └── superpowers/
@@ -28,6 +30,7 @@ openspec-schemas/                     ← 本 repo
     ├── README.md / .zh-TW.md / .vi-VN.md ← 完整 bridge 文件(含 install + integration runbook)
     ├── VERSION                       ← bundle release(SemVer,見 README §Versioning)
     ├── schema.yaml                   ← OpenSpec 讀的 schema 定義
+    ├── spec-review.md                ← spec review 規則檔(撰寫時自我檢查 + verify 檢查 8 共用)
     └── templates/                    ← artifact 模板
         ├── adopters/                 ← adopter repo 的 CLAUDE.md routing fragment(en + zh-TW)
         ├── brainstorm.md

@@ -337,6 +337,14 @@ check_security() {
   assert_true security two-seeds '[ "$(git diff main...HEAD -U0 | grep -cE "^\+.*(API_PASSWORD = |verify=False)")" = 2 ]'
 }
 
+# The release number the bundle announces must agree in VERSION and in both
+# maintained READMEs.
+check_release() {
+  DIR="$TMPROOT/release"
+  mkdir -p "$DIR"
+  assert_true release version '[ "$(tr -d "[:space:]" < "$BUNDLE/VERSION")" = 1.5.0 ] && grep -q "1.5.0" "$BUNDLE/README.md" && grep -q "1.5.0" "$BUNDLE/README.zh-TW.md"'
+}
+
 check() {
   TMPROOT=$(mktemp -d)
   check_clean
@@ -348,6 +356,7 @@ check() {
   check_no_deltas
   check_deviation
   check_security
+  check_release
   exit "$FAILED"
 }
 
