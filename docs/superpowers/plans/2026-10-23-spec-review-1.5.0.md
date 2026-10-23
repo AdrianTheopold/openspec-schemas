@@ -23,7 +23,7 @@
 - Comments and docstrings in `run.sh` and the fixtures' code state reasons in words and cite no planning labels — no decision numbers, task or step numbers, no `plan.md`. Commit messages carry the trace: each ends with a trailer `Refs: spec-review design Decision <n>[, <n>…]; plan Task <n>`.
 - Commits use the clone's configured GitHub noreply author; verify with `git show -s --format='%ae'` before any push. Commit messages in English, conventional-commit prefixes (`feat:`, `docs:`, `ci:`, `test:`).
 - English is canonical for `README.md`, `schema.yaml` and templates; `README.zh-TW.md` is synced in the same task as its English counterpart. `README.vi-VN.md` is community-maintained and is not edited.
-- Pushing `feat/spec-review` is approved. Opening the pull request, and merging, are not: stop after Task 12 and hand over.
+- Pushing `feat/spec-review` is approved. Opening the pull request, and merging, are not: the branch reaches `main` only after the pilot of Task 13 and the owner's verdict.
 
 ## Review Focus
 
@@ -66,6 +66,7 @@ Reuse check for the two `Create:` entries outside fixtures: the repository has n
 **Interfaces:**
 - Produces: `run.sh check` — runs every fixture's assertions; prints one `PASS <fixture>: <assertion>` or `FAIL <fixture>: <assertion> — <detail>` line each; exits 0 only if none failed.
 - Produces: `run.sh stage <fixture> <dir> [--config <file>]` — creates a git repository at `<dir>`: commits `base/` on the branch named in `trunk`, creates branch `change` with `branch/` committed on top and checked out, copies `superpowers-bridge/` to `<dir>/openspec/schemas/superpowers-bridge` and lists `openspec/schemas/` in `.git/info/exclude`, writes `openspec/config.yaml` from `--config`, else from the fixture's `config.yaml`, else `schema: superpowers-bridge`, replacing `@KB@` with the path of the fixture's source repository (Task 6). Prints `<dir>`.
+- Produces: every OpenSpec call in `run.sh` goes through `${OPENSPEC:-openspec}`, so the same assertions can run against another CLI version (Task 2, Step 5).
 - Produces (internal helpers, used by every later task): `assert_true <fixture> <name> <command>`; `assert_json <fixture> <name> <json-producing command> <python expression over j>`; `label_hits <dir>` — prints added lines outside `openspec/` matching the pinned label patterns, diffing against `$(git merge-base HEAD <trunk>)`.
 
 - [ ] **Step 1: Write the failing assertions for `clean`**
@@ -172,7 +173,14 @@ Seed exactly the table above. `expected.md` lists the fourteen seeds, says "each
 Run: `acceptance/superpowers-bridge/run.sh check`
 Expected: exit 0. An assertion that fails because 1.14.3 behaves differently from the design's table is a finding about the design, not the fixture: stop and report it with the actual output.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 5: Test whether `check` earns its place**
+
+`check` is worth keeping only if it catches something no other step catches: OpenSpec changing the behavior the rule file relies on when the pin moves. Run it once under OpenSpec 1.13.0, where the design records different behavior (no strict failure on a long ADDED requirement, no error on an empty scenario): `OPENSPEC="npx -y @fission-ai/openspec@1.13.0" acceptance/superpowers-bridge/run.sh check` (`run.sh` calls `${OPENSPEC:-openspec}` everywhere).
+Expected: `seeded: strict-fails` FAILs, and every failure traces to a row of the design's 1.13.0/1.14.2 table.
+This downloads and runs a tool outside the declared dependencies: ask the owner before running it locally, or run it once in CI on this branch with the pin temporarily set to 1.13.0 and reverted in the next commit.
+Decision rule: if no assertion fails under 1.13.0, the `check` mode guards nothing — remove it and its CI step, keep `stage`, and say so in the commit message. Otherwise keep it, and record in the commit message which assertions caught the difference.
+
+- [ ] **Step 6: Commit**
 
 ```bash
 git add acceptance/
@@ -525,4 +533,14 @@ Each item runs in a fresh subagent, cwd inside a directory produced by `run.sh s
 - [ ] **Step 4: Check 10** — `stage security`; run check 10. Expected: both seeds found; each fixed or dismissed with a reason.
 - [ ] **Step 5: End-to-end card** — `stage deviation`; run verify (checks 1–10) and fill the card. Expected: six parts in order, deviations first, `.github/workflows/ci.yml` named under "What the checks did not cover". No pull request is created.
 - [ ] **Step 6: Fix and re-run** — a miss in the bundle goes back to its task (fix, `run.sh check`, commit with that task's trailer); re-run the failed item. A real miss becomes a new seed.
-- [ ] **Step 7: Push and hand over** — confirm the author with `git log --format='%ae' origin/main..HEAD | sort -u`, push `feat/spec-review`, and stop. The release pull request, its description (with the acceptance results), merge and `bridge install` wait for the owner.
+- [ ] **Step 7: Push and hand over** — confirm the author with `git log --format='%ae' origin/main..HEAD | sort -u`, push `feat/spec-review`, and stop. The pilot (Task 13) comes next; the release pull request, merge and `bridge install` wait until the pilot is done.
+
+---
+
+### Task 13: Pilot in a real repository before merging
+
+The review card, the blocking checks 8 and 10, and the safety stop change how every adopter's apply ends. `main` is what `bridge install` ships to every adopter, so the branch is tried on real work first, in one repository, while every other adopter keeps 1.4.1. The pilot mechanics (a project-tier copy of the branch bundle in the pilot repository only) are in the workbench plan; this task is what the pilot must show.
+
+- [ ] **Step 1: One real change, full cycle** — in the pilot repository, with its adopter configuration, run one real change from brainstorm to archive on the branch bundle. Record: check 8's findings and how each was cleared; check 9's deviations; check 10's findings; the card as written into the pull request description; where the flow stopped for a human, and why.
+- [ ] **Step 2: Without adopter configuration** — run checks 8–10 on the `clean` fixture staged with no `config.yaml` keys beyond `schema`. Expected: the bundle works with no governing sources (`No governing sources configured`), so it still stands without any particular knowledge base.
+- [ ] **Step 3: The owner's verdict** — present the card and the records of Step 1. The owner decides: merge as is, revise (a fix goes back to its task, then the pilot repeats), or drop a part. A part found not to work under a single knowledge base belongs to the later decision on whether the bundle splits from its public form; record that observation, do not act on it here.
