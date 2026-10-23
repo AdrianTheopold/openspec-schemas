@@ -279,17 +279,15 @@ PLANNING ━━━━━━━━━━━━━━━━━━━━━━━�
   brainstorm.md ──┬─→ proposal.md ──→ specs/**/*.md ──┐
                   │                                   ├─→ tasks.md ──→ plan.md
                   └─→ design.md(必填)────────────────┘
-                         (撰寫時 spec 自我檢查)
-                                                                       │
+                         (撰寫時 spec 自我檢查)                         │
                           apply.requires: [plan], apply.tracks: tasks  ▼
 APPLY ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   0. Pre-flight skill check
   1. superpowers:using-git-worktrees
   2. superpowers:subagent-driven-development(+ per-task review;TDD 經由 plan step)
   3. openspec-verify-change → verify.md(10 項檢查,Review Card) ◄┐
-                              │                                    │ blocking → 回去修
-                              │ (檢查 8、10:findings 由 agent 清掉)
-                              ▼           │
+                              │                                 │ blocking → 回去修
+                              ▼                                 │
   4. retrospective.md(finish 之前;hot context)
   5. openspec archive -y(sync delta + 搬 folder)
   6. superpowers:finishing-a-development-branch(Review Card 放在 PR/MR 描述;🏁 push 是最後一步)
@@ -397,7 +395,7 @@ Main agent 讀 `plan.md`,為每個 micro-task 派發 fresh subagent:
 - **TDD**(`superpowers:test-driven-development`):經由 plan 而非 SDD 進到每個 task —— plan artifact 要求每個有行為的 task 以「寫失敗測試」與「執行、預期它 fail」開頭,而 SDD 的 implementer 寫測試時「following TDD if task says to」,並回報 RED 與 GREEN 證據,由 task reviewer 檢視
 - **per-task review**:每個 task 完成後由 controller 派發 subagent-driven-development 自己的 merged task-reviewer(spec compliance + code quality)—— 不是另外呼叫一個 skill;Critical 級問題擋下進度
 
-每份 brief 都帶有 plan.md 的 Global Constraints,其中包含註解規則與 adopter 的安全規則。在任何一條這些規則、或 adopter 的 apply guidance 保留給人類的動作之前,controller 都要停下來問人類,這是 Superpowers 自己 stop classes 之外的額外規則;沒有安全規則也沒有 apply guidance 時,那些 stop classes 就是全部的 stop 規則。見[設定 key](#設定-key)。
+每份 brief 都帶有 plan.md 的 Global Constraints,其中包含註解規則、commit trailer 規則與 adopter 的安全規則。在任何一條這些規則、或 adopter 的 apply guidance 保留給人類的動作之前,controller 都要停下來問人類,這是 Superpowers 自己 stop classes 之外的額外規則;沒有安全規則也沒有 apply guidance 時,那些 stop classes 就是全部的 stop 規則。見[設定 key](#設定-key)。
 
 task 清掉時,兩份進 git 的 ledger 都要更新 —— `tasks.md` 的粗粒度 checkbox,以及該 task 在 `plan.md` 的 step box —— 和 SDD progress ledger 那一行寫在同一個 bookkeeping 步驟裡。若某個 step 是被延後而非完成,當下就在 `plan.md` 標成 `[~]`,因為 verify §7 讀的正是這個標記。所有 task 跑完後,對整個 branch 再做一次 final code review(`superpowers:requesting-code-review`)。
 
@@ -416,7 +414,7 @@ task 清掉時,兩份進 git 的 ledger 都要更新 —— `tasks.md` 的粗粒
 7. deferred-dogfood vs automated-test 等價性 —— 僅在 `plan.md` 有 `[~]` 但等價性章節空白(gap 分析被跳過)時才 block,其他情境屬 informational
 8. **spec review** —— fresh subagent 對 delta specs 執行 [spec-review.md](./spec-review.md):涵蓋 `openspec validate --strict` 沒檢查的規則,讓進入 `openspec/specs/` 的文字合併後仍然讀得通。Findings 會擋住 verify,直到 agent 修掉或附上紀錄的理由駁回;連續三次有 findings 的執行之後,下一次只審查上次之後改動的部分,仍未解決的項目交給 review card。乾淨的一次回報 `No findings.`
 9. **deviation report** —— fresh subagent 讀取 adopter 指定的 governing sources(取其 trunk 所持有的版本,絕不取自正在修改它們的 branch)、change 的 artifacts 與 diff,回報 change 牴觸、捨棄或超出 source 的每個地方,各附原因、推理錯誤時的代價,以及對 source 的建議修改。Deviation 不會讓 verify 失敗:接受它、修改 source 或把程式改回去,是人類在 merge 時的決定。缺少報告、deviation 沒有原因、或 source 讀不到,則會讓它失敗。乾淨的一次回報 `No deviations from the governing sources.`;沒有設定任何 source 時,記下 `No governing sources configured` 並通過
-10. **security pass** —— 在 fresh context 中審查 change 對照其 merge 目標 branch 的 diff 是否有安全缺陷;runtime 自帶安全審查時就用它(Claude Code 中是 `/security-review`),否則派 subagent。Agent 逐項修掉或附理由駁回;若修正會改變某個 governing source 所陳述的行為,該項就成為交給檢查 9 的 deviation
+10. **security pass** —— 在 fresh context 中審查 change 對照其 merge 目標 branch 的 diff 是否有安全缺陷;由 fresh subagent 執行:runtime 自帶安全審查時就用它(Claude Code 中是 `/security-review`),否則、或該審查涵蓋的範圍不及 diff 時,改用固定的 reading list。Agent 逐項修掉或附理由駁回;若修正會改變某個 governing source 所陳述的行為,該項就成為交給檢查 9 的 deviation
 
 失敗會回到對應 artifact 修正後重跑 verify。沒有 blocking 問題之後,controller 填寫 `verify.md` 的 `## Review Card` 區段:**Deviations**(檢查 9 的報告)與 **What the checks did not cover**(diff 觸及的 sensitive areas、沒跑或走 fallback 路徑的檢查、仍未解決的 findings)是要讀的兩部分;**Evidence**、**Security pass**、**How to revert**、**Rulings** 只需瀏覽。Card 是 `verify.md` 的一個檢視,`verify.md` 仍是紀錄,step 6 會把它放在 PR/MR 描述的最上方。
 
@@ -446,7 +444,7 @@ Evidence-first 反思:§0 Evidence(量化前置數據 —— commit 數、diff �
 |---|---|---|
 | `context` | 每個 artifact 的 instructions | 指明 governing sources 以及如何讀取。檢查 9 讀取 adopter 已接受的版本(它的 trunk),絕不取自正在修改它們的 branch,並記下每個 source 讀取時的 review status。 |
 | `rules.verify` | verify artifact 的 instructions | 收窄或放寬檢查 9 對 deviation 的認定(預設:change 牴觸、捨棄或超出 source 所陳述的內容,明列的 non-goal 也算),說明建議的修改如何送達它的 source,並列出 diff 觸及時 review card 要列出的 sensitive areas。 |
-| `rules.plan` | plan artifact 的 instructions | 安全規則,或指向它們所在之處的 pointer。Plan instruction 會把它們以原樣(規則本身或 pointer)放進 `plan.md` 的 Global Constraints;pointer 會要求每個 implementer 在第一個動作前先載入規則,因此它們能送達每份 implementer brief 與 task reviewer。 |
+| `rules.plan` | plan artifact 的 instructions | 安全規則,或指向它們所在之處的 pointer。Plan instruction 會把它們以原樣(規則本身或 pointer)放進 `plan.md` 的 Global Constraints(若是 pointer,則要求每個 implementer 在第一個動作前先載入規則),因此它們能送達每份 implementer brief 與 task reviewer。 |
 | `operations.apply.guidance` | apply 的 instructions(`openspec instructions apply --json` 回傳的 `operationGuidance` 欄位) | controller 在 apply 期間必須遵守的事項,例如哪些動作要先停下來問。會加進 controller 派發的每份 brief。 |
 
 最小範例,使用中性的 `orders` 領域:
@@ -462,7 +460,7 @@ rules:
     - "Sensitive areas: CI configuration (.github/workflows/)."
 ```
 
-沒有這些 key 時,bundle 的行為與以前相同:檢查 9 記下 `No governing sources configured` 並通過,review card 不列 sensitive areas,Global Constraints 只帶註解規則,Superpowers 的四個 stop classes 就是全部的 stop 規則。
+沒有這些 key 時,bundle 的行為與以前相同:檢查 9 記下 `No governing sources configured` 並通過,review card 不列 sensitive areas,Global Constraints 只帶 bundle 自己的註解規則與 commit trailer 規則,Superpowers 的四個 stop classes 就是全部的 stop 規則。
 
 針對程式碼內容的規則(不得出現 secret 值、不得停用憑證檢查),用確定性的 per-edit 檢查來執行比靠 brief 更好:例如 runtime 在每次編輯時執行的 pattern hook,主 session 與 subagent 都適用。採用哪種檢查(若有)屬於 adopter 的設定,不屬於 bundle 的內容。
 
@@ -547,7 +545,7 @@ LLM 不必解讀 timing 文字 —— 跑指令、看結果即可。這是顧慮
 | v1 | `1.5.0` | `6.2.0` | 2026-08-12 |
 | v1 | `1.5.0` | `6.1.0` | 2026-07-02 |
 
-> Bundle **1.5.0** 沒有 schema graph 的變動(artifacts、`requires:` 邊與 PRECHECK 都相同),也沒有基準版本的調整;下表的基準仍然成立。它為 verify 加入 spec review、deviation report 與 security pass,為 plan 加入 Global Constraints 規則,並為 apply 加入 stop 規則、review loop 與 review card。它的 acceptance suite `acceptance/superpowers-bridge/run.sh check` 在 CLI 上釘住各檢查所讀取的訊息文字(`Archive would refuse this delta`、`Purpose section is still a placeholder`、ADDED requirement 超過 500 字元時 `--strict` 的失敗、`proposal.md` 的 parse status),所以 CLI 某個 release 一旦改了措辭,是讓這次執行失敗,而不是悄悄讓某個檢查失去作用。
+> Bundle **1.5.0** 沒有 schema graph 的變動(artifacts、`requires:` 邊與 PRECHECK 都相同),也沒有基準版本的調整;上表的基準仍然成立。它加入 `templates/spec.md` 中撰寫時的註記,為 verify 加入 spec review、deviation report 與 security pass,為 plan 加入 Global Constraints 規則,為 apply 加入 stop 規則、review loop 與 review card,並為 retrospective 加入駁回理由的統計。它的 acceptance suite `acceptance/superpowers-bridge/run.sh check` 在 CLI 上釘住各檢查所讀取的訊息文字(`Archive would refuse this delta`、`Purpose section is still a placeholder`、ADDED requirement 超過 500 字元時 `--strict` 的失敗、`proposal.md` 的 parse status),所以 CLI 某個 release 一旦改了措辭,是讓這次執行失敗,而不是悄悄讓某個檢查失去作用。
 >
 > 已對 **OpenSpec 1.14.3**(2026-10-21,bundle 1.4.1)重新對齊 OpenSpec 側。結構面:`openspec schema validate` 通過,每個 artifact 與 apply 的 instructions 都能產生,依 templates 撰寫的 probe change 通過 `openspec validate --strict`。從 1.14.3 `spec-driven` 文字吸收進四段繼承的 instruction:**proposal** —— 新 capability 以持久的系統行為命名,而非這個 change 的工作內容,邊界要內聚、不要包山包海;**specs** —— spec 檔一次寫一個,從第一個還沒有檔案的 capability 開始;每個 requirement 的描述不超過 500 字元,一個 requirement 一個行為(較長的 ADDED requirement 會讓 `--strict` 失敗),且絕不為了長度而在 MODIFIED 下刪減既有 requirement;新 capability 的 delta 第一個 section 是 `## Purpose`;**tasks** —— 只有內容為 `x` 的 checkbox 算完成(其他標記,包括 `[~]`,都視為未完成),不在追蹤進度內的工作以一般條列放在選用的 `## Workflow follow-up` 段落,每個 task group 自行交付自己該有的測試與文件。**design** upstream 未變。templates 加上 upstream 的 H1 標題,以及 capability 命名與長度規則。針對 bridge 的調整:`[~]` 延後標記只用在 `plan.md`;workflow follow-up 列的是 apply steps 3–6 —— 追蹤的 task 永遠不涵蓋 verify、retrospective、archive 或 finish,因為 verify 的 task-completion 檢查要求 `tasks.md` 每個 box 在 archive 前都已勾選。原樣保留:brainstorm-first 的框架、spec 盤點段落、MODIFIED 完整性段落(upstream 沒有對應)、`tasks.md` / `plan.md` 的 ledger 分工。與 1.4.0 一樣刻意不納入:`--store` 參數(stores 仍未使用)。
 >

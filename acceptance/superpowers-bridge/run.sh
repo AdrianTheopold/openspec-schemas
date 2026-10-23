@@ -337,12 +337,14 @@ check_security() {
   assert_true security two-seeds '[ "$(git diff main...HEAD -U0 | grep -cE "^\+.*(API_PASSWORD = |verify=False)")" = 2 ]'
 }
 
-# The release number the bundle announces must agree in VERSION and in both
-# maintained READMEs.
+# The release number the bundle announces must agree in three places: the VERSION
+# file and the release line of each maintained README. Each README is matched on
+# its own release line, because the version string also appears elsewhere in them
+# as a baseline row.
 check_release() {
   DIR="$TMPROOT/release"
   mkdir -p "$DIR"
-  assert_true release version '[ "$(tr -d "[:space:]" < "$BUNDLE/VERSION")" = 1.5.0 ] && grep -q "1.5.0" "$BUNDLE/README.md" && grep -q "1.5.0" "$BUNDLE/README.zh-TW.md"'
+  assert_true release version 'v=$(tr -d "[:space:]" < "$BUNDLE/VERSION"); grep -qF "Current bundle release: **\`$v\`**" "$BUNDLE/README.md" && grep -qF "目前 bundle release: **\`$v\`**" "$BUNDLE/README.zh-TW.md"'
 }
 
 check() {
