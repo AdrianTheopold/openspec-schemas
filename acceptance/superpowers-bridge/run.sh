@@ -94,6 +94,15 @@ stage() {
     mkdir -p .git/info
     echo "openspec/schemas/" >> .git/info/exclude
 
+    # The executor's ledger, where its rulings are recorded, is scratch the
+    # executor never commits; it is placed where the executor keeps it and
+    # excluded for the same reason as the bundle.
+    if [ -d "$fx/sdd" ]; then
+      mkdir -p .superpowers/sdd
+      cp -R "$fx/sdd/." .superpowers/sdd/
+      echo ".superpowers/" >> .git/info/exclude
+    fi
+
     if [ -n "$config" ]; then
       src=$config
     elif [ -f "$fx/config.yaml" ]; then

@@ -715,7 +715,9 @@ artifacts:
          deviation; only drift that also moves away from a governing
          source is. A §8 finding marked `deviation — check 9` that moves
          away from no source is not a deviation either: return it to
-         check 8 to be fixed or dismissed. The adopter's verify rules may
+         check 8 by emptying its Outcome cell in §8, so §8's rule that an
+         empty Outcome is uncleared holds Overall Decision at FAIL until
+         check 8 fixes or dismisses it. The adopter's verify rules may
          narrow or widen this definition; where they say nothing, it
          holds as written. Areas the verify rules call sensitive are for
          the review card, not deviations in themselves.

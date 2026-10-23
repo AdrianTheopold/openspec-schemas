@@ -26,3 +26,7 @@ stands in for an adopter's governing documents: `kb/trunk/` is committed on `mai
 `kb/amend/` on a branch `amend`, which is left checked out. `@KB@` in the config becomes
 that repository's path. Stage with `--config` to swap in another config, for example
 `fixtures/deviation/config.unreadable.yaml`.
+
+A fixture with an `sdd/` directory gets it copied, untracked, to `.superpowers/sdd/` in the
+staged repository: the executor's ledger, whose `Ruling:` lines verify reads as the executor's
+"Rulings I made" list.

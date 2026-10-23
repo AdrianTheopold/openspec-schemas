@@ -4,7 +4,7 @@ status: approved
 
 # Orders direction
 
-The order service records what customers ordered and keeps that record available to support staff.
+The order service records what customers ordered.
 
 ## Behavior
 

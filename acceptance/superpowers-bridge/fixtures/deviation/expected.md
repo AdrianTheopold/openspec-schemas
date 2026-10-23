@@ -7,6 +7,11 @@ the change moves away from and marks the page `draft`. A reader that takes the w
 tree instead of the trunk sees no deviation, so these outcomes hold only for a read at
 `main`.
 
+The change's `tasks.md` and `plan.md` are fully ticked, so verify's PRECHECK passes. The
+executor's ledger is staged untracked at `.superpowers/sdd/plan/progress.md` and carries two
+rulings — retention counted from `cancelled_at`, and 409 for deleting an order that is not
+cancelled. Check 9 reads both; neither moves away from the source, so neither is a deviation.
+
 ## With `config.yaml`
 
 Check 9 records the source as read at `main`, with its review status `approved`, and
