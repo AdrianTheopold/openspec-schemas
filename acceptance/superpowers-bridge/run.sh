@@ -55,6 +55,8 @@ stage() {
     cd "$dir" || exit 1
     git init -q -b "$trunk" . || exit 1
     git config commit.gpgsign false
+    # label_hits diffs against this, so it never has to guess the trunk.
+    git config bridge.trunk "$trunk"
     [ -d "$fx/base" ] && cp -R "$fx/base/." .
     git add -A && git commit -q --allow-empty -m "base" || exit 1
     git checkout -q -b change || exit 1
@@ -89,7 +91,7 @@ stage() {
 # Added lines outside openspec/ that carry a planning label.
 label_hits() {
   local dir=$1 trunk base
-  trunk=$(git -C "$dir" rev-parse --abbrev-ref "$(git -C "$dir" for-each-ref --format='%(refname:short)' refs/heads | grep -v '^change$' | head -n1)")
+  trunk=$(git -C "$dir" config bridge.trunk) || { echo "label_hits: $dir was not staged by run.sh" >&2; return 1; }
   base=$(git -C "$dir" merge-base HEAD "$trunk")
   git -C "$dir" diff -U0 "$base" HEAD -- . ':(exclude)openspec' \
     | grep -E '^\+' | grep -vE '^\+\+\+' | grep -E "$LABEL_PATTERNS"
@@ -115,11 +117,11 @@ assert_true() { # <fixture> <name> <command>; runs in $DIR
 }
 
 assert_json() { # <fixture> <name> <json-producing command> <python expression over j>
-  local json out
-  if ! json=$(cd "$DIR" && eval "$3" 2>&1); then
-    # validate exits non-zero on findings but still prints JSON; keep going if it parses.
-    :
-  fi
+  local json out errfile
+  errfile=$(mktemp "$TMPROOT/stderr.XXXXXX")
+  # validate exits non-zero on findings but still prints JSON, so the exit
+  # status is ignored. Only stdout is parsed; stderr is kept for the failure detail.
+  json=$(cd "$DIR" && eval "$3" 2>"$errfile")
   if out=$(printf '%s' "$json" | python3 -c '
 import json, sys
 j = json.load(sys.stdin)
@@ -127,7 +129,7 @@ sys.exit(0 if eval(sys.argv[1]) else 1)
 ' "$4" 2>&1); then
     report PASS "$1" "$2"
   else
-    report FAIL "$1" "$2" "expression false or output not JSON: $4 | $(echo "${out:-$json}" | head -c 300 | tr '\n' ' ')"
+    report FAIL "$1" "$2" "expression false or output not JSON: $4 | $(echo "${out:-$json}" | head -c 300 | tr '\n' ' ') | stderr: $(head -c 300 "$errfile" | tr '\n' ' ')"
   fi
 }
 
@@ -150,9 +152,34 @@ check_clean() {
   assert_true clean no-label-hits '[ -z "$(label_hits .)" ]'
 }
 
+check_seeded() {
+  local fixture=seeded
+  DIR="$TMPROOT/$fixture"
+  stage "$fixture" "$DIR" >/dev/null || { report FAIL "$fixture" stage "staging failed"; return; }
+
+  assert_json seeded strict-fails "openspec validate rework-order-totals --strict --json" 'j["items"][0]["valid"] is False'
+  assert_json seeded archive-refusal-info "openspec validate rework-order-totals --strict --json" 'sum(i["message"].startswith("Archive would refuse this delta") for it in j["items"] for i in it["issues"])==1'
+  assert_json seeded one-stepless-scenario "openspec show rework-order-totals --json --deltas-only" 'sum(not("WHEN" in s["rawText"] and "THEN" in s["rawText"]) for d in j["deltas"] for s in d["requirement"]["scenarios"])==1'
+  assert_true seeded one-non-scenario-header '[ "$(grep -cP "^#### (?!Scenario:)" openspec/changes/rework-order-totals/specs/orders/spec.md)" = 1 ]'
+  assert_true seeded placeholder-purpose "openspec validate orders --type spec --strict --json | grep -q 'Purpose section is still a placeholder'"
+  assert_true seeded one-label-hit '[ "$(label_hits . | wc -l)" = 1 ] && label_hits . | grep -q "Task 3: recompute"'
+  assert_true seeded sibling-collision 'for c in rework-order-totals adjust-order-totals; do awk "/^## MODIFIED/{m=1;next} /^## /{m=0} m" openspec/changes/$c/specs/orders/spec.md | grep -q "^### Requirement: Orders are priced$" || exit 1; done'
+}
+
+check_seeded_proposal() {
+  local fixture=seeded-proposal
+  DIR="$TMPROOT/$fixture"
+  stage "$fixture" "$DIR" >/dev/null || { report FAIL "$fixture" stage "staging failed"; return; }
+
+  assert_json seeded-proposal proposal-error "openspec show fix-order-rounding --json" 'any(s.get("severity")=="error" for s in j.get("status",[]))'
+  assert_json seeded-proposal no-deltas-while-unparsed "openspec show fix-order-rounding --json --deltas-only" 'j.get("deltaCount",0)==0'
+}
+
 check() {
   TMPROOT=$(mktemp -d)
   check_clean
+  check_seeded
+  check_seeded_proposal
   exit "$FAILED"
 }
 
