@@ -747,18 +747,24 @@ artifacts:
          changes is in scope; a repository-wide scan is not part of this
          check.
 
-         Where the runtime ships a security review the agent can invoke
-         — in Claude Code, the built-in `/security-review`, through the
-         Skill tool — invoke it on the branch. Otherwise, or if it cannot
-         review this branch against `<base>`, dispatch a general-purpose
-         subagent with no prior context, as check 8 does, and pass it
-         the diff and this reading list: how untrusted input flows
-         through the changed code; the trust boundaries it crosses;
-         secrets and credentials written into code or config; injection
-         (SQL, shell, path, template); verification turned off or
-         skipped (TLS, signatures, authentication, authorization). It
-         returns a count line, then each finding with its file and line,
-         the defect and the quoted code — or `No findings.`
+         Dispatch a general-purpose subagent with no prior context, as
+         check 8 does: a skill loads into the turn that invokes it, so
+         the verify agent never runs the review itself. Pass the
+         subagent the change name, `<base>` and this reading list: how
+         untrusted input flows through the changed code; the trust
+         boundaries it crosses; secrets and credentials written into code
+         or config; injection (SQL, shell, path, template); verification
+         turned off or skipped (TLS, signatures, authentication,
+         authorization). Where the subagent can invoke the runtime's own
+         security review — in Claude Code, the built-in
+         `/security-review` — it runs that on the branch first, then
+         compares the files the review says it covered with
+         `git diff --name-only <base>..HEAD`. When they differ, or the
+         review does not say what it covered, the subagent reviews the
+         diff with the reading list itself. Otherwise it reviews the diff
+         with the reading list from the start. It returns which path ran,
+         a count line, then each finding with its file and line, the
+         defect and the quoted code — or `No findings.`
 
          Record the run in verify.md §10 the way check 8 records its run
          in §8 — the run line, which path reviewed it, the reviewed

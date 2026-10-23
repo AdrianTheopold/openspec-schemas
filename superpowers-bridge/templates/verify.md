@@ -209,16 +209,18 @@ Then one block per deviation, or `No deviations from the governing sources.`
 
 A fresh-context review of the change's diff against the branch it merges into
 (`git diff <base>..HEAD`) for security defects: untrusted input flow, trust boundaries,
-secrets, injection, verification turned off. Where the runtime ships its own security review
-(in Claude Code, `/security-review`) it runs that; otherwise a fresh-context subagent reads the
-diff. Only what the diff adds or changes is reviewed. One block per run, newest first; earlier
+secrets, injection, verification turned off. A fresh-context subagent runs it: with the
+runtime's own security review where it can invoke one (in Claude Code, `/security-review`),
+falling back to the reading list when that review does not cover exactly the files of
+`git diff --name-only <base>..HEAD` or does not say what it covered; otherwise with the reading
+list. Only what the diff adds or changes is reviewed. One block per run, newest first; earlier
 runs are carried forward unchanged, as in §8.
 
 ### Run <n> of 3
 
 <!-- n counts runs of check 10 that reported findings, as §8 counts check 8's runs. -->
 
-**Reviewed by**: `/security-review` / fresh-context subagent
+**Reviewed by**: subagent with `/security-review` / subagent with the reading list (`/security-review` covered other files) / subagent with the reading list
 
 **Reviewed commit**: `<git rev-parse HEAD at this run>`
 
