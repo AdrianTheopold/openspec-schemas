@@ -147,9 +147,11 @@ A fresh-context subagent reviews the delta specs against the bundle's `spec-revi
 verify is re-run, earlier runs are carried forward unchanged: the next run's subagent reads them
 for the round cap, the no-repeat rule and the capped run's diff base.
 
-### Run <n> of 3
+### Run <k>
 
-<!-- n counts runs of check 8 that reported findings; a run reporting `No findings.` does not advance it. -->
+<!-- k counts every run of check 8 on this change. n counts its runs that reported findings, this one included; a run reporting `No findings.` does not advance it. The run after n reaches 3 is the capped run: head it `### Run <k> — capped run`; it is past the cap, so it does not advance n and its line reads `3 of 3`. -->
+
+Runs with findings: <n> of 3
 
 **Reviewed commit**: `<git rev-parse HEAD at this run>`
 
@@ -162,13 +164,13 @@ for the round cap, the no-repeat rule and the capped run's diff base.
 > **Outcomes**: *fixed* — the text or code was changed; *dismissed* — a one-line reason, and the
 > quoted text stays as the no-repeat rule's reference; *deviation* — the fix would change behavior
 > a governing source states, so check 9 reports it; *open — review card* — still open after the
-> capped run (`Run 4 of 3`, which reviews only what changed since the previous run's reviewed
-> commit) and handed to the human. The capped run's own findings are cleared like any other; one
+> capped run (`Run <k> — capped run`, which reviews only what changed since the previous run's
+> reviewed commit) and handed to the human. The capped run's own findings are cleared like any other; one
 > neither fixed nor dismissed is *open — review card*, and fixes made after the capped run are
 > listed on the review card as not re-reviewed by check 8. An empty Outcome cell means the
 > finding is uncleared, and Overall Decision is FAIL.
 
-<!-- Earlier runs follow here, carried forward unchanged: ### Run <n-1> of 3 … -->
+<!-- Earlier runs follow here, carried forward unchanged: ### Run <k-1> … -->
 
 ---
 
@@ -199,9 +201,10 @@ Then one block per deviation, or `No deviations from the governing sources.`
 - **Proposed edit to the source**: <the edit, in the form the adopter's verify rules ask for>
 
 > A deviation does not fail verify: accepting it, amending the source, or reversing the code is
-> the human's decision at merge time, and the review card puts it in front of them. FAIL only
-> when this section is missing, a deviation has no **Why**, or a configured source is
-> *unreadable*.
+> the human's decision at merge time, and the review card puts it in front of them. Because they
+> await that decision, one or more deviations here make Overall Decision PASS WITH WARNINGS,
+> naming them. FAIL only when this section is missing, a deviation has no **Why**, or a
+> configured source is *unreadable*.
 
 ---
 
@@ -216,9 +219,11 @@ falling back to the reading list when that review does not cover exactly the fil
 list. Only what the diff adds or changes is reviewed. One block per run, newest first; earlier
 runs are carried forward unchanged, as in §8.
 
-### Run <n> of 3
+### Run <k>
 
-<!-- n counts runs of check 10 that reported findings, as §8 counts check 8's runs. -->
+<!-- k and n count check 10's runs, as §8 counts check 8's runs; the capped run is headed `### Run <k> — capped run` here too. -->
+
+Runs with findings: <n> of 3
 
 **Reviewed by**: subagent with `/security-review` / subagent with the reading list (`/security-review` covered other files) / subagent with the reading list
 
@@ -236,7 +241,7 @@ runs are carried forward unchanged, as in §8.
 > still open after the capped run and handed to the human. An empty Outcome cell means the
 > finding is uncleared, and Overall Decision is FAIL.
 
-<!-- Earlier runs follow here, carried forward unchanged: ### Run <n-1> of 3 … -->
+<!-- Earlier runs follow here, carried forward unchanged: ### Run <k-1> … -->
 
 ---
 
@@ -244,7 +249,9 @@ runs are carried forward unchanged, as in §8.
 
 - [ ] ✅ PASS — proceed in order: retrospective → archive → invoke
   **superpowers:finishing-a-development-branch** (its push option publishes the branch)
-- [ ] ⚠️ PASS WITH WARNINGS — may proceed, but note: `<explanation>`
+- [ ] ⚠️ PASS WITH WARNINGS — may proceed, but note: `<explanation>`. Never a plain PASS while §9
+  lists one or more deviations: they await the human's decision at merge, so unless something
+  fails, the decision is PASS WITH WARNINGS, naming each deviation
 - [ ] ❌ FAIL — return to the failing artifact, fix it, and re-run verify. Always FAIL while
   §8 holds a finding that is not fixed, dismissed with a reason, marked a deviation, or carried
   to the review card after the capped run; findings carried to the review card make it PASS WITH
@@ -283,7 +290,7 @@ runs are carried forward unchanged, as in §8.
 
 ### What the checks did not cover
 
-<!-- Derived by the controller, not copied: the sensitive areas the adopter's verify rules (`rules.verify`) name that the diff touches; every check verify did not run or ran on a fallback path (for example §10's **Reviewed by** naming the reading list, or verify's checks run by hand); the findings marked `open — review card` in §8 and §10; and the fixes made after a capped run (`Run 4 of 3`), not re-reviewed by the check that raised them. This tells the human where to read the code itself. -->
+<!-- Derived by the controller, not copied: the sensitive areas the adopter's verify rules (`rules.verify`) name that the diff touches; every check verify did not run or ran on a fallback path (for example §10's **Reviewed by** naming the reading list, or verify's checks run by hand); the findings marked `open — review card` in §8 and §10; and the fixes made after a capped run (`Run <k> — capped run`), not re-reviewed by the check that raised them. This tells the human where to read the code itself. -->
 
 ### Evidence
 
@@ -291,7 +298,7 @@ runs are carried forward unchanged, as in §8.
 
 ### Security pass
 
-<!-- From §10: the latest run line, which path reviewed it, its count line, and the outcomes (fixed / dismissed / deviation / open). -->
+<!-- From §10: the latest run's heading and its `Runs with findings` line, which path reviewed it, its count line, and the outcomes (fixed / dismissed / deviation / open). -->
 
 ### How to revert
 

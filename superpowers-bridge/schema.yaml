@@ -512,7 +512,7 @@ artifacts:
       PRECHECK — implementation evidence:
       (Substitute <change-name> in the commands below with this
       change's directory name before running them.)
-      Before producing verify.md, run BOTH commands. If either
+      Before producing verify.md, run all three commands. If any
       returns 0, STOP and tell the user that apply phase has not
       yet produced reviewable changes.
 
@@ -525,7 +525,7 @@ artifacts:
       3. Step progress (must return > 0):
          grep -cE '^\s*([-*+]|[0-9]{1,9}[.)])\s*\[\s*[xX~]\s*\]([^([]|$)' openspec/changes/<change-name>/plan.md
 
-      A 0 from either means the apply executor failed to maintain that
+      A 0 from command 2 or 3 means the apply executor failed to maintain that
       ledger as tasks cleared — see apply step 2's ticking rule. On a
       genuinely-complete apply, a 0 is a bookkeeping miss, not
       incomplete work: tick the boxes, then re-run. Both files are
@@ -538,7 +538,7 @@ artifacts:
       (1.14.3) counts as a done box: `x` or `X` with any spacing inside
       the brackets, after a `-`, `*`, `+` or `1.` / `1)` marker.
 
-      Only after BOTH return positive numbers, proceed to invoke
+      Only after all three return positive numbers, proceed to invoke
       the verification skill below.
 
       Use the Skill tool to invoke **openspec-verify-change** (the
@@ -654,9 +654,10 @@ artifacts:
 
          Dispatch a general-purpose subagent with no prior context, the
          way superpowers:requesting-code-review dispatches its final
-         reviewer: no session history, only the change name, the rule
-         file's path and — on any run after the first — the previous
-         verify.md §8 (or verify.md's path). On the capped run the
+         reviewer: no session history, only the change name, the
+         working directory (the root of the repository the change
+         lives in), the rule file's path and — on any run after the
+         first — the previous verify.md §8 (or verify.md's path). On the capped run the
          dispatch also says "this is the capped run; base <sha>", with
          the commit the previous run recorded. The subagent applies the
          whole rule file, including its own strict validation
@@ -664,13 +665,16 @@ artifacts:
          section 2; check 1 stays non-strict), and returns its report in
          the rule file's section 7 format.
 
-         Record the run in verify.md §8: the run line `Run <n> of 3`,
-         where n counts this change's runs of check 8 that reported
-         findings — a run reporting `No findings.` does not advance it
-         (the capped run that follows a third such run is `Run 4 of 3`);
-         the commit the run reviewed (`git rev-parse HEAD`); the
-         report's count line;
-         and one table row per finding with its file and line, its rule
+         Record the run in verify.md §8: the heading `Run <k>`, where k
+         counts every run of check 8 on this change; under it the line
+         `Runs with findings: <n> of 3`, where n counts this change's
+         runs of check 8 that reported findings, this one included — a
+         run reporting `No findings.` does not advance it. The run after
+         n reaches 3 is the capped run, and its heading says so
+         (`Run <k> — capped run`); it is past the cap, so it does not
+         advance n and its line reads `3 of 3`. Then record the commit
+         the run reviewed (`git rev-parse HEAD`); the report's count
+         line; and one table row per finding with its file and line, its rule
          (`rule <n>` or the bold name the rule file gives), the quoted
          text, its outcome and whether it is `pre-existing`. Then clear
          every finding as the rule file's section 1 says: fix the text or
@@ -682,7 +686,8 @@ artifacts:
          Re-run check 8 until it reports no uncleared finding, under the
          rule file's round cap, no-repeat and `pre-existing` rules. The
          previous §8 is what makes them applicable to a subagent with no
-         memory of earlier runs: its run line counts toward the cap, its
+         memory of earlier runs: its `Runs with findings` line is the
+         count the cap reads, its
          dismissed rows and their quoted text are what "no repeats"
          compares against, and its recorded commit is the base of the
          capped run, which reviews only what `git diff <commit>` shows
@@ -712,8 +717,9 @@ artifacts:
          Otherwise dispatch a general-purpose subagent with no prior
          context, as check 8 does — the agent that implemented the
          change leaves out what it did not think counted. Pass it the
-         change name, the context, the verify rules and this check's
-         text. It reads:
+         change name, the working directory (the root of the repository
+         the change lives in), the context, the verify rules and this
+         check's text. It reads:
          - each governing source at the version the adopter has
            accepted — its trunk — using the read the context gives, and
            never from a working tree or a branch that amends the source,
@@ -756,8 +762,10 @@ artifacts:
          A deviation does not fail verify: whether to accept it, amend the
          source, or reverse the code is the human's decision at merge
          time, and the report is what the review card puts in front of
-         them. Blocking — any of these sets Overall Decision to FAIL: no
-         report in §9; a deviation without its why; a governing source the
+         them. Because they await that decision, a §9 report listing one
+         or more deviations sets Overall Decision to PASS WITH WARNINGS,
+         naming them. Blocking — any of these sets Overall Decision to
+         FAIL: no report in §9; a deviation without its why; a governing source the
          context names that the subagent could not read (name the source
          and what the read returned).
 
@@ -771,8 +779,9 @@ artifacts:
          Dispatch a general-purpose subagent with no prior context, as
          check 8 does: a skill loads into the turn that invokes it, so
          the verify agent never runs the review itself. Pass the
-         subagent the change name, `<base>` and this reading list: how
-         untrusted input flows through the changed code; the trust
+         subagent the change name, the working directory (the root of
+         the repository the change lives in), `<base>` and this reading
+         list: how untrusted input flows through the changed code; the trust
          boundaries it crosses; secrets and credentials written into code
          or config; injection (SQL, shell, path, template); verification
          turned off or skipped (TLS, signatures, authentication,
@@ -788,9 +797,10 @@ artifacts:
          defect and the quoted code — or `No findings.`
 
          Record the run in verify.md §10 the way check 8 records its run
-         in §8 — the run line, which path reviewed it, the reviewed
-         commit, the count line — then one table row per finding with
-         its file and line, the defect with the quoted code, and its
+         in §8 — the `Run <k>` heading and the `Runs with findings`
+         line, both counted on check 10's own runs; which path reviewed
+         it; the reviewed commit; the count line — then one table row
+         per finding with its file and line, the defect with the quoted code, and its
          outcome. Clear every
          finding as check 8 does: fix the code, or dismiss the finding
          with a one-line reason in its row. A finding whose fix would
@@ -1196,11 +1206,13 @@ apply:
          the previous run recorded. After a fix round, run check 5
          again; the fixes changed files after it was recorded.
        - Re-run the check until it reports no uncleared finding, under
-         the rule file's round cap: the run line `Run <n> of 3` counts
-         that check's runs that reported findings, and after the third
-         the capped run, `Run 4 of 3`, reviews only what changed since
-         the previous run's recorded commit. A finding still open after
-         the capped run is marked `open — review card`, sets Overall
+         the rule file's round cap: each run is headed `Run <k>`, k
+         counting every run of that check, and its line
+         `Runs with findings: <n> of 3` counts that check's runs that
+         reported findings. The run after n reaches 3 is the capped
+         run, headed `Run <k> — capped run`; it reviews only what
+         changed since the previous run's recorded commit. A finding
+         still open after the capped run is marked `open — review card`, sets Overall
          Decision to PASS WITH WARNINGS rather than FAIL, and goes to
          the human on the review card instead of into another run.
          Fixes made after the capped run go on the card as not
