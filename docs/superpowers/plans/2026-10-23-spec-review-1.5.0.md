@@ -533,14 +533,15 @@ Each item runs in a fresh subagent, cwd inside a directory produced by `run.sh s
 - [ ] **Step 4: Check 10** — `stage security`; run check 10. Expected: both seeds found; each fixed or dismissed with a reason.
 - [ ] **Step 5: End-to-end card** — `stage deviation`; run verify (checks 1–10) and fill the card. Expected: six parts in order, deviations first, `.github/workflows/ci.yml` named under "What the checks did not cover". No pull request is created.
 - [ ] **Step 6: Fix and re-run** — a miss in the bundle goes back to its task (fix, `run.sh check`, commit with that task's trailer); re-run the failed item. A real miss becomes a new seed.
-- [ ] **Step 7: Push and hand over** — confirm the author with `git log --format='%ae' origin/main..HEAD | sort -u`, push `feat/spec-review`, and stop. The pilot (Task 13) comes next; the release pull request, merge and `bridge install` wait until the pilot is done.
+- [ ] **Step 7: Push and hand over** — confirm the author with `git log --format='%ae' origin/main..HEAD | sort -u`, push `feat/spec-review`, and stop. The pilot (Task 13) comes next; the release pull request and the merge wait until the owner's verdict.
 
 ---
 
-### Task 13: Pilot in a real repository before merging
+### Task 13: Pilot across the owner's repositories before release
 
-The review card, the blocking checks 8 and 10, and the safety stop change how every adopter's apply ends. `main` is what `bridge install` ships to every adopter, so the branch is tried on real work first, in one repository, while every other adopter keeps 1.4.1. The pilot mechanics (a project-tier copy of the branch bundle in the pilot repository only) are in the workbench plan; this task is what the pilot must show.
+`main` is the public release: what `bridge install` ships and what other OpenSpec users see. The review card, the blocking checks 8 and 10 and the safety stop change how every adopter's apply ends, so the branch is used for a few days of real work in all of the owner's repositories before it reaches `main`. The install mechanics (a user-tier install from this branch, and the rollback) are in the owner's own tooling, outside this repository.
 
-- [ ] **Step 1: One real change, full cycle** — in the pilot repository, with its adopter configuration, run one real change from brainstorm to archive on the branch bundle. Record: check 8's findings and how each was cleared; check 9's deviations; check 10's findings; the card as written into the pull request description; where the flow stopped for a human, and why.
-- [ ] **Step 2: Without adopter configuration** — run checks 8–10 on the `clean` fixture staged with no `config.yaml` keys beyond `schema`. Expected: the bundle works with no governing sources (`No governing sources configured`), so it still stands without any particular knowledge base.
-- [ ] **Step 3: The owner's verdict** — present the card and the records of Step 1. The owner decides: merge as is, revise (a fix goes back to its task, then the pilot repeats), or drop a part. A part found not to work under a single knowledge base belongs to the later decision on whether the bundle splits from its public form; record that observation, do not act on it here.
+- [ ] **Step 1: Hands-on period** — the owner runs real changes on the branch bundle across the repositories. For each change, keep: check 8's findings and how each was cleared; check 9's deviations; check 10's findings; the card as written into the pull request description; where the flow stopped for a human, and why.
+- [ ] **Step 2: Without adopter configuration** — run checks 8–10 on the `clean` fixture staged with no `config.yaml` keys beyond `schema`. Expected: the bundle works with no governing sources (`No governing sources configured`), so it stands without any particular knowledge base.
+- [ ] **Step 3: The owner's verdict** — present the records of Step 1. The owner decides: release as is, revise (a fix goes back to its task and the period continues), or drop a part. A part found to work only with one knowledge base feeds the later decision on whether the bundle splits from its public form; record the observation, do not act on it here.
+- [ ] **Step 4: Release** (on the owner's word) — open the pull request with the acceptance results of Task 12 and the pilot's summary in its description; the owner merges.
