@@ -260,6 +260,19 @@ check_no_deltas() {
   assert_true no-deltas no-label-hits '[ -z "$(label_hits .)" ]'
 }
 
+# The plan is the channel that reaches the implementing subagent, so the
+# comment rule, the commit trailer and the adopter's safety rules must reach it.
+# Staged with a configuration that carries a safety rule as a pointer, so the
+# rule is shown arriving through OpenSpec's own channel.
+check_plan() {
+  DIR="$TMPROOT/plan"
+  stage clean "$DIR" --config "$HERE/fixtures/clean/config.safety.yaml" >/dev/null || { report FAIL clean plan-stage "staging failed"; return; }
+
+  assert_json clean plan-rules-delivered "openspec instructions plan --change add-order-cancellation --json" 'any("SAFETY.md" in r for r in j.get("rules",[]))'
+  assert_json clean plan-instruction-label-rule "openspec instructions plan --change add-order-cancellation --json" '"cite no planning labels" in j["instruction"] and "Refs: <change-name> decision D<n>; task <n>" in j["instruction"]'
+  assert_json clean plan-template-sections "openspec instructions plan --change add-order-cancellation --json" '"## Global Constraints" in j["template"] and "## Review Focus" in j["template"]'
+}
+
 # A change that moves away from its governing source. The source repository has
 # a branch amending that source checked out, so a reader that takes the working
 # tree instead of the trunk sees no deviation at all.
@@ -296,6 +309,7 @@ check_security() {
 check() {
   TMPROOT=$(mktemp -d)
   check_clean
+  check_plan
   check_seeded
   check_seeded_proposal
   check_rule_file

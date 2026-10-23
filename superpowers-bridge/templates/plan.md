@@ -13,6 +13,16 @@
 
 ---
 
+## Global Constraints
+
+<!-- Bullets every task inherits: the comment rule, verbatim, and each of the instructions' plan rules, as given -->
+
+## Review Focus
+
+<!-- Input classes or failure modes the spec implies but no task's tests exercise; each line gets a test in the task that owns the code -->
+
+---
+
 ## Task 1: <!-- Component Name -->
 
 - [ ] **Step 1:** <!-- micro-step -->

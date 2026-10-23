@@ -440,6 +440,27 @@ artifacts:
       the spec implies but no task's tests exercise — and adds a test
       for each line to the task that owns the code.
 
+      Global Constraints this schema adds — writing-plans emits the
+      section; fill it with these as well:
+      (a) This line, verbatim:
+          Code comments, docstrings and messages state the reason in words. They cite no planning labels — design decisions (D9), task or step numbers (Task 5, Step 2), review fix tags (FIX-2) or change-folder files (design.md, plan.md). Where a comment needs its source, it names the change: "decision D9 of the change <change-name>". Commit messages carry the trace.
+      (b) If these instructions carry `rules` for this artifact, each
+          rule in the form it is given: a rule given as text goes in
+          as that text; a rule given as a pointer goes in as the
+          pointer plus "load it before your first action". Never copy
+          the pointed-to content into plan.md — it is tracked in the
+          repository, and a copy ages while its source moves on. With
+          no `rules`, add nothing and no empty heading.
+      (c) Every commit step in the plan ends its message with the
+          trailer `Refs: <change-name> decision D<n>; task <n>`, so the
+          commit, not the code, links the work to its decision and task.
+      These go in the plan because subagent-driven development copies
+      each task's section of plan.md verbatim into the implementer's
+      brief and fills the task reviewer's constraint slot from Global
+      Constraints. That makes the plan the channel that reaches the
+      subagent that acts, where an instruction to the controller alone
+      arrives only if the controller passes it on.
+
       Execution handoff (Superpowers 6.4.1+): after its self-review,
       writing-plans asks the user to review the plan and, unless an
       execution method was already supplied, to choose Subagent-driven

@@ -1,0 +1,4 @@
+schema: superpowers-bridge
+rules:
+  plan:
+    - "Safety rules: see SAFETY.md at the repository root; every implementer reads it before its first action."
