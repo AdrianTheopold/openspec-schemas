@@ -635,16 +635,20 @@ artifacts:
          way superpowers:requesting-code-review dispatches its final
          reviewer: no session history, only the change name, the rule
          file's path and — on any run after the first — the previous
-         verify.md §8 (or verify.md's path). The subagent applies the
+         verify.md §8 (or verify.md's path). On the capped run the
+         dispatch also says "this is the capped run; base <sha>", with
+         the commit the previous run recorded. The subagent applies the
          whole rule file, including its own strict validation
          (`openspec validate <change-name> --strict --json`, rule file
          section 2; check 1 stays non-strict), and returns its report in
          the rule file's section 7 format.
 
          Record the run in verify.md §8: the run line `Run <n> of 3`,
-         where n counts this change's runs of check 8 (the capped run
-         that follows a third run is `Run 4 of 3`); the commit the
-         run reviewed (`git rev-parse HEAD`); the report's count line;
+         where n counts this change's runs of check 8 that reported
+         findings — a run reporting `No findings.` does not advance it
+         (the capped run that follows a third such run is `Run 4 of 3`);
+         the commit the run reviewed (`git rev-parse HEAD`); the
+         report's count line;
          and one table row per finding with its file and line, its rule
          (`rule <n>` or the bold name the rule file gives), the quoted
          text, its outcome and whether it is `pre-existing`. Then clear
@@ -661,9 +665,12 @@ artifacts:
          dismissed rows and their quoted text are what "no repeats"
          compares against, and its recorded commit is the base of the
          capped run, which reviews only what `git diff <commit>` shows
-         changed since then. A finding still open after the capped run is
-         marked `open — review card` and carried to the review card for
-         the human; it is not sent into another run.
+         changed since then. The capped run's own findings are cleared
+         like any other; one the controller neither fixes nor dismisses
+         is marked `open — review card` and carried to the review card
+         for the human, not sent into another run. Fixes made after the
+         capped run are listed on the review card as not re-reviewed by
+         check 8.
 
          Blocking: any finding that is neither fixed, dismissed, marked a
          deviation, nor carried to the review card after the cap sets

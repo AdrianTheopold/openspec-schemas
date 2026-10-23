@@ -149,6 +149,8 @@ for the round cap, the no-repeat rule and the capped run's diff base.
 
 ### Run <n> of 3
 
+<!-- n counts runs of check 8 that reported findings; a run reporting `No findings.` does not advance it. -->
+
 **Reviewed commit**: `<git rev-parse HEAD at this run>`
 
 **Count**: `<n> findings, <m> pre-existing` — or `No findings.`
@@ -161,8 +163,10 @@ for the round cap, the no-repeat rule and the capped run's diff base.
 > quoted text stays as the no-repeat rule's reference; *deviation* — the fix would change behavior
 > a governing source states, so check 9 reports it; *open — review card* — still open after the
 > capped run (`Run 4 of 3`, which reviews only what changed since the previous run's reviewed
-> commit) and handed to the human. An empty Outcome cell means the finding is uncleared, and
-> Overall Decision is FAIL.
+> commit) and handed to the human. The capped run's own findings are cleared like any other; one
+> neither fixed nor dismissed is *open — review card*, and fixes made after the capped run are
+> listed on the review card as not re-reviewed by check 8. An empty Outcome cell means the
+> finding is uncleared, and Overall Decision is FAIL.
 
 <!-- Earlier runs follow here, carried forward unchanged: ### Run <n-1> of 3 … -->
 
