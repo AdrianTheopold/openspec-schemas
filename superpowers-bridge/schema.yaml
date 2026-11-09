@@ -152,9 +152,11 @@ artifacts:
       and the commit the change is planned against, given as a hash and never
       left as a branch name, since a branch moves and the work must not
       rewrite the rules it is judged by. When the amendment later takes in a
-      deviation, add a move to the new commit naming the deviation it takes
-      in. Verify's deviation report reads the amendment at those commits
-      only. Leave the section out when there are none.
+      deviation, add a move to the new commit naming the deviation, its
+      place in the source and who decided it; a move that names no decider
+      or no place takes in nothing. Verify's deviation report reads the
+      amendment at those commits only. Leave the section out when there are
+      none.
 
       Keep it concise (1-2 pages). Focus on the "why" not the "how".
     requires:
@@ -747,9 +749,26 @@ artifacts:
            the declaration moved to. Read it at each declared commit,
            using the read the context gives, never at its branch head or
            from a working tree; an amendment the proposal does not
-           declare is never read. The declaration predates the work, so
-           the work still cannot rewrite the rules it is judged by.
+           declare is never read. Pinning the commit is the guard: the
+           amended text the change is judged by cannot move with the
+           work. Before crediting a declared commit, check that it lies
+           on the amendment's branch as fetched from where the
+           amendment lives, not on a local branch the implementer can
+           move (`git merge-base --is-ancestor <commit>
+           <remote>/<branch>` after fetching it); a commit that does not
+           is judged as if not declared, and the report says so. A
+           declared commit that is already an ancestor of the trunk
+           means the amendment has landed: report
+           `declared amendment merged`, and judge that source by its
+           trunk text alone.
            Record each declared amendment with the commits read;
+         - the declaration's provenance, reported and never gated: from
+           `git log -- <change folder>/proposal.md`, the commit that
+           first carried each declared commit and each move, and whether
+           it comes before the first commit of the change that touches
+           anything outside `openspec/` — or that the declaration is not
+           committed yet. Record it as the `Declaration provenance` line
+           of verify.md §9;
          - the change's proposal, design and delta specs as they will be
            archived;
          - the diff of the change against the branch it merges into
@@ -774,20 +793,28 @@ artifacts:
          holds as written. Areas the verify rules call sensitive are for
          the review card, not deviations in themselves.
 
-         A declared amendment changes how a point is reported, never
-         which text is accepted:
+         Where a source has a declared amendment that has not landed, the
+         change is judged against the amended text; the trunk text stays
+         the accepted one, so every point below is reported:
          - a point where the change matches the declared amendment at
            the commit it was planned against but not the trunk text is
            reported as `follows declared amendment`, with the place in
            the amendment; it is not a deviation;
          - where the declaration records a move to a later commit "to
-           take in" a named deviation, a point that move covers is
+           take in" a deviation, naming the deviation's place in the
+           source and who decided it, a point that move covers is
            reported as `decided — folded into the amendment`, naming the
-           move; it is not a deviation;
+           move; it is not a deviation. A move that names no decider, or
+           no place in the source, takes in nothing;
          - a difference between the first and the last declared commit
-           that no move names is judged as if it were not declared, and
-           its entry notes "declared commit moved without naming the
+           that no such move names is judged as if it were not declared,
+           and its entry notes "declared commit moved without naming the
            deviation it takes in";
+         - a point where the change departs from the declared amendment,
+           even where it matches the trunk text, is a deviation reported
+           as `departs from declared amendment`: the amendment is about
+           to become the accepted text, so the proposed edit is to the
+           amendment or to the change;
          - text that only commits past the last declared one carry is
            not declared, so a point that relies on it is a deviation.
 
@@ -799,10 +826,10 @@ artifacts:
          reports `No deviations from the governing sources.`
 
          Record in verify.md §9 the sources read with their review status
-         as read and the declared amendments with the commits read, then
-         the report: the deviations, then each point reported as
-         `follows declared amendment` or `decided — folded into the
-         amendment`.
+         as read and the declared amendments with the commits read, the
+         `Declaration provenance` line, then the report: the deviations,
+         then each point reported as `follows declared amendment` or
+         `decided — folded into the amendment`.
 
          A deviation does not fail verify: whether to accept it, amend the
          source, or reverse the code is the human's decision at merge
@@ -1277,7 +1304,15 @@ apply:
        naming the reading list, or verify's checks run by hand), the
        findings marked `open — review card`, and the fixes made after
        a capped run. A part with nothing to list says so in words; an
-       empty part reads as unchecked.
+       empty part reads as unchecked. Deviations carries, beside check
+       9's deviations, every point it credited to a declared amendment
+       (`follows declared amendment`, `decided — folded into the
+       amendment`, with the source, the place and the declared commit,
+       and for a move who decided it and the text it folded in), the
+       `Declaration provenance` line, and for each declared amendment
+       that has not landed the line "relies on the unmerged amendment
+       <where it lives> at <commit>: it lands first or with this
+       change".
 
        A PASS verify is mid-cycle, not an endpoint: steps 4–5
        (retrospective, archive) gate the PR/MR (step 6) and must

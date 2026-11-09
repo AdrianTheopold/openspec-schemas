@@ -330,6 +330,7 @@ check_apply() {
   assert_json clean apply-guidance-delivered "openspec instructions apply --change add-order-cancellation --json" 'any("database migration" in g for g in (j.get("operationGuidance") or []))'
   assert_json clean apply-card-rule "openspec instructions apply --change add-order-cancellation --json" '"Review Card" in j["instruction"] and "cite no planning labels" in j["instruction"]'
   assert_true template card-order 'card_order "$BUNDLE/templates/verify.md"'
+  assert_json clean apply-card-declared "openspec instructions apply --change add-order-cancellation --json" '"relies on the unmerged amendment" in j["instruction"] and "follows declared amendment" in j["instruction"]'
 }
 
 # The review card's six parts in their fixed order, under a final section of
@@ -385,6 +386,33 @@ check_declared_amendment() {
   assert_json $fixture verify-reads-declared "openspec instructions verify --change $change --json" '"Declared amendments" in j["instruction"] and "follows declared amendment" in j["instruction"] and "decided — folded into the amendment" in j["instruction"]'
   assert_json $fixture verify-template-declared "openspec instructions verify --change $change --json" '"Declared amendment" in j["template"] and "follows declared amendment" in j["template"]'
   assert_json $fixture proposal-template "openspec instructions proposal --change $change --json" '"## Declared amendments" in j["template"]'
+  # A declared commit must sit on the amendment's branch as fetched, and when the
+  # declaration was written is reported, since nothing can gate it.
+  assert_json $fixture verify-ancestry "openspec instructions verify --change $change --json" '"--is-ancestor" in j["instruction"] and "fetched" in j["instruction"]'
+  assert_json $fixture verify-provenance "openspec instructions verify --change $change --json" '"Declaration provenance" in j["instruction"] and "Declaration provenance" in j["template"]'
+  # An amendment that has landed stops earning credit: the trunk governs alone.
+  assert_json $fixture verify-landed "openspec instructions verify --change $change --json" '"declared amendment merged" in j["instruction"]'
+  # A departure from the amendment is reported even where the trunk text agrees.
+  assert_json $fixture verify-departs "openspec instructions verify --change $change --json" '"departs from declared amendment" in j["instruction"] and "departs from declared amendment" in j["template"]'
+  # A move counts only when it names the decider and the place it takes in.
+  assert_json $fixture verify-move-decider "openspec instructions verify --change $change --json" '"names no decider" in j["instruction"]'
+  assert_true $fixture move-names-place 'grep -F "Moved to commit" openspec/changes/'"$change"'/proposal.md | grep -qF "No public API deletes an order."'
+  # The human sees what was credited to the amendment, and that it must land first.
+  # (The apply rule is asserted in check_apply: a fully ticked change gets no full instruction.)
+  assert_true template card-declared 'card_declared "$BUNDLE/templates/verify.md"'
+}
+
+# The review card's Deviations part carries the declared-amendment points and the
+# merge-order note, not only the deviations.
+card_declared() { # <template file>
+  python3 - "$1" <<'PY'
+import sys
+t = open(sys.argv[1]).read()
+part = t[t.index("### Deviations"):t.index("### What the checks did not cover")]
+for s in ("follows declared amendment", "decided — folded into the amendment",
+          "departs from declared amendment", "relies on the unmerged amendment"):
+    assert s in part, s
+PY
 }
 
 # A change whose code carries two security defects for the security pass to find:

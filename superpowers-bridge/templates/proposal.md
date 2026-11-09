@@ -74,10 +74,11 @@ is planned against, so that verify reads it at the declared commit instead of
 reporting the planned text as a deviation. Give the commit as a hash, never a
 branch name: a branch moves, and the work must not rewrite the rules it is
 judged by. When the amendment later takes in a deviation, add a move to the
-new commit and name the deviation it takes in.
+new commit naming the deviation, its place in the source and who decided it;
+a move that names no decider or no place takes in nothing.
 
 - `<source>`: pending amendment on `<where it lives, e.g. a branch or merge request>`.
   - Planned against commit `<hash>`.
-  - Moved to commit `<hash>` to take in the deviation *<name>*, decided by <who> as an edit to the source.
+  - Moved to commit `<hash>` to take in the deviation *<name>* (<section>: "<the source text it changes>"), decided by <who> as an edit to the source.
 -->
 - `<source>`: pending amendment on `<where it lives>`, planned against commit `<hash>`.

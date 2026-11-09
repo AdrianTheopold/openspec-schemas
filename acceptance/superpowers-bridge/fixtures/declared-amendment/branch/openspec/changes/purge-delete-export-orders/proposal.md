@@ -25,4 +25,4 @@ Cancelled orders stay in the store forever, support staff have no way to remove 
 
 - `orders-direction.md`: pending amendment on branch `amend` of the source repository.
   - Planned against commit `@KB_COMMIT_01@`.
-  - Moved to commit `@KB_COMMIT_02@` to take in the deviation *Delete endpoint*, decided by the source's owner as an edit to the source.
+  - Moved to commit `@KB_COMMIT_02@` to take in the deviation *Delete endpoint* (Non-goals: "No public API deletes an order."), decided by the source's owner as an edit to the source.

@@ -192,9 +192,14 @@ If no governing source is configured, write only `No governing sources configure
 | Source | Read at | Review status as read |
 |---|---|---|
 | `<source>` | `<trunk, and the read used>` | `<status, or "no status stated">` — or *unreadable*: `<what the read returned>` |
-| Declared amendment to `<source>` | `<commit>` (one row per declared commit, and the read used) | `<status, or "no status stated">` — or *unreadable*: `<what the read returned>` |
+| Declared amendment to `<source>` | `<commit>` (one row per declared commit, and the read used; on the amendment's fetched branch, or not; or `declared amendment merged`) | `<status, or "no status stated">` — or *unreadable*: `<what the read returned>` |
 
-Then one block per deviation, or `No deviations from the governing sources.`
+**Declaration provenance**: `<the commit that first carried each declared commit and move, and
+whether it precedes the change's first commit outside openspec/ — or "not committed yet">`
+
+Then one block per deviation, or `No deviations from the governing sources.` A point where the
+change departs from a declared amendment is a deviation too, named `departs from declared
+amendment`, with its proposed edit aimed at the amendment or at the change.
 
 Then one line per point the change takes from a declared amendment rather than the trunk text:
 `follows declared amendment` (`<source>`, `<place>`, at `<commit>`), or
@@ -296,7 +301,7 @@ Runs with findings: <n> of 3
 
 ### Deviations
 
-<!-- Copied from §9: each deviation with its source and place, what the source says, what the change does instead, why, the cost if wrong, and the proposed edit. Or `No deviations from the governing sources.` — or `No governing sources configured`. The only part that asks for decisions. -->
+<!-- Copied from §9: each deviation with its source and place, what the source says, what the change does instead, why, the cost if wrong, and the proposed edit (a `departs from declared amendment` point included). Or `No deviations from the governing sources.` — or `No governing sources configured`. Then every point credited to a declared amendment — `follows declared amendment` and `decided — folded into the amendment`, with the source, the place, the declared commit, and for a move who decided it and the text it folded in — the `Declaration provenance` line, and for each declared amendment that has not landed: "relies on the unmerged amendment <where it lives> at <commit>: it lands first or with this change". The only part that asks for decisions. -->
 
 ### What the checks did not cover
 
