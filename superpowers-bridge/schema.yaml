@@ -145,6 +145,17 @@ artifacts:
       not change, no spec should change either. Do not invent a requirement
       just to satisfy validation.
 
+      If the change is planned against a pending amendment to a governing
+      source the adopter names in `openspec/config.yaml` (`context`) — text
+      that is planned but not yet accepted — list it under an optional final
+      section `## Declared amendments`: the source, where the amendment lives,
+      and the commit the change is planned against, given as a hash and never
+      left as a branch name, since a branch moves and the work must not
+      rewrite the rules it is judged by. When the amendment later takes in a
+      deviation, add a move to the new commit naming the deviation it takes
+      in. Verify's deviation report reads the amendment at those commits
+      only. Leave the section out when there are none.
+
       Keep it concise (1-2 pages). Focus on the "why" not the "how".
     requires:
       - brainstorm
@@ -729,6 +740,16 @@ artifacts:
            not rewrite the rules it is judged by. Record each source with
            its review status as read (for example a status field), or
            "no status stated";
+         - each declared amendment, the one exception: a pending
+           amendment to a governing source that the change's
+           `proposal.md` lists under `## Declared amendments`, with the
+           commit the change was planned against and any later commit
+           the declaration moved to. Read it at each declared commit,
+           using the read the context gives, never at its branch head or
+           from a working tree; an amendment the proposal does not
+           declare is never read. The declaration predates the work, so
+           the work still cannot rewrite the rules it is judged by.
+           Record each declared amendment with the commits read;
          - the change's proposal, design and delta specs as they will be
            archived;
          - the diff of the change against the branch it merges into
@@ -753,6 +774,23 @@ artifacts:
          holds as written. Areas the verify rules call sensitive are for
          the review card, not deviations in themselves.
 
+         A declared amendment changes how a point is reported, never
+         which text is accepted:
+         - a point where the change matches the declared amendment at
+           the commit it was planned against but not the trunk text is
+           reported as `follows declared amendment`, with the place in
+           the amendment; it is not a deviation;
+         - where the declaration records a move to a later commit "to
+           take in" a named deviation, a point that move covers is
+           reported as `decided — folded into the amendment`, naming the
+           move; it is not a deviation;
+         - a difference between the first and the last declared commit
+           that no move names is judged as if it were not declared, and
+           its entry notes "declared commit moved without naming the
+           deviation it takes in";
+         - text that only commits past the last declared one carry is
+           not declared, so a point that relies on it is a deviation.
+
          For each deviation the report gives: the source and the place in
          it; what it says; what the change does instead; why; what it
          costs if that reasoning is wrong; and the proposed edit to the
@@ -761,7 +799,10 @@ artifacts:
          reports `No deviations from the governing sources.`
 
          Record in verify.md §9 the sources read with their review status
-         as read, then the report.
+         as read and the declared amendments with the commits read, then
+         the report: the deviations, then each point reported as
+         `follows declared amendment` or `decided — folded into the
+         amendment`.
 
          A deviation does not fail verify: whether to accept it, amend the
          source, or reverse the code is the human's decision at merge
@@ -771,7 +812,9 @@ artifacts:
          naming them. Blocking — any of these sets Overall Decision to
          FAIL: no report in §9; a deviation without its why; a governing source the
          context names that the subagent could not read (name the source
-         and what the read returned).
+         and what the read returned); a declared amendment the subagent
+         could not read at a declared commit (name it, the commit and
+         what the read returned).
 
       10. **Security pass**: Review the change's diff against the branch
          it merges into for security defects, in a fresh context. The

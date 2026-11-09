@@ -180,8 +180,10 @@ Runs with findings: <n> of 3
 
 A fresh-context subagent compares the change with the governing sources the adopter names in
 `openspec/config.yaml` (`context`), under the adopter's verify rules (`rules.verify`). Each source
-is read at the adopter's trunk, never from a branch that amends it. A deviation is a point where
-the change contradicts, drops, or goes beyond what a source states, including a stated non-goal.
+is read at the adopter's trunk, never from a branch that amends it — except a declared amendment:
+one the change's `proposal.md` lists under `## Declared amendments`, read at each commit it
+declares and never at its branch head. A deviation is a point where the change contradicts, drops,
+or goes beyond what a source states, including a stated non-goal.
 
 If no governing source is configured, write only `No governing sources configured` and stop here.
 
@@ -190,8 +192,14 @@ If no governing source is configured, write only `No governing sources configure
 | Source | Read at | Review status as read |
 |---|---|---|
 | `<source>` | `<trunk, and the read used>` | `<status, or "no status stated">` — or *unreadable*: `<what the read returned>` |
+| Declared amendment to `<source>` | `<commit>` (one row per declared commit, and the read used) | `<status, or "no status stated">` — or *unreadable*: `<what the read returned>` |
 
 Then one block per deviation, or `No deviations from the governing sources.`
+
+Then one line per point the change takes from a declared amendment rather than the trunk text:
+`follows declared amendment` (`<source>`, `<place>`, at `<commit>`), or
+`decided — folded into the amendment` (`<source>`, `<place>`, by the move to `<commit>` that
+names it). Neither is a deviation.
 
 ### Deviation <n>: <short name>
 
@@ -206,7 +214,7 @@ Then one block per deviation, or `No deviations from the governing sources.`
 > the human's decision at merge time, and the review card puts it in front of them. Because they
 > await that decision, one or more deviations here make Overall Decision PASS WITH WARNINGS,
 > naming them. FAIL only when this section is missing, a deviation has no **Why**, or a
-> configured source is *unreadable*.
+> configured source or a declared amendment is *unreadable*.
 
 ---
 
