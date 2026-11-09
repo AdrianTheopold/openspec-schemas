@@ -5,7 +5,9 @@ context: |
   never from its working tree.
   A change may declare a pending amendment to it in its proposal; read a declared
   amendment at its commit with `git -C @KB@ show <commit>:orders-direction.md`,
-  never from the branch head or the working tree.
+  never from the branch head or the working tree. Amendments live on branches of
+  that repository itself, so nothing is fetched: check that a declared commit lies
+  on its amendment's branch with `git -C @KB@ merge-base --is-ancestor <commit> <branch>`.
 rules:
   verify:
     - "Sensitive areas: CI configuration (.github/workflows/)."
