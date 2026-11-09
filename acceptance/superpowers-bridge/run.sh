@@ -39,9 +39,14 @@ trap cleanup EXIT
 # documents: kb/trunk/ is its accepted state on main, kb/amend/ a branch that
 # amends it. The amending branch is left checked out, so the working tree shows
 # the amended text and only a read at the trunk shows what was accepted.
+# A fixture with kb/amend-commits/ instead commits each of its subdirectories,
+# in name order, onto the amending branch, and records each commit as an
+# NN=<sha> line in <kb repository dir>.commits, NN being the subdirectory's
+# leading number. stage() substitutes those into @KB_COMMIT_NN@ placeholders.
 stage_kb() { # <fixture dir> <kb repository dir>
   local fx=$1 kb=$2
   mkdir -p "$kb"
+  : > "$kb.commits"
   (
     cd "$kb" || exit 1
     git init -q -b main . || exit 1
@@ -50,10 +55,32 @@ stage_kb() { # <fixture dir> <kb repository dir>
     git add -A && git commit -q -m "accepted" || exit 1
     git checkout -q -b amend || exit 1
     # Replace the tree rather than overlay it, so a file the branch removes is gone.
-    git rm -rq . || exit 1
-    cp -R "$fx/kb/amend/." . || exit 1
-    git add -A && git commit -q --allow-empty -m "amend" || exit 1
+    if [ -d "$fx/kb/amend-commits" ]; then
+      local sub name
+      for sub in "$fx"/kb/amend-commits/*/; do
+        name=$(basename "$sub")
+        git rm -rq --ignore-unmatch . || exit 1
+        cp -R "$sub." . || exit 1
+        git add -A && git commit -q --allow-empty -m "amend $name" || exit 1
+        echo "${name%%-*}=$(git rev-parse HEAD)" >> "$kb.commits"
+      done
+    else
+      git rm -rq . || exit 1
+      cp -R "$fx/kb/amend/." . || exit 1
+      git add -A && git commit -q --allow-empty -m "amend" || exit 1
+    fi
   )
+}
+
+# Replace every @KB_COMMIT_NN@ in the given files with the commit stage_kb recorded.
+substitute_commits() { # <commits file> <file …>
+  local commits=$1 nn sha
+  shift
+  [ -s "$commits" ] || return 0
+  while IFS='=' read -r nn sha; do
+    [ -n "$nn" ] || continue
+    sed -i "s|@KB_COMMIT_${nn}@|$sha|g" "$@" || return 1
+  done < "$commits"
 }
 
 stage() {
@@ -90,7 +117,17 @@ stage() {
     [ -d "$fx/base" ] && cp -R "$fx/base/." .
     git add -A && git commit -q --allow-empty -m "base" || exit 1
     git checkout -q -b change || exit 1
-    [ -d "$fx/branch" ] && cp -R "$fx/branch/." .
+    if [ -d "$fx/branch" ]; then
+      cp -R "$fx/branch/." .
+      # The change cites the source's amending commits by placeholder, since
+      # their hashes exist only once the source repository is staged.
+      if [ -n "$kb" ]; then
+        local f
+        while IFS= read -r -d '' f; do
+          substitute_commits "$kb.commits" "$f" || exit 1
+        done < <(cd "$fx/branch" && find . -type f -print0)
+      fi
+    fi
     git add -A && git commit -q --allow-empty -m "change" || exit 1
 
     # The bundle is copied in after the commits and excluded, so it never
@@ -119,6 +156,7 @@ stage() {
     # A fixture without kb/ has no source repository, so its placeholder stays.
     if [ -n "$src" ] && [ -n "$kb" ]; then
       sed "s|@KB@|$kb|g" "$src" > openspec/config.yaml
+      substitute_commits "$kb.commits" openspec/config.yaml || exit 1
     elif [ -n "$src" ]; then
       cp "$src" openspec/config.yaml
     else
@@ -327,6 +365,28 @@ check_deviation() {
   assert_true deviation source-on-amend-branch '[ "$(git -C "$DIR.kb" branch --show-current)" = amend ]'
 }
 
+# A change planned against a pending amendment to its governing source, which its
+# proposal declares with the commit it was planned against and one later move.
+# The amending branch has moved on past the declared commit, so a reader that
+# takes the branch head sees text the change was never planned against.
+check_declared_amendment() {
+  local fixture=declared-amendment change=purge-delete-export-orders
+  if [ ! -d "$HERE/fixtures/$fixture" ]; then
+    report FAIL "$fixture" fixture-present "no fixtures/$fixture directory"
+    return
+  fi
+  DIR="$TMPROOT/$fixture"
+  stage "$fixture" "$DIR" >/dev/null || { report FAIL "$fixture" stage "staging failed"; return; }
+
+  assert_json $fixture proposal-parses "openspec show $change --json" 'not any(s.get("severity")=="error" for s in j.get("status",[]))'
+  assert_json $fixture strict-valid "openspec validate $change --strict --json" 'j["items"][0]["valid"] is True'
+  assert_json $fixture context-delivered "openspec instructions verify --change $change --json" '"Declared amendments" not in j.get("context","") and "show main:orders-direction.md" in j.get("context","")'
+  assert_true $fixture head-past-declared 'c2=$(sed -n "s/^02=//p" "$DIR.kb.commits"); c3=$(sed -n "s/^03=//p" "$DIR.kb.commits"); p=openspec/changes/'"$change"'/proposal.md; [ -n "$c2" ] && [ -n "$c3" ] && [ "$(git -C "$DIR.kb" rev-parse amend)" = "$c3" ] && grep -qF "$c2" "$p" && ! grep -qF "$c3" "$p"'
+  assert_json $fixture verify-reads-declared "openspec instructions verify --change $change --json" '"Declared amendments" in j["instruction"] and "follows declared amendment" in j["instruction"] and "decided — folded into the amendment" in j["instruction"]'
+  assert_json $fixture verify-template-declared "openspec instructions verify --change $change --json" '"Declared amendment" in j["template"] and "follows declared amendment" in j["template"]'
+  assert_json $fixture proposal-template "openspec instructions proposal --change $change --json" '"## Declared amendments" in j["template"]'
+}
+
 # A change whose code carries two security defects for the security pass to find:
 # a hard-coded credential and a request with certificate verification turned off.
 # The assertion only proves both reach the diff against the trunk; finding them
@@ -363,6 +423,7 @@ check() {
   check_rule_file
   check_no_deltas
   check_deviation
+  check_declared_amendment
   check_security
   check_release
   exit "$FAILED"

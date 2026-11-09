@@ -1,0 +1,11 @@
+schema: superpowers-bridge
+context: |
+  Governing sources: orders-direction.md in the repository at @KB@.
+  Read it at that repository's trunk with `git -C @KB@ show main:orders-direction.md`,
+  never from its working tree.
+  A change may declare a pending amendment to it in its proposal; read a declared
+  amendment at its commit with `git -C @KB@ show <commit>:orders-direction.md`,
+  never from the branch head or the working tree.
+rules:
+  verify:
+    - "Sensitive areas: CI configuration (.github/workflows/)."

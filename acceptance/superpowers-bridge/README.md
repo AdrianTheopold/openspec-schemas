@@ -26,6 +26,7 @@ copies the bundle itself, so it needs no install beyond the CLI.
 | `seeded-proposal` | A change whose `proposal.md` does not parse | The CLI reports the parse error and returns no deltas while the proposal is unparsed | (mechanical only) |
 | `no-deltas` | A change with code but no delta specs | The change has no deltas, and the code-label search still runs on its code | (mechanical only) |
 | `deviation` | A change that moves away from a governing source kept in a second repository, with a branch amending that source checked out | The configured context and verify rules reach the verify instruction; the source repository has the amending branch checked out | Two deviations, read at `main`; with `config.unreadable.yaml`, FAIL naming the missing source |
+| `declared-amendment` | A change planned against a pending amendment to its governing source, declared in its proposal at one commit and moved to a second; the amending branch has a third, undeclared commit checked out | The proposal with its `## Declared amendments` section parses and validates strictly; the context reaches verify; the branch head is past the declared commit; the verify instruction and template and the proposal template carry the declared-amendment rules | Retention follows the declared amendment, *Delete endpoint* is decided and folded into it, *Export endpoint* is a deviation; variants (b) and (c) as its `expected.md` states |
 | `security` | A branch adding a client with a hard-coded credential and certificate verification turned off | Both defects are in the diff against the trunk | Both defects found, each fixed or dismissed with a reason |
 
 ## Fixture layout
@@ -38,7 +39,11 @@ A fixture with a `kb/` directory also gets a source repository, staged at `<dir>
 stands in for an adopter's governing documents: `kb/trunk/` is committed on `main`, then
 `kb/amend/` on a branch `amend`, which is left checked out. `@KB@` in the config becomes
 that repository's path. Stage with `--config` to swap in another config, for example
-`fixtures/deviation/config.unreadable.yaml`.
+`fixtures/deviation/config.unreadable.yaml`. With `kb/amend-commits/` in place of
+`kb/amend/`, each of its subdirectories (`01-…`, `02-…`, in name order) becomes one commit
+on `amend`, replacing the tree each time; their hashes are written as `NN=<hash>` lines to
+`<dir>.kb.commits`, and every `@KB_COMMIT_NN@` in `branch/` and in the config becomes the
+matching hash.
 
 A fixture with an `sdd/` directory gets it copied, untracked, to `.superpowers/sdd/` in the
 staged repository: the executor's ledger, whose `Ruling:` lines verify reads as the executor's

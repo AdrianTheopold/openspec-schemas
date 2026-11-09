@@ -1,0 +1,16 @@
+---
+status: draft
+---
+
+# Orders direction
+
+The order service records what customers ordered.
+
+## Behavior
+
+- An order is identified by the identifier it receives when it is accepted.
+- Cancelled orders are kept for 30 days.
+
+## Non-goals
+
+- No public API exports orders in bulk.
