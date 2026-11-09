@@ -65,7 +65,10 @@ sed -i "s/$(sed -n 's/^01=//p' <dir>.kb.commits)/0000000/" <dir>/openspec/change
 ```
 
 Check 9 names the declared amendment to `orders-direction.md` as unreadable at `0000000`,
-with what the read returned, and sets Overall Decision to FAIL.
+with what the read returned, and sets Overall Decision to FAIL. With the planned-against text
+unreadable, nothing can be credited as following the amendment: Retention is reported as a
+deviation beside *Export endpoint*. *Delete endpoint* may still be reported as folded in by the
+readable move, with a caveat that the declaration it hangs on is broken.
 
 ## On the `deviation` fixture
 
