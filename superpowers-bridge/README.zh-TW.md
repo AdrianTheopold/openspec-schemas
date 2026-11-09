@@ -413,7 +413,7 @@ task 清掉時,兩份進 git 的 ledger 都要更新 —— `tasks.md` 的粗粒
 6. front-door routing leak detector(non-blocking warning)
 7. deferred-dogfood vs automated-test 等價性 —— 僅在 `plan.md` 有 `[~]` 但等價性章節空白(gap 分析被跳過)時才 block,其他情境屬 informational
 8. **spec review** —— fresh subagent 對 delta specs 執行 [spec-review.md](./spec-review.md):涵蓋 `openspec validate --strict` 沒檢查的規則,讓進入 `openspec/specs/` 的文字合併後仍然讀得通。Findings 會擋住 verify,直到 agent 修掉或附上紀錄的理由駁回;累計三次有 findings 的執行之後,下一次只審查上次之後改動的部分,仍未解決的項目交給 review card。乾淨的一次回報 `No findings.`
-9. **deviation report** —— fresh subagent 讀取 adopter 指定的 governing sources(取其 trunk 所持有的版本,絕不取自正在修改它們的 branch)、change 的 artifacts 與 diff,回報 change 牴觸、捨棄或超出 source 的每個地方,各附原因、推理錯誤時的代價,以及對 source 的建議修改。Deviation 不會讓 verify 失敗:接受它、修改 source 或把程式改回去,是人類在 merge 時的決定,因此只要報告列出一個以上的 deviation,Overall Decision 就是 PASS WITH WARNINGS,並逐一列名。缺少報告、deviation 沒有原因、或 source 讀不到,則會讓它失敗。乾淨的一次回報 `No deviations from the governing sources.`;沒有設定任何 source 時,記下 `No governing sources configured` 並通過
+9. **deviation report** —— fresh subagent 讀取 adopter 指定的 governing sources(取其 trunk 所持有的版本,絕不取自正在修改它們的 branch;唯一的例外是 change 的 proposal 在 `## Declared amendments` 下宣告的 pending amendment,只在每個宣告的 commit 讀取,絕不讀 branch head)、change 的 artifacts 與 diff,回報 change 牴觸、捨棄或超出 source 的每個地方,各附原因、推理錯誤時的代價,以及對 source 的建議修改。Deviation 不會讓 verify 失敗:接受它、修改 source 或把程式改回去,是人類在 merge 時的決定,因此只要報告列出一個以上的 deviation,Overall Decision 就是 PASS WITH WARNINGS,並逐一列名。缺少報告、deviation 沒有原因、或 source 讀不到,則會讓它失敗。與 declared amendment 相符、但與 trunk 文字不符的地方,回報為 `follows declared amendment`;宣告中移到較新 commit 時明確點名納入的 deviation,回報為 `decided — folded into the amendment`;兩者都不算 deviation。宣告的 commit 讀不到時,和 source 讀不到一樣會讓 verify 失敗。乾淨的一次回報 `No deviations from the governing sources.`;沒有設定任何 source 時,記下 `No governing sources configured` 並通過
 10. **security pass** —— 在 fresh context 中審查 change 對照其 merge 目標 branch 的 diff 是否有安全缺陷;由 fresh subagent 執行:runtime 自帶安全審查時就用它(Claude Code 中是 `/security-review`),否則、或該審查涵蓋的範圍不及 diff 時,改用固定的 reading list。Agent 逐項修掉或附理由駁回;若修正會改變某個 governing source 所陳述的行為,該項就成為交給檢查 9 的 deviation
 
 失敗會回到對應 artifact 修正後重跑 verify。沒有 blocking 問題之後,controller 填寫 `verify.md` 的 `## Review Card` 區段:**Deviations**(檢查 9 的報告)與 **What the checks did not cover**(diff 觸及的 sensitive areas、沒跑或走 fallback 路徑的檢查、仍未解決的 findings)是要讀的兩部分;**Evidence**、**Security pass**、**How to revert**、**Rulings** 只需瀏覽。Card 是 `verify.md` 的一個檢視,`verify.md` 仍是紀錄,step 6 會把它放在 PR/MR 描述的最上方。
@@ -536,7 +536,7 @@ LLM 不必解讀 timing 文字 —— 跑指令、看結果即可。這是顧慮
 
 本 schema 撰寫時所對齊的 upstream 基準版本。這是**歷史快照,不是端對端相容性承諾** — CI 無法在 headless 環境跑完整的 prompt-layer workflow,行為相容性依賴 drift 觸發人類檢核。
 
-目前 bundle release: **`1.5.0`**(見 [VERSION](./VERSION))。
+目前 bundle release: **`1.6.0`**(見 [VERSION](./VERSION))。
 
 | superpowers-bridge | OpenSpec CLI | Superpowers plugin | 基準日期 |
 |---|---|---|---|
@@ -545,6 +545,8 @@ LLM 不必解讀 timing 文字 —— 跑指令、看結果即可。這是顧慮
 | v1 | `1.5.0` | `6.2.0` | 2026-08-12 |
 | v1 | `1.5.0` | `6.1.0` | 2026-07-02 |
 
+> Bundle **1.6.0** 沒有 schema graph 的變動,也沒有基準版本的調整。Verify 檢查 9 會讀取 declared amendment:change 的 proposal 在選填的 `## Declared amendments` 段落中列出的、對某個 governing source 的 pending amendment,附上 change 規劃時所依據的 commit,以及之後每次移動與它納入的 deviation。檢查 9 只在這些 commit 讀取它,絕不讀 branch head;與它相符的地方回報為 `follows declared amendment` 或 `decided — folded into the amendment`,而不是 deviation。沒有這個段落的 proposal,行為與 1.5.0 相同。Acceptance suite 新增 `declared-amendment` fixture。
+>
 > Bundle **1.5.0** 沒有 schema graph 的變動(artifacts、`requires:` 邊與 PRECHECK 都相同),也沒有基準版本的調整;上表的基準仍然成立。它加入 `templates/spec.md` 中撰寫時的註記,為 verify 加入 spec review、deviation report 與 security pass,為 plan 加入 Global Constraints 規則,為 apply 加入 stop 規則、review loop 與 review card,並為 retrospective 加入駁回理由的統計。它的 acceptance suite `acceptance/superpowers-bridge/run.sh check` 在 CLI 上釘住各檢查所讀取的訊息文字(`Archive would refuse this delta`、`Purpose section is still a placeholder`、ADDED requirement 超過 500 字元時 `--strict` 的失敗、`proposal.md` 的 parse status),所以 CLI 某個 release 一旦改了措辭,是讓這次執行失敗,而不是悄悄讓某個檢查失去作用。
 >
 > 已對 **OpenSpec 1.14.3**(2026-10-21,bundle 1.4.1)重新對齊 OpenSpec 側。結構面:`openspec schema validate` 通過,每個 artifact 與 apply 的 instructions 都能產生,依 templates 撰寫的 probe change 通過 `openspec validate --strict`。從 1.14.3 `spec-driven` 文字吸收進四段繼承的 instruction:**proposal** —— 新 capability 以持久的系統行為命名,而非這個 change 的工作內容,邊界要內聚、不要包山包海;**specs** —— spec 檔一次寫一個,從第一個還沒有檔案的 capability 開始;每個 requirement 的描述不超過 500 字元,一個 requirement 一個行為(較長的 ADDED requirement 會讓 `--strict` 失敗),且絕不為了長度而在 MODIFIED 下刪減既有 requirement;新 capability 的 delta 第一個 section 是 `## Purpose`;**tasks** —— 只有內容為 `x` 的 checkbox 算完成(其他標記,包括 `[~]`,都視為未完成),不在追蹤進度內的工作以一般條列放在選用的 `## Workflow follow-up` 段落,每個 task group 自行交付自己該有的測試與文件。**design** upstream 未變。templates 加上 upstream 的 H1 標題,以及 capability 命名與長度規則。針對 bridge 的調整:`[~]` 延後標記只用在 `plan.md`;workflow follow-up 列的是 apply steps 3–6 —— 追蹤的 task 永遠不涵蓋 verify、retrospective、archive 或 finish,因為 verify 的 task-completion 檢查要求 `tasks.md` 每個 box 在 archive 前都已勾選。原樣保留:brainstorm-first 的框架、spec 盤點段落、MODIFIED 完整性段落(upstream 沒有對應)、`tasks.md` / `plan.md` 的 ledger 分工。與 1.4.0 一樣刻意不納入:`--store` 參數(stores 仍未使用)。
