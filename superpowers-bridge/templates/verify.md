@@ -197,6 +197,10 @@ If no governing source is configured, write only `No governing sources configure
 **Declaration provenance**: `<the commit that first carried each declared commit and move, and
 whether it precedes the change's first commit outside openspec/ — or "not committed yet">`
 
+<!-- The Declared amendment rows and the provenance line exist only when the proposal declares
+an amendment. With nothing declared, leave this line out and those rows too, so §9 reads as it
+did before declared amendments existed. -->
+
 Then one block per deviation, or `No deviations from the governing sources.` A point where the
 change departs from a declared amendment is a deviation too, named `departs from declared
 amendment`, with its proposed edit aimed at the amendment or at the change.

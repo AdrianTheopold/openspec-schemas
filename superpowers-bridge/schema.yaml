@@ -149,8 +149,9 @@ artifacts:
       source the adopter names in `openspec/config.yaml` (`context`) — text
       that is planned but not yet accepted — list it under an optional final
       section `## Declared amendments`: the source, where the amendment lives,
-      and the commit the change is planned against, given as a hash and never
-      left as a branch name, since a branch moves and the work must not
+      and the commit the change is planned against, given as the
+      full commit hash and never shortened or left as a branch name, since a
+      short hash can turn ambiguous, a branch moves, and the work must not
       rewrite the rules it is judged by. When the amendment later takes in a
       deviation, add a move to the new commit naming the deviation, its
       place in the source and who decided it; a move that names no decider
@@ -748,8 +749,12 @@ artifacts:
            commit the change was planned against and any later commit
            the declaration moved to. Read it at each declared commit,
            using the read the context gives, never at its branch head or
-           from a working tree; an amendment the proposal does not
-           declare is never read. Pinning the commit is the guard: the
+           from a working tree, and read no commit past the last
+           declared one, not even to map its history; an amendment the
+           proposal does not declare is never read. If a declared commit
+           cannot be read, nothing is credited to that amendment: its
+           points are judged by the trunk text alone, and the blocking
+           rule below applies. Pinning the commit is the guard: the
            amended text the change is judged by cannot move with the
            work. Before crediting a declared commit, check that it lies
            on the amendment's branch as fetched from where the
@@ -762,7 +767,8 @@ artifacts:
            `declared amendment merged`, and judge that source by its
            trunk text alone.
            Record each declared amendment with the commits read;
-         - the declaration's provenance, reported and never gated: from
+         - Only when the proposal declares an amendment, the
+           declaration's provenance, reported and never gated: from
            `git log -- <change folder>/proposal.md`, the commit that
            first carried each declared commit and each move, and whether
            it comes before the first commit of the change that touches

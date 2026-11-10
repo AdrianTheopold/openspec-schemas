@@ -72,6 +72,16 @@ stage_kb() { # <fixture dir> <kb repository dir>
   )
 }
 
+# Fail, naming the files, when a commit placeholder is left unreplaced: a fixture
+# directory without its NN- prefix, or an empty amend-commits/, leaves one behind.
+no_placeholders_left() { # <file …>
+  if grep -l '@KB_COMMIT_[0-9]*@' "$@" >&2; then
+    echo "stage: unreplaced @KB_COMMIT_NN@ in the files above" >&2
+    return 1
+  fi
+  return 0
+}
+
 # Replace every @KB_COMMIT_NN@ in the given files with the commit stage_kb recorded.
 substitute_commits() { # <commits file> <file …>
   local commits=$1 nn sha
@@ -124,7 +134,7 @@ stage() {
       if [ -n "$kb" ]; then
         local f
         while IFS= read -r -d '' f; do
-          substitute_commits "$kb.commits" "$f" || exit 1
+          substitute_commits "$kb.commits" "$f" && no_placeholders_left "$f" || exit 1
         done < <(cd "$fx/branch" && find . -type f -print0)
       fi
     fi
@@ -156,7 +166,7 @@ stage() {
     # A fixture without kb/ has no source repository, so its placeholder stays.
     if [ -n "$src" ] && [ -n "$kb" ]; then
       sed "s|@KB@|$kb|g" "$src" > openspec/config.yaml
-      substitute_commits "$kb.commits" openspec/config.yaml || exit 1
+      substitute_commits "$kb.commits" openspec/config.yaml && no_placeholders_left openspec/config.yaml || exit 1
     elif [ -n "$src" ]; then
       cp "$src" openspec/config.yaml
     else
@@ -397,9 +407,30 @@ check_declared_amendment() {
   # A move counts only when it names the decider and the place it takes in.
   assert_json $fixture verify-move-decider "openspec instructions verify --change $change --json" '"names no decider" in j["instruction"]'
   assert_true $fixture move-names-place 'grep -F "Moved to commit" openspec/changes/'"$change"'/proposal.md | grep -qF "No public API deletes an order."'
+  # Nothing past the last declared commit is read, history included; provenance is
+  # written only when something is declared; an amendment with an unreadable commit
+  # earns no credit; a declared commit is a full hash.
+  assert_json $fixture verify-no-history-read "openspec instructions verify --change $change --json" '"not even to map its history" in j["instruction"]'
+  assert_json $fixture verify-provenance-only-declared "openspec instructions verify --change $change --json" '"Only when the proposal declares an amendment" in j["instruction"] and "leave this line out" in j["template"]'
+  assert_json $fixture verify-unreadable-no-credit "openspec instructions verify --change $change --json" '"nothing is credited to that amendment" in j["instruction"]'
+  assert_json $fixture full-hash "openspec instructions proposal --change $change --json" '"full commit hash" in j["instruction"] and "full commit hash" in j["template"]'
+  assert_true template proposal-placeholder-in-comment 'placeholder_in_comment "$BUNDLE/templates/proposal.md"'
+  # Staging fails loudly when a commit placeholder is left unreplaced.
+  assert_true runner placeholder-guard 'f=$(mktemp "$TMPROOT/ph.XXXXXX"); echo "commit @KB_COMMIT_09@" > "$f"; ! no_placeholders_left "$f" 2>/dev/null && no_placeholders_left "$DIR/openspec/changes/'"$change"'/proposal.md" "$DIR/openspec/config.yaml"'
   # The human sees what was credited to the amendment, and that it must land first.
   # (The apply rule is asserted in check_apply: a fully ticked change gets no full instruction.)
   assert_true template card-declared 'card_declared "$BUNDLE/templates/verify.md"'
+}
+
+# The Declared amendments section of the proposal template carries no bullet outside
+# its comment, so a left-over placeholder cannot reach verify as a declaration.
+placeholder_in_comment() { # <template file>
+  python3 - "$1" <<'PY'
+import re, sys
+t = open(sys.argv[1]).read()
+sec = t[t.index("## Declared amendments"):]
+assert not re.search(r"^\s*- ", re.sub(r"<!--.*?-->", "", sec, flags=re.S), re.M)
+PY
 }
 
 # The review card's Deviations part carries the declared-amendment points and the

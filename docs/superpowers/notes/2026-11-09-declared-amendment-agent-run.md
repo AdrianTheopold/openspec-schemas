@@ -62,3 +62,24 @@ as staged and (g) reported exactly the expected outcomes.
 while mapping history, against "never at its branch head"; both said so, and neither result
 used it. Every subagent noticed when the variant's edit to `proposal.md` was left uncommitted
 and reported the declaration as not committed yet.
+
+## Third run, after the follow-up round (2026-11-10)
+
+Five small fixes from the final review's deferred list:
+- check 9 reads no commit past the last declared one, not even to map its history;
+- an amendment with an unreadable declared commit earns no credit;
+- the provenance line and the declared-amendment rows appear only when something is declared;
+- a declared commit is given as the full commit hash;
+- the proposal template's example sits inside its comment.
+
+The runner also fails staging when a commit placeholder is left unreplaced. Variant (c)'s expectation is pinned to one answer.
+
+| Run | Expected | Reported | Result |
+|---|---|---|---|
+| As staged | One deviation, both credits, both card lines | As expected; every source-repository read was a declared commit or `main` | pass |
+| (c) unreadable planned-against commit | FAIL naming it; Retention, *Delete endpoint* and *Export endpoint* all deviations; nothing credited | As expected; its first `git log --all --graph` survey listed the later commit's subject line, never its content | pass |
+| `deviation` (regression) | Exactly the two deviations at `main`, no provenance line | First run, before the template change: the two deviations plus "Declaration provenance: not applicable"; the template now says to leave the line out, and the re-run is recorded below | see below |
+
+**Re-run of `deviation` with the template change:** exactly the two deviations at `main`; the
+declared-amendment rows and the provenance line left out, as before declared amendments
+existed. Pass.

@@ -71,14 +71,15 @@ requirement just to satisfy validation.
 Optional: delete this section when the change is planned against no pending
 amendment. List each pending amendment to a governing source that the change
 is planned against, so that verify reads it at the declared commit instead of
-reporting the planned text as a deviation. Give the commit as a hash, never a
-branch name: a branch moves, and the work must not rewrite the rules it is
-judged by. When the amendment later takes in a deviation, add a move to the
-new commit naming the deviation, its place in the source and who decided it;
-a move that names no decider or no place takes in nothing.
+reporting the planned text as a deviation. Give the commit as the
+full commit hash, never shortened or a branch name: a short hash can turn ambiguous, a
+branch moves, and the work must not rewrite the rules it is judged by. When
+the amendment later takes in a deviation, add a move to the new commit naming
+the deviation, its place in the source and who decided it; a move that names
+no decider or no place takes in nothing. Write the entries below this comment,
+in this form:
 
 - `<source>`: pending amendment on `<where it lives, e.g. a branch or merge request>`.
-  - Planned against commit `<hash>`.
-  - Moved to commit `<hash>` to take in the deviation *<name>* (<section>: "<the source text it changes>"), decided by <who> as an edit to the source.
+  - Planned against commit `<full hash>`.
+  - Moved to commit `<full hash>` to take in the deviation *<name>* (<section>: "<the source text it changes>"), decided by <who> as an edit to the source.
 -->
-- `<source>`: pending amendment on `<where it lives>`, planned against commit `<hash>`.
